@@ -1,7 +1,7 @@
 class DrakeException(Exception):
     pass
 
-class SyntaxError(DrakeException):
+class DrakeSyntaxError(DrakeException):
     def __init__(self, error, value, linenum, column):
         super().__init__(f'{error}: {value} @ {linenum}:{column}')
         self.error = error
