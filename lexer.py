@@ -50,7 +50,7 @@ TOKENS = {
     'STRING': fr'\'{STRING}\'|\"{STRING}\"',
     'NUMBER': r'\d+(?:\.\d+)?',
     'WHITESPACE': r'[ \t]+',
-    'UNKNOWN': r'.'
+    'UNKNOWN': r'.*?'
 }
 TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKENS.items()))
 
