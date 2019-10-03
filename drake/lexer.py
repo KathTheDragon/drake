@@ -21,6 +21,7 @@ KEYWORDS = [
     'none',
     'nonlocal',
     'return',
+    'self',
     'then',
     'true',
     'while',
