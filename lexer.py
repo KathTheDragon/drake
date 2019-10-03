@@ -38,9 +38,10 @@ KEYWORD_OPERATORS = [
 ]
 STRING = r'([^\\\n]|\\.)*?'
 TOKENS = {
+    'COMMENT': r'//.*$',
     'ASSIGNMENT': r'[-+*/]?=(?!=)',
     'LAMBDA': r'->',
-    'OPERATOR': fr'[-+&|^~:]|[<>!=]=|[*/<>]{{1,2}}|\.\.|(?:{"|".join(KEYWORD_OPERATORS)})(?!\w)',
+    'OPERATOR': fr'[-+/&|^~:]|[<>!=]=|[*<>]{{1,2}}|\.\.|(?:{"|".join(KEYWORD_OPERATORS)})(?!\w)',
     'DOT': r'\.',
     'COMMA': r',',
     'LBRACKET': r'[([{]',
@@ -82,7 +83,7 @@ def lex(source):
                 bracket = brackets.pop()
                 if bracket+value not in ('()', '[]', '{}'):
                     raise DrakeSyntaxError(f'mismatched brackets', value, linenum, column)
-            elif type == 'WHITESPACE':
+            elif type in ('COMMENT', 'WHITESPACE'):
                 continue
             elif type == 'UNKNOWN':
                 raise DrakeSyntaxError(f'unexpected character', value, linenum, column)
