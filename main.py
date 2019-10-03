@@ -1,6 +1,6 @@
 import argparse
-from .drake.lexer import lex
-from .drake.parser import Parser
+from drake.lexer import lex
+from drake.parser import Parser
 
 parser = argparse.ArgumentParser(description='Compile or interpret a Drake program.')
 parser.add_argument('cmd', choices=['build', 'run'])
