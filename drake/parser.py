@@ -1,5 +1,5 @@
 import ast
-from .ast import Precedence, ASTNode, BinaryOp, Primary
+from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary
 from .exceptions import DrakeParserError
 
 class Parser():
@@ -75,7 +75,16 @@ class Parser():
         self.expect(')')
 
     def unary(self):
+        operator = self.current
+
         self.parsePrecedence(Precedence.UNARY)
+
+        operand = self.ast.pop()
+        if not isinstance(operand, ASTNode):
+            operand = Primary(operand)
+
+        node = UnaryOp(operator, operand)
+        self.ast.append(node)
 
     def binary(self):
         operator = self.current
@@ -92,7 +101,6 @@ class Parser():
             left = Primary(left)
 
         node = BinaryOp(left, operator, right)
-
         self.ast.append(node)
 
     def primary(self):
