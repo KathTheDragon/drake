@@ -75,15 +75,7 @@ def lex(source):
             type = match.lastgroup
             value = match.group()
             column = match.start()
-            if type == 'LBRACKET':
-                brackets.append(value)
-            elif type == 'RBRACKET':
-                if not brackets:
-                    raise DrakeSyntaxError(f'unexpected bracket', value, linenum, column)
-                bracket = brackets.pop()
-                if bracket+value not in ('()', '[]', '{}'):
-                    raise DrakeSyntaxError(f'mismatched brackets', value, linenum, column)
-            elif type in ('COMMENT', 'WHITESPACE'):
+            if type in ('COMMENT', 'WHITESPACE'):
                 continue
             elif type == 'UNKNOWN':
                 raise DrakeSyntaxError(f'unexpected character', value, linenum, column)
