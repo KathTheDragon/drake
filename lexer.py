@@ -38,7 +38,7 @@ KEYWORD_OPERATORS = [
 ]
 STRING = r'([^\\\n]|\\.)*?'
 TOKENS = {
-    'ASSIGNMENT': r'[-+*/]?=',
+    'ASSIGNMENT': r'[-+*/]?=(?!=)',
     'LAMBDA': r'->',
     'OPERATOR': fr'[-+&|^~:]|[<>!=]=|[*/<>]{{1,2}}|\.\.|(?:{"|".join(KEYWORD_OPERATORS)})(?!\w)',
     'DOT': r'\.',
