@@ -2,7 +2,6 @@ import enum
 from dataclasses import dataclass
 from .lexer import Token
 
-
 class ASTNode():
     def pprint(self):
         raise NotImplementedError
@@ -30,7 +29,7 @@ class BinaryOp(ASTNode):
             left = indent(left)
             right = indent(right)
             br = '\n'
-        return f'Binary {self.operator.value}({br}{left},{br}{right}{br})'
+        return f'Binary {self.operator.value} ({br}{left},{br}{right}{br})'
 
 
 class Precedence(enum.IntEnum):
