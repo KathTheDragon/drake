@@ -1,3 +1,4 @@
+import enum
 from dataclasses import dataclass
 from .lexer import Token
 
@@ -32,15 +33,15 @@ class BinaryOp(ASTNode):
         return f'Binary {self.operator.value}({br}{left},{br}{right}{br})'
 
 
-class Precedence:
-    NONE       = 0
-    ASSIGNMENT = 1   # =
-    OR         = 2   # or
-    AND        = 3   # and
-    EQUALITY   = 4   # == !=
-    COMPARISON = 5   # < > <= >=
-    ADD_SUB    = 6   # + -
-    MULT_DIV   = 7   # * /
-    UNARY      = 8   # ! -
-    CALL       = 9   # . () []
-    PRIMARY    = 10
+class Precedence(enum.IntEnum):
+    NONE       = enum.auto()
+    ASSIGNMENT = enum.auto()   # =
+    OR         = enum.auto()   # or
+    AND        = enum.auto()   # and
+    EQUALITY   = enum.auto()   # == !=
+    COMPARISON = enum.auto()   # < > <= >=
+    ADD_SUB    = enum.auto()   # + -
+    MULT_DIV   = enum.auto()   # * /
+    UNARY      = enum.auto()   # ! -
+    CALL       = enum.auto()   # . () []
+    PRIMARY    = enum.auto()
