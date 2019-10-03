@@ -29,6 +29,13 @@ class UnaryOp(ASTNode):
     operand: ASTNode
     operator: Token
 
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        if type(self.operand) == Primary:
+            return f'Unary {self.operator.value}({self.operand.pprint()})'
+        else:
+            return f'Unary {self.operator.value}(\n{indent(self.operand.pprint())}\n)'
+
 @dataclass
 class BinaryOp(ASTNode):
     left: ASTNode
@@ -39,12 +46,10 @@ class BinaryOp(ASTNode):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         left = self.left.pprint()
         right = self.right.pprint()
-        br = ''
-        if not (type(self.left) == type(self.right) == Primary):
-            left = indent(left)
-            right = indent(right)
-            br = '\n'
-        return f'Binary {self.operator.value} ({br}{left},{br}{right}{br})'
+        if (type(self.left) == type(self.right) == Primary):
+            return f'Binary {self.operator.value}({left}, {right})'
+        else:
+            return f'Binary {self.operator.value}(\n{indent(left)},\n{indent(right)}\n)'
 
 @dataclass
 class Assignment(ASTNode):
