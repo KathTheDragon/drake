@@ -46,8 +46,8 @@ class Precedence(enum.IntEnum):
     BIT_XOR    = enum.auto()   # bitwise ^
     BIT_AND    = enum.auto()   # bitwise &
     SHIFT      = enum.auto()   # >> <<
-    ADD_SUB    = enum.auto()   # + -
-    MULT_DIV   = enum.auto()   # * /
+    ADD        = enum.auto()   # + -
+    MULT       = enum.auto()   # * /
     EXP        = enum.auto()   # **
     UNARY      = enum.auto()   # ! -
     CALL       = enum.auto()   # . () []
