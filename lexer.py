@@ -71,22 +71,15 @@ class Token:
 ## Functions
 def lex(source):
     brackets = []
+    errors = []  # Temp thing for now
     for linenum, line in enumerate(source.splitlines()):
         for match in TOKEN_REGEX.finditer(line):
             type = match.lastgroup
             value = match.group()
             column = match.start()
-            if type == 'LBRACKET':
-                brackets.append(value)
-            elif type == 'RBRACKET':
-                if not brackets:
-                    raise DrakeSyntaxError(f'unexpected bracket', value, linenum, column)
-                bracket = brackets.pop()
-                if bracket+value not in ('()', '[]', '{}'):
-                    raise DrakeSyntaxError(f'mismatched brackets', value, linenum, column)
-            elif type in ('COMMENT', 'WHITESPACE'):
+            if type in ('COMMENT', 'WHITESPACE'):
                 continue
             elif type == 'UNKNOWN':
-                raise DrakeSyntaxError(f'unexpected character', value, linenum, column)
+                errors.append(DrakeSyntaxError(f'unexpected character(s)', value, linenum, column))
             yield Token(type, value, linenum, column)
         yield Token('NEWLINE', '', linenum, len(line))
