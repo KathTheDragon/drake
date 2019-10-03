@@ -5,9 +5,8 @@ from .exceptions import DrakeParserError
 class Parser():
     def __init__(self, tokens):
         self.tokens = tokens
-        self.current = next(tokens)
         self.next = next(tokens)
-        self.previous = None
+        self.current = None
 
         self.ast = []
 
@@ -18,9 +17,9 @@ class Parser():
         self.expression()
 
     def expression(self):
-        return self.parse_precedence(Precedence.ASSIGNMENT)
+        return self.parsePrecedence(Precedence.ASSIGNMENT)
 
-    def get_rule(self, token):
+    def getRule(self, token):
         from collections import namedtuple
         Rule = namedtuple('Rule', 'prefix infix precedence')
 
@@ -45,13 +44,13 @@ class Parser():
         self.expect(')')
 
     def unary(self):
-        self.parse_precedence(Precedence.UNARY)
+        self.parsePrecedence(Precedence.UNARY)
 
     def binary(self):
-        operator = self.previous
+        operator = self.current
 
-        rule_precedence = self.get_rule(operator).precedence
-        self.parse_precedence(rule_precedence + 1)
+        rule_precedence = self.getRule(operator).precedence
+        self.parsePrecedence(rule_precedence + 1)
 
         right = self.ast.pop()
         if not isinstance(right, ASTNode):
@@ -66,32 +65,31 @@ class Parser():
         self.ast.append(node)
 
     def primary(self):
-        self.ast.append(self.previous)
+        self.ast.append(self.current)
 
-    def parse_precedence(self, precedence):
+    def parsePrecedence(self, precedence):
         self.advance()
 
-        prefix = self.get_rule(self.previous).prefix
+        prefix = self.getRule(self.current).prefix
         if prefix is None:
-            raise DrakeParserError(f'expected expression, got `{self.previous.value}`', self.previous)
+            raise DrakeParserError(f'expected expression, got `{self.current.value}`', self.current)
 
         prefix()
 
-        while precedence <= self.get_rule(self.current).precedence:
+        while precedence <= self.getRule(self.next).precedence:
             self.advance()
-            self.get_rule(self.previous).infix()
+            self.getRule(self.current).infix()
 
 
     def advance(self):
-        self.previous = self.current
         self.current = self.next
         try:
             self.next = next(self.tokens)
         except StopIteration:
-            self.current = None
+            self.next = None
 
     def expect(self, value):
-        if self.current.value == value:
+        if self.next.value == value:
             self.advance()
         else:
-            raise DrakeParserError(f'expected `{value}`, got {self.current.value}', self.current)
+            raise DrakeParserError(f'expected `{value}`, got {self.next.value}', self.next)
