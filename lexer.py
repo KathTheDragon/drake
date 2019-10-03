@@ -42,7 +42,7 @@ TOKENS = {
     'COMMENT': r'//.*$',
     'ASSIGNMENT': r'[-+*/]?=(?!=)',
     'LAMBDA': r'->',
-    'OPERATOR': fr'[-+/&|^~:]|[<>!=]=|[*<>]{{1,2}}|\.\.|(?:{"|".join(KEYWORD_OPERATORS)})(?!\w)',
+    'OPERATOR': fr'[<>!=]=|[-+/&|^!:]|[*<>]{{1,2}}|\.\.|(?:{"|".join(KEYWORD_OPERATORS)})(?!\w)',
     'DOT': r'\.',
     'COMMA': r',',
     'LBRACKET': r'[([{]',
