@@ -35,13 +35,20 @@ class BinaryOp(ASTNode):
 
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
-    ASSIGNMENT = enum.auto()   # =
-    OR         = enum.auto()   # or
-    AND        = enum.auto()   # and
-    EQUALITY   = enum.auto()   # == !=
+    ASSIGNMENT = enum.auto()   # -> = += -= *= /=
+    OR         = enum.auto()   # boolean or
+    XOR        = enum.auto()   # boolean xor
+    AND        = enum.auto()   # boolean and
+    EQUALITY   = enum.auto()   # == != in is
     COMPARISON = enum.auto()   # < > <= >=
+    RANGE      = enum.auto()   # ..
+    BIT_OR     = enum.auto()   # bitwise |
+    BIT_XOR    = enum.auto()   # bitwise ^
+    BIT_AND    = enum.auto()   # bitwise &
+    SHIFT      = enum.auto()   # >> <<
     ADD_SUB    = enum.auto()   # + -
     MULT_DIV   = enum.auto()   # * /
+    EXP        = enum.auto()   # **
     UNARY      = enum.auto()   # ! -
     CALL       = enum.auto()   # . () []
     PRIMARY    = enum.auto()
