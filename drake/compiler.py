@@ -114,4 +114,4 @@ def compileASTNode(node, values, *scopes):
         for i, subnode in enumerate(node, 1):
             yield from compileASTNode(subnode, values, *scopes)
             if i != last:  # Last expression stays on the stack as the block's value
-                yield Op.POP
+                yield Op.POP,
