@@ -55,7 +55,6 @@ class BinaryOp(ASTNode):
 class Assignment(ASTNode):
     target: ASTNode
     expression: ASTNode
-    local: bool = True
 
     def pprint(self):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())

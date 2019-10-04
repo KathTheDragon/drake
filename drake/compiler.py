@@ -121,7 +121,7 @@ class ASTCompiler:
         target = node.target
         if isinstance(target, ast.Identifier):
             name = target.value.value
-            if node.local:
+            if target.local:
                 if name in localscope:
                     index = localscope.index(name)
                 else:
