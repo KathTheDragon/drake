@@ -17,9 +17,9 @@ try:
 
     if args.output:
         with open(args.output, 'w+') as f:
-            [f.write(node.pprint()) for node in ast]
+            f.write(ast.pprint())
     else:
-        [print(node.pprint()) for node in ast]
+        print(ast.pprint())
 
 except FileNotFoundError:
     print(f'Could not find `{args.file}`')

@@ -16,18 +16,25 @@ class Primary(ASTNode):
         return f'{self.value.type} {self.value.value}'
 
 @dataclass
-class Literal(ASTNode):
+class Literal(Primary):
     value: Token
 
 @dataclass
-class Identifier(ASTNode):
-    name: Token
+class Identifier(Primary):
+    value: Token
     local: bool = True
 
 @dataclass
 class UnaryOp(ASTNode):
-    operand: ASTNode
     operator: Token
+    operand: ASTNode
+
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        if isinstance(self.operand, Primary):
+            return f'Unary {self.operator.value} ({self.operand.pprint()})'
+        else:
+            return f'Unary {self.operator.value} (\n{indent(self.operand.pprint())}\n)'
 
 @dataclass
 class BinaryOp(ASTNode):
@@ -39,18 +46,25 @@ class BinaryOp(ASTNode):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         left = self.left.pprint()
         right = self.right.pprint()
-        br = ''
-        if not (type(self.left) == type(self.right) == Primary):
-            left = indent(left)
-            right = indent(right)
-            br = '\n'
-        return f'Binary {self.operator.value} ({br}{left},{br}{right}{br})'
+        if isinstance(self.left, Primary) and isinstance(self.right, Primary):
+            return f'Binary {self.operator.value} ({left}, {right})'
+        else:
+            return f'Binary {self.operator.value} (\n{indent(left)},\n{indent(right)}\n)'
 
 @dataclass
 class Assignment(ASTNode):
-    name: Token
+    name: ASTNode
     expression: ASTNode
     local: bool = True
+
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        name = self.name.pprint()
+        expression = self.expression.pprint()
+        if isinstance(self.name, Primary) and isinstance(self.expression, Primary):
+            return f'Assign ({name}, {expression})'
+        else:
+            return f'Assign (\n{indent(name)},\n{indent(expression)}\n)'
 
 @dataclass
 class Block(ASTNode):
@@ -58,6 +72,11 @@ class Block(ASTNode):
 
     def __iter__(self):
         yield from self.expressions
+
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        return '{\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
+            
 
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
