@@ -110,7 +110,7 @@ def compileASTNode(node, values, *scopes):
                 index = -1  # NameError, not in any scope
             yield Op.STORE_NONLOCAL, i, index
     elif isinstance(node, ast.Block):
-        last = len(nodes)
+        last = len(node)
         for i, subnode in enumerate(node, 1):
             yield from compileASTNode(subnode, values, *scopes)
             if i != last:  # Last expression stays on the stack as the block's value
