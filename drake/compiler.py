@@ -52,7 +52,7 @@ class Real:
 
 ## Functions
 def compileASTNode(node, values, *scopes):
-    import ast
+    from . import ast
     if not scopes:
         scopes = ([],)
     localscope = scopes[0]
