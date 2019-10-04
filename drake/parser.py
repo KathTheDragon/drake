@@ -1,5 +1,5 @@
 import ast
-from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary
+from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Assignment
 from .exceptions import DrakeParserError
 
 class Parser():
@@ -68,7 +68,18 @@ class Parser():
         }.get(token.value, Rule(None, None, Precedence.NONE))
 
     def assignment(self):
-        pass
+        self.parsePrecedence(Precedence.ASSIGNMENT)
+
+        expression = self.ast.pop()
+        if not isinstance(expression, ASTNode):
+            expression = Primary(expression)
+
+        name = self.ast.pop()
+        if not isinstance(name, ASTNode):
+            name = Primary(name)
+
+        node = Assignment(name, expression)
+        self.ast.append(node)
 
     def grouping(self):
         self.expression()

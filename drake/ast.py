@@ -53,9 +53,18 @@ class BinaryOp(ASTNode):
 
 @dataclass
 class Assignment(ASTNode):
-    name: Token
+    name: ASTNode
     expression: ASTNode
     local: bool = True
+
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        name = self.name.pprint()
+        expression = self.expression.pprint()
+        if (type(self.name) == type(self.expression) == Primary):
+            return f'Assign ({name}, {expression})'
+        else:
+            return f'Assign (\n{indent(name)},\n{indent(expression)}\n)'
 
 @dataclass
 class Block(ASTNode):
