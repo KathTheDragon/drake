@@ -6,8 +6,10 @@ from dataclasses import dataclass, field
 #   NOS = next (second) on stack
 #   3OS = third on stack
 NULLARY_OPS = [
+    'INVALID',
     # Program
     'NOP',
+    'HALT',
     'POP',
     # Arithmetic
     'NEGATION',
