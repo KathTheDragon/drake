@@ -1,6 +1,17 @@
 import ast
-from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Assignment, Block
+from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Literal, Identifier, Assignment, Block
+from .lexer import Token
 from .exceptions import DrakeParserError
+
+
+def makeASTNode(expression):
+    if isinstance(expression, Token):
+        if expression.type == 'IDENTIFIER':
+            return Identifier(expression)
+        elif expression.type in ('STRING', 'NUMBER'):
+            return Literal(expression)
+    else:
+        return Primary(expression)
 
 class Parser():
     def __init__(self, tokens):
@@ -95,11 +106,11 @@ class Parser():
 
         expression = self.stack.pop()
         if not isinstance(expression, ASTNode):
-            expression = Primary(expression)
+            expression = makeASTNode(expression)
 
         name = self.stack.pop()
         if not isinstance(name, ASTNode):
-            name = Primary(name)
+            name = makeASTNode(name)
 
         if operator.value[0] in '+-*/':
             expression = BinaryOp(name, operator, expression)
@@ -118,7 +129,7 @@ class Parser():
 
         operand = self.stack.pop()
         if not isinstance(operand, ASTNode):
-            operand = Primary(operand)
+            operand = makeASTNode(operand)
 
         node = UnaryOp(operator, operand)
         self.stack.append(node)
@@ -131,11 +142,11 @@ class Parser():
 
         right = self.stack.pop()
         if not isinstance(right, ASTNode):
-            right = Primary(right)
+            right = makeASTNode(right)
 
         left = self.stack.pop()
         if not isinstance(left, ASTNode):
-            left = Primary(left)
+            left = makeASTNode(left)
 
         node = BinaryOp(left, operator, right)
         self.stack.append(node)

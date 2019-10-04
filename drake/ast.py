@@ -16,12 +16,12 @@ class Primary(ASTNode):
         return f'{self.value.type} {self.value.value}'
 
 @dataclass
-class Literal(ASTNode):
+class Literal(Primary):
     value: Token
 
 @dataclass
-class Identifier(ASTNode):
-    name: Token
+class Identifier(Primary):
+    value: Token
     local: bool = True
 
 @dataclass
@@ -31,7 +31,7 @@ class UnaryOp(ASTNode):
 
     def pprint(self):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
-        if type(self.operand) == Primary:
+        if isinstance(self.operand, Primary):
             return f'Unary {self.operator.value} ({self.operand.pprint()})'
         else:
             return f'Unary {self.operator.value} (\n{indent(self.operand.pprint())}\n)'
@@ -46,7 +46,7 @@ class BinaryOp(ASTNode):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         left = self.left.pprint()
         right = self.right.pprint()
-        if (type(self.left) == type(self.right) == Primary):
+        if isinstance(self.left, Primary) and isinstance(self.right, Primary):
             return f'Binary {self.operator.value} ({left}, {right})'
         else:
             return f'Binary {self.operator.value} (\n{indent(left)},\n{indent(right)}\n)'
@@ -61,7 +61,7 @@ class Assignment(ASTNode):
         indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         name = self.name.pprint()
         expression = self.expression.pprint()
-        if (type(self.name) == type(self.expression) == Primary):
+        if isinstance(self.name, Primary) and isinstance(self.expression, Primary):
             return f'Assign ({name}, {expression})'
         else:
             return f'Assign (\n{indent(name)},\n{indent(expression)}\n)'
