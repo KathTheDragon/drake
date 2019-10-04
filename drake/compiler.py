@@ -67,7 +67,7 @@ def compileASTNode(node, values, *scopes):
         values.append(value)
         yield Op.LOAD_VALUE, index
     elif isinstance(node, ast.Identifier):
-        name = node.name.value
+        name = node.value.value
         if node.local:
             if name in localscope:
                 index = localscope.index(name)
