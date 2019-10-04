@@ -91,24 +91,28 @@ def compileASTNode(node, values, *scopes):
         yield from compileASTNode(node.left, values, *scopes)
         yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
     elif isinstance(node, ast.Assignment):
-        name = node.name.value
-        if node.local:
-            if name in localscope:
-                index = localscope.index(name)
         yield from compileASTNode(node.expression, values, *scopes)
+        target = node.target
+        if isinstance(target, ast.Identifier):
+            name = target.value.value
+            if node.local:
+                if name in localscope:
+                    index = localscope.index(name)
+                else:
+                    index = len(localscope)
+                    localscope.append(name)
+                yield Op.STORE_LOCAL, index
             else:
-                index = len(localscope)
-                localscope.append(name)
-            yield Op.STORE_LOCAL, index
+                for i, scope in enumerate(scopes[1:], 1):
+                    if name in scope:
+                        index = scope.index(name)
+                        break
+                else:
+                    i = -1
+                    index = -1  # NameError, not in any scope
+                yield Op.STORE_NONLOCAL, i, index
         else:
-            for i, scope in enumerate(scopes[1:], 1):
-                if name in scope:
-                    index = scope.index(name)
-                    break
-            else:
-                i = -1
-                index = -1  # NameError, not in any scope
-            yield Op.STORE_NONLOCAL, i, index
+            yield Op.INVALID,
     elif isinstance(node, ast.Block):
         last = len(node)
         for i, subnode in enumerate(node, 1):
