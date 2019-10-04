@@ -90,7 +90,8 @@ class Parser():
     def assignment(self):
         operator = self.current
 
-        self.parsePrecedence(Precedence.ASSIGNMENT)
+        rule_precedence = self.getRule(operator).precedence
+        self.parsePrecedence(rule_precedence + 1)
 
         expression = self.stack.pop()
         if not isinstance(expression, ASTNode):
@@ -100,7 +101,10 @@ class Parser():
         if not isinstance(name, ASTNode):
             name = Primary(name)
 
-        node = Assignment(name, operator, expression)
+        if operator.value[0] in '+-*/':
+            expression = BinaryOp(name, operator, expression)
+
+        node = Assignment(name, expression)
         self.stack.append(node)
 
     def grouping(self):
