@@ -9,22 +9,8 @@ NULLARY_OPS = [
     # Program
     'NOP',
     'POP',
-]
-UNARY_OPS = [
-    # Program
-    'LOAD_VALUE',
-    'LOAD_LOCAL',
-    'STORE_LOCAL',
-    # Operators
-    'NEGATION',
-    'BITWISE_NOT',
-    'BOOLEAN_NOT',
-]
-BINARY_OPS = [
-    # Program
-    'LOAD_NONLOCAL',
-    'STORE_NONLOCAL',
     # Arithmetic
+    'NEGATION',
     'ADD',
     'SUBTRACT',
     'MULTIPLY',
@@ -32,12 +18,14 @@ BINARY_OPS = [
     'MODULUS',
     'POWER',
     # Bitwise
+    'BITWISE_NOT',
     'BITWISE_AND',
     'BITWISE_OR',
     'BITWISE_XOR',
     'BITSHIFT_LEFT',
     'BITSHIFT_RIGHT',
     # Boolean
+    'BOOLEAN_NOT',
     'BOOLEAN_AND',
     'BOOLEAN_OR',
     'BOOLEAN_XOR',
@@ -56,9 +44,16 @@ BINARY_OPS = [
     # Misc
     'RANGE',
 ]
-TERNARY_OPS = [
+UNARY_OPS = [
+    'LOAD_VALUE',
+    'LOAD_LOCAL',
+    'STORE_LOCAL',
 ]
-OPS = NULLARY_OPS + UNARY_OPS + BINARY_OPS + TERNARY_OPS
+BINARY_OPS = [
+    'LOAD_NONLOCAL',
+    'STORE_NONLOCAL',
+]
+OPS = NULLARY_OPS + UNARY_OPS + BINARY_OPS
 
 ## Classes
 Op = enum.Enum('Op', ' '.join(OPS), start=0)
