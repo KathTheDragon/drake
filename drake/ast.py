@@ -24,6 +24,13 @@ class Identifier(Primary):
     value: Token
     local: bool = True
 
+    def pprint(self):
+        string = super().pprint()
+        if self.local:
+            return string
+        else:
+            return f'nonlocal {string}'
+
 @dataclass
 class UnaryOp(ASTNode):
     operator: Token
