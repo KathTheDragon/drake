@@ -1,5 +1,5 @@
 import ast
-from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Assignment
+from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Assignment, Block
 from .exceptions import DrakeParserError
 
 class Parser():
@@ -8,16 +8,35 @@ class Parser():
         self.next = next(tokens)
         self.current = None
 
-        self.ast = []
-
-        self.parse()
+        self.stack = []
+        self.ast = self.parse()
 
 
     def parse(self):
+        self.block()
+        return self.stack.pop()
+        
+    def block(self):
+        self.maybe(type='NEWLINE')
+
         self.expression()
+        expressions = [self.stack.pop()]
+
+        while self.next.type == 'NEWLINE':
+            self.expect(type='NEWLINE')
+            if self.next == None:
+                break
+            elif self.next.value == '}':
+                self.advance()
+                break
+
+            self.expression()
+            expressions.append(self.stack.pop())
+
+        self.stack.append(Block(expressions))
 
     def expression(self):
-        return self.parsePrecedence(Precedence.ASSIGNMENT)
+        self.parsePrecedence(Precedence.ASSIGNMENT)
 
     def getRule(self, token):
         from collections import namedtuple
@@ -30,6 +49,7 @@ class Parser():
             return Rule(self.primary, None, Precedence.PRIMARY)
 
         return {
+            '{':      Rule(self.block,    None,            Precedence.NONE      ),
             '(':      Rule(self.grouping, None,            Precedence.NONE      ),
             '!':      Rule(self.unary,    None,            Precedence.UNARY     ),
             'not':    Rule(self.unary,    None,            Precedence.UNARY     ),
@@ -72,32 +92,32 @@ class Parser():
 
         self.parsePrecedence(Precedence.ASSIGNMENT)
 
-        expression = self.ast.pop()
+        expression = self.stack.pop()
         if not isinstance(expression, ASTNode):
             expression = Primary(expression)
 
-        name = self.ast.pop()
+        name = self.stack.pop()
         if not isinstance(name, ASTNode):
             name = Primary(name)
 
-        self.ast.append(node)
         node = Assignment(name, operator, expression)
+        self.stack.append(node)
 
     def grouping(self):
         self.expression()
-        self.expect(')')
+        self.expect(value=')')
 
     def unary(self):
         operator = self.current
 
         self.parsePrecedence(Precedence.UNARY)
 
-        operand = self.ast.pop()
+        operand = self.stack.pop()
         if not isinstance(operand, ASTNode):
             operand = Primary(operand)
 
         node = UnaryOp(operator, operand)
-        self.ast.append(node)
+        self.stack.append(node)
 
     def binary(self):
         operator = self.current
@@ -105,19 +125,19 @@ class Parser():
         rule_precedence = self.getRule(operator).precedence
         self.parsePrecedence(rule_precedence + 1)
 
-        right = self.ast.pop()
+        right = self.stack.pop()
         if not isinstance(right, ASTNode):
             right = Primary(right)
 
-        left = self.ast.pop()
+        left = self.stack.pop()
         if not isinstance(left, ASTNode):
             left = Primary(left)
 
         node = BinaryOp(left, operator, right)
-        self.ast.append(node)
+        self.stack.append(node)
 
     def primary(self):
-        self.ast.append(self.current)
+        self.stack.append(self.current)
 
     def parsePrecedence(self, precedence):
         self.advance()
@@ -140,8 +160,16 @@ class Parser():
         except StopIteration:
             self.next = None
 
-    def expect(self, value):
+    def expect(self, value=None, type=None):
         if self.next.value == value:
             self.advance()
+        elif self.next.type == type:
+            self.advance()
         else:
-            raise DrakeParserError(f'expected `{value}`, got `{self.next.value}`', self.next)
+            raise DrakeParserError(f'expected `{type} {value}`, got `{self.next.type} {self.next.value}`', self.next)
+
+    def maybe(self, value=None, type=None):
+        if self.next.value == value:
+            self.advance()
+        elif self.next.type == type:
+            self.advance()

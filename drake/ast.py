@@ -74,6 +74,11 @@ class Block(ASTNode):
     def __iter__(self):
         yield from self.expressions
 
+    def pprint(self):
+        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
+        return '{\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
+            
+
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
     ASSIGNMENT = enum.auto()   # -> = += -= *= /=
