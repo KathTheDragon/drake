@@ -26,7 +26,7 @@ class Parser():
     def parse(self):
         self.block()
         return self.stack.pop()
-        
+
     def block(self):
         self.maybe(type='NEWLINE')
 
@@ -108,14 +108,14 @@ class Parser():
         if not isinstance(expression, ASTNode):
             expression = makeASTNode(expression)
 
-        name = self.stack.pop()
-        if not isinstance(name, ASTNode):
-            name = makeASTNode(name)
+        target = self.stack.pop()
+        if not isinstance(target, ASTNode):
+            target = makeASTNode(target)
 
         if operator.value[0] in '+-*/':
-            expression = BinaryOp(name, operator, expression)
+            expression = BinaryOp(target, operator, expression)
 
-        node = Assignment(name, expression)
+        node = Assignment(target, expression)
         self.stack.append(node)
 
     def grouping(self):
