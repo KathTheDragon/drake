@@ -43,7 +43,7 @@ BINARY_OPS = [
     'BOOLEAN_XOR',
     # Comparison
     'IS',
-    'IS_NOT'
+    'IS_NOT',
     'EQUALS',
     'NOT_EQUALS',
     'LESS_THAN',
