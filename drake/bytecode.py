@@ -1,16 +1,19 @@
 import enum
 from dataclasses import dataclass, field
 
-# Abbreviations:
-#   TOS = top of stack
-#   NOS = next (second) on stack
-#   3OS = third on stack
-NULLARY_OPS = [
+OPS = [
     'INVALID',
     # Program
     'NOP',
     'HALT',
+    # Stack
     'POP',
+    # Memory
+    'LOAD_VALUE',
+    'LOAD_LOCAL',
+    'STORE_LOCAL',
+    'LOAD_NONLOCAL',
+    'STORE_NONLOCAL',
     # Arithmetic
     'NEGATION',
     'ADD',
@@ -46,19 +49,16 @@ NULLARY_OPS = [
     # Misc
     'RANGE',
 ]
-UNARY_OPS = [
-    'LOAD_VALUE',
-    'LOAD_LOCAL',
-    'STORE_LOCAL',
-]
-BINARY_OPS = [
-    'LOAD_NONLOCAL',
-    'STORE_NONLOCAL',
-]
-OPS = NULLARY_OPS + UNARY_OPS + BINARY_OPS
+OP_LENGTHS = {
+    'LOAD_VALUE': 2,
+    'LOAD_LOCAL': 2,
+    'STORE_LOCAL': 2,
+    'LOAD_NONLOCAL': 3,
+    'STORE_NONLOCAL': 3,
+}
 
 ## Classes
-Op = enum.Enum('Op', ' '.join(OPS), start=0)
+Op = enum.Enum('Op', ' '.join(OPS), start=-1)
 
 class Bytecode(bytearray):
     def __repr__(self):
@@ -70,13 +70,7 @@ class Bytecode(bytearray):
         bytecode = Bytecode()
         for instruction in instructions:
             op = instruction[0]
-            opname = op._name_
-            if opname in NULLARY_OPS:
-                oplength = 1
-            elif opname in UNARY_OPS:
-                oplength = 2
-            elif opname in BINARY_OPS:
-                oplength = 3
+            oplength = OP_LENGTHS.get(op._name_, 1)
             if oplength == len(instruction):
                 bytecode.append(op._value_)
                 bytecode.extend(instruction[1:])
@@ -86,13 +80,7 @@ class Bytecode(bytearray):
         ip = 0
         while ip < len(self):
             op = Op(self[ip])
-            opname = op._name_
-            if opname in NULLARY_OPS:
-                oplength = 1
-            elif opname in UNARY_OPS:
-                oplength = 2
-            elif opname in BINARY_OPS:
-                oplength = 3
+            oplength = OP_LENGTHS.get(op._name_, 1)
             nextip = ip + oplength
             args = self[ip+1:nextip]
             ip = nextip
