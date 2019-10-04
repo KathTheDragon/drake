@@ -72,8 +72,6 @@ def assemble(instructions):
             oplength = 2
         elif opname in BINARY_OPS:
             oplength = 3
-        elif opname in TERNARY_OPS:
-            oplength = 4
         if oplength == len(instruction):
             bytecode.append(op._value_)
             bytecode.extend(instruction[1:])
@@ -90,8 +88,6 @@ def disassemble(bytecode):
             oplength = 2
         elif opname in BINARY_OPS:
             oplength = 3
-        elif opname in TERNARY_OPS:
-            oplength = 4
         nextip = ip + oplength
         args = bytecode[ip+1:nextip]
         ip = nextip
