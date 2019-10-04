@@ -84,12 +84,12 @@ def compileASTNode(node, values, *scopes):
                 index = -1  # NameError, not in any scope
             yield Op.LOAD_NONLOCAL, i, index
     elif isinstance(node, ast.UnaryOp):
-        yield UNARY_OPS.get(node.operator.value, -1)  # InvalidOperatorError
         yield from compileASTNode(node.operand, values, *scopes)
+        yield UNARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
     elif isinstance(node, ast.BinaryOp):
-        yield BINARY_OPS.get(node.operator.value, -1)  # InvalidOperatorError
         yield from compileASTNode(node.right, values, *scopes)
         yield from compileASTNode(node.left, values, *scopes)
+        yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
     elif isinstance(node, ast.Assignment):
         name = node.name.value
         if node.local:
