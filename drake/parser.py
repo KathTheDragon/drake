@@ -68,6 +68,8 @@ class Parser():
         }.get(token.value, Rule(None, None, Precedence.NONE))
 
     def assignment(self):
+        operator = self.current
+
         self.parsePrecedence(Precedence.ASSIGNMENT)
 
         expression = self.ast.pop()
@@ -78,8 +80,8 @@ class Parser():
         if not isinstance(name, ASTNode):
             name = Primary(name)
 
-        node = Assignment(name, expression)
         self.ast.append(node)
+        node = Assignment(name, operator, expression)
 
     def grouping(self):
         self.expression()

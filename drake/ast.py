@@ -54,6 +54,7 @@ class BinaryOp(ASTNode):
 @dataclass
 class Assignment(ASTNode):
     name: ASTNode
+    operator: Token
     expression: ASTNode
     local: bool = True
 
@@ -62,9 +63,9 @@ class Assignment(ASTNode):
         name = self.name.pprint()
         expression = self.expression.pprint()
         if (type(self.name) == type(self.expression) == Primary):
-            return f'Assign ({name}, {expression})'
+            return f'Assign {self.operator.value} ({name}, {expression})'
         else:
-            return f'Assign (\n{indent(name)},\n{indent(expression)}\n)'
+            return f'Assign {self.operator.value} (\n{indent(name)},\n{indent(expression)}\n)'
 
 @dataclass
 class Block(ASTNode):
