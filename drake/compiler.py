@@ -76,7 +76,7 @@ def compileASTNode(node, values, *scopes):
             yield Op.LOAD_LOCAL, index
         else:
             for i, scope in enumerate(scopes[1:], 1):
-                if name in frame:
+                if name in scope:
                     index = scope.index(name)
                     break
             else:
@@ -84,25 +84,25 @@ def compileASTNode(node, values, *scopes):
                 index = -1  # NameError, not in any scope
             yield Op.LOAD_NONLOCAL, i, index
     elif isinstance(node, ast.UnaryOp):
-        yield from compileASTNode(node.operand, values, *frames)
         yield UNARY_OPS.get(node.operator.value, -1)  # InvalidOperatorError
+        yield from compileASTNode(node.operand, values, *scopes)
     elif isinstance(node, ast.BinaryOp):
-        yield from compileASTNode(node.right, values, *frames)
-        yield from compileASTNode(node.left, values, *frames)
         yield BINARY_OPS.get(node.operator.value, -1)  # InvalidOperatorError
+        yield from compileASTNode(node.right, values, *scopes)
+        yield from compileASTNode(node.left, values, *scopes)
     elif isinstance(node, ast.Assignment):
-        yield from compileASTNode(node.expression, values, *frames)
         name = node.name.value
         if node.local:
             if name in localscope:
                 index = localscope.index(name)
+        yield from compileASTNode(node.expression, values, *scopes)
             else:
                 index = len(localscope)
                 localscope.append(name)
             yield Op.STORE_LOCAL, index
         else:
             for i, scope in enumerate(scopes[1:], 1):
-                if name in frame:
+                if name in scope:
                     index = scope.index(name)
                     break
             else:
@@ -112,6 +112,6 @@ def compileASTNode(node, values, *scopes):
     elif isinstance(node, ast.Block):
         last = len(nodes)
         for i, subnode in enumerate(node, 1):
-            yield from compileASTNode(subnode, values, *frames)
+            yield from compileASTNode(subnode, values, *scopes)
             if i != last:  # Last expression stays on the stack as the block's value
                 yield Op.POP
