@@ -142,4 +142,4 @@ class Parser():
         if self.next.value == value:
             self.advance()
         else:
-            raise DrakeParserError(f'expected `{value}`, got {self.next.value}', self.next)
+            raise DrakeParserError(f'expected `{value}`, got `{self.next.value}`', self.next)
