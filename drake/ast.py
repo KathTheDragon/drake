@@ -8,10 +8,17 @@ def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
 def isprimary(*nodes):
-    return all(isinstance(node, (LiteralNode, IdentifierNode, str)) for node in nodes)
+    return all(isinstance(node, (LiteralNode, IdentifierNode, list)) for node in nodes)
 
 def pprint(name, *args):
-    argstrings = [(arg.pprint() if isinstance(arg, ASTNode) else arg) for arg in args]
+    argstrings = []
+    for arg in args:
+        if isinstance(arg, ASTNode):
+            argstrings.append(arg.pprint())
+        elif isinstance(arg, list):
+            argstrings.append(f'({", ".join(item.value for item in arg)})')
+        else:
+            argstrings.append(arg)
     if isprimary(*args):
         return f'{name} (\n{",\n".join((indent(arg) for arg in argstrings))}\n)'
     else:
