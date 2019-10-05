@@ -7,6 +7,9 @@ from .lexer import Token
 def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
+def isprimary(*nodes):
+    return all(isinstance(node, (PrimaryNode, str)) for node in nodes)
+
 def pprint(name, *args):
     argstrings = [(arg.pprint() if isinstance(arg, ASTNode) else arg) for arg in args]
     if isprimary(*args):
