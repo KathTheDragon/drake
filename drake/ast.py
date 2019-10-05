@@ -18,7 +18,7 @@ def pprint(name, *args):
         return f'{name} ( {', '.join(argstrings)} )'
 
 ## Enums
-class Types(enum.Enum):
+class Type(enum.Enum):
     INVALID = enum.auto()
     BOOLEAN = enum.auto()
     STRING = enum.auto()
@@ -36,7 +36,7 @@ class Types(enum.Enum):
 
 ## Classes
 class ASTNode:
-    type: Types = field(init=False)
+    type: Type = field(init=False)
 
     def __post_init__(self):
         self.type = self.getType()
