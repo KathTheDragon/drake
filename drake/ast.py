@@ -73,16 +73,31 @@ class IdentifierNode(ASTNode):
             return f'nonlocal Identifier {self.name.value}'
 
 @dataclass
-class ListNode(ASTNode):
+class SequenceNode(ASTNode):
     items: List[ASTNode]
 
-@dataclass
-class TupleNode(ASTNode):
-    items: List[ASTNode]
+    def pprint(self):
+        return pprint(self.__class__.__name__[:-4], *self.items)
 
 @dataclass
-class MapNode(ASTNode):
-    items: List[Tuple[ASTNode, ASTNode]]
+class ListNode(SequenceNode):
+    pass
+
+@dataclass
+class TupleNode(SequenceNode):
+    pass
+
+@dataclass
+class PairNode(ASTNode):
+    name: ASTNode
+    value: ASTNode
+
+    def pprint():
+        pprint('Pair', self.name, self.value)
+
+@dataclass
+class MapNode(SequenceNode):
+    items: List[PairNode]
 
 @dataclass
 class UnaryOpNode(ASTNode):
