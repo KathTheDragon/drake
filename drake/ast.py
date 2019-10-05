@@ -8,7 +8,7 @@ def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
 def isprimary(*nodes):
-    return all(isinstance(node, (PrimaryNode, str)) for node in nodes)
+    return all(isinstance(node, (LiteralNode, IdentifierNode, str)) for node in nodes)
 
 def pprint(name, *args):
     argstrings = [(arg.pprint() if isinstance(arg, ASTNode) else arg) for arg in args]
@@ -47,29 +47,23 @@ class ASTNode:
     def pprint(self):
         raise NotImplementedError
 
-# Deprecate Primary in favour of Literal and Identifier
 @dataclass
-class PrimaryNode(ASTNode):
+class LiteralNode(ASTNode):
     value: Token
 
     def pprint(self):
         return f'{self.value.type.capitalise()} {self.value.value}'
 
 @dataclass
-class LiteralNode(PrimaryNode):
-    value: Token
-
-@dataclass
-class IdentifierNode(PrimaryNode):
-    value: Token
+class IdentifierNode(ASTNode):
+    name: Token
     local: bool = True
 
     def pprint(self):
-        string = super().pprint()
         if self.local:
-            return string
+            return f'Identifier {self.name.value}'
         else:
-            return f'nonlocal {string}'
+            return f'nonlocal Identifier {self.name.value}'
 
 @dataclass
 class ListNode(ASTNode):

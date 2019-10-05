@@ -4,7 +4,6 @@ from .ast import (
     ASTNode,
     UnaryOpNode,
     BinaryOpNode,
-    PrimaryNode,
     LiteralNode,
     IdentifierNode,
     AssignmentNode,
@@ -21,7 +20,7 @@ def makeASTNode(expression):
         elif expression.type in ('STRING', 'NUMBER'):
             return LiteralNode(expression)
     else:
-        return PrimaryNode(expression)
+        return ASTNode(expression)  # This was a PrimaryNode - why?
 
 class Parser():
     def __init__(self, tokens):
