@@ -3,7 +3,15 @@ from dataclasses import dataclass
 from typing import List
 from .lexer import Token
 
-class ASTNode():
+class ASTNode:
+    type: Types = field(init=False)
+
+    def __post_init__(self):
+        self.type = self.getType()
+
+    def getType(self):
+        return Type.INVALID
+
     def pprint(self):
         raise NotImplementedError
 
