@@ -1,5 +1,5 @@
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 from .lexer import Token
 
