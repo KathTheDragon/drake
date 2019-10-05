@@ -136,8 +136,7 @@ class KeywordNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
-        name = self.__class__.__name__[:-4]
-        return pprint(name, self.expression)
+        return pprint(self.__class__.__name__[:-4], self.expression)
 
 class KeywordOptionalNode(KeywordNode):
     expression: Optional[ASTNode]
