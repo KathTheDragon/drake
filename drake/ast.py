@@ -7,6 +7,12 @@ from .lexer import Token
 def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
+def pprint(name, *args, inline=False):
+    if inline:
+        return f'{name} ( {', '.join(args)} )'
+    else:
+        return f'{name} (\n{',\n'.join(args)}\n)'
+
 ## Enums
 class Types(enum.Enum):
     INVALID = enum.auto()
@@ -53,10 +59,10 @@ class UnaryOpNode(ASTNode):
     operand: ASTNode
 
     def pprint(self):
-        if isinstance(self.operand, Primary):
-            return f'Unary {self.operator.value} ({self.operand.pprint()})'
-        else:
-            return f'Unary {self.operator.value} (\n{indent(self.operand.pprint())}\n)'
+        name = f'Unary {self.operator.value}'
+        operand = self.operand.pprint()
+        inline = isinstance(self.operand, PrimaryNode)
+        return pprint(name, operand, inline=inline)
 
 @dataclass
 class BinaryOpNode(ASTNode):
@@ -65,12 +71,11 @@ class BinaryOpNode(ASTNode):
     right: ASTNode
 
     def pprint(self):
+        name = f'Binary {self.operator.value}'
         left = self.left.pprint()
         right = self.right.pprint()
-        if isinstance(self.left, Primary) and isinstance(self.right, Primary):
-            return f'Binary {self.operator.value} ({left}, {right})'
-        else:
-            return f'Binary {self.operator.value} (\n{indent(left)},\n{indent(right)}\n)'
+        inline = isinstance(self.left, PrimaryNode) and isinstance(self.right, PrimaryNode)
+        return pprint(name, *args, inline=inline)
 
 @dataclass
 class AssignmentNode(ASTNode):
@@ -80,10 +85,8 @@ class AssignmentNode(ASTNode):
     def pprint(self):
         target = self.target.pprint()
         expression = self.expression.pprint()
-        if isinstance(self.target, Primary) and isinstance(self.expression, Primary):
-            return f'Assign ({target}, {expression})'
-        else:
-            return f'Assign (\n{indent(target)},\n{indent(expression)}\n)'
+        inline = isinstance(self.target, PrimaryNode) and isinstance(self.expression, PrimaryNode)
+        return pprint('Assign', target, expression, inline=inline)
 
 @dataclass
 class BlockNode(ASTNode):
