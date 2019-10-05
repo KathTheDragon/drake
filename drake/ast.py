@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 from .lexer import Token
 
 ## Helper functions
@@ -17,6 +17,7 @@ def pprint(name, *args, inline=False):
 class Types(enum.Enum):
     INVALID = enum.auto()
 
+## Classes
 class ASTNode:
     type: Types = field(init=False)
 
@@ -54,6 +55,18 @@ class IdentifierNode(PrimaryNode):
             return f'nonlocal {string}'
 
 @dataclass
+class ListNode(ASTNode):
+    items: List[ASTNode]
+
+@dataclass
+class TupleNode(ASTNode):
+    items: List[ASTNode]
+
+@dataclass
+class MapNode(ASTNode):
+    items: List[Tuple[ASTNode, ASTNode]]
+
+@dataclass
 class UnaryOpNode(ASTNode):
     operator: Token
     operand: ASTNode
@@ -76,6 +89,98 @@ class BinaryOpNode(ASTNode):
         right = self.right.pprint()
         inline = isinstance(self.left, PrimaryNode) and isinstance(self.right, PrimaryNode)
         return pprint(name, *args, inline=inline)
+
+@dataclass
+class SubscriptNode(ASTNode):
+    container: ASTNode
+    subscript: ASTNode
+
+    def pprint(self):
+        container = self.container.pprint()
+        subscript = self.subscript.pprint()
+        inline = isinstance(self.container, PrimaryNode) and isinstance(self.subscript, PrimaryNode)
+        return pprint('Subscript', container, subscript, inline=inline)
+
+@dataclass
+class AttrLookupNode(ASTNode):
+    obj: ASTNode
+    attribute: IdentifierNode
+
+    def pprint(self):
+        obj = self.obj.pprint()
+        attribute = self.attribute.pprint()
+        inline = isinstance(self.obj, PrimaryNode)
+        return pprint('AttrLookup', obj, attribute, inline=inline)
+
+class IterNode(ASTNode):
+    expression: ASTNode
+
+    def pprint(self):
+        expression = self.expression.pprint()
+        inline = isinstance(self.expression, PrimaryNode)
+        return pprint('iter', expression, inline=inline)
+
+class ReturnNode(ASTNode):
+    expression: Optional[ASTNode]
+
+    def pprint(self):
+        if expression is None:
+            return 'return'
+        else:
+            expression = self.expression.pprint()
+            inline = isinstance(self.expression, PrimaryNode)
+            return pprint('return', expression, inline=inline)
+
+class BreakNode(ASTNode):
+    expression: Optional[ASTNode]
+
+    def pprint(self):
+        if expression is None:
+            return 'break'
+        else:
+            expression = self.expression.pprint()
+            inline = isinstance(self.expression, PrimaryNode)
+            return pprint('break', expression, inline=inline)
+
+class ContinueNode(ASTNode):
+    expression: Optional[ASTNode]
+
+    def pprint(self):
+        if expression is None:
+            return 'continue'
+        else:
+            expression = self.expression.pprint()
+            inline = isinstance(self.expression, PrimaryNode)
+            return pprint('continue', expression, inline=inline)
+
+class YieldNode(ASTNode):
+    expression: ASTNode
+
+    def pprint(self):
+        expression = self.expression.pprint()
+        inline = isinstance(self.expression, PrimaryNode)
+        return pprint('yield', expression, inline=inline)
+
+class YieldFromNode(ASTNode):
+    expression: ASTNode
+
+    def pprint(self):
+        expression = self.expression.pprint()
+        inline = isinstance(self.expression, PrimaryNode)
+        return pprint('yield from', expression, inline=inline)
+
+@dataclass
+class LambdaNode(ASTNode):
+    params: List[Token]
+    returns: ASTNode
+
+    def pprint(self):
+        name = self.__class__.__name__[:-4]
+        params = ', '.join(param.value for param in self.params) or '()'
+        if ',' in params:
+            params = f'({params})'
+        returns = self.returns.pprint()
+        return pprint(name, params, returns)
 
 @dataclass
 class AssignmentNode(ASTNode):
@@ -101,6 +206,67 @@ class BlockNode(ASTNode):
     def pprint(self):
         return '{\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
 
+@dataclass
+class ClassNode(LambdaNode):
+    returns: BlockNode
+
+@dataclass
+class InterfaceNode(ASTNode):
+    body: BlockNode
+
+    def pprint(self):
+        return f'Interface ({self.body.pprint()[1:-1]})'
+
+class ExceptionNode(ClassNode):
+    pass
+
+class CaseNode(ASTNode):
+    var: IdentifierNode
+    cases: MapNode
+    default: Optional[ASTNode]
+
+    def pprint(self):
+        var = self.var.pprint()
+        cases = self.cases.pprint()
+        if self.default is None:  # No else
+            return pprint('Case', var, cases)
+        else:
+            default = self.default.pprint()
+            return pprint('Case', var, cases, default)
+
+class IfNode(ASTNode):
+    condition: ASTNode
+    then: ASTNode
+    default: Optional[ASTNode]
+
+    def pprint(self):
+        condition = self.condition.pprint()
+        then = self.then.pprint()
+        if self.default is None:  # No else
+            return pprint('If', condition, then)
+        else:
+            default = self.default.pprint()
+            return pprint('If', condition, then, default)
+
+class ForNode(ASTNode):
+    vars: List[Tokens]
+    container: ASTNode
+    body: BlockNode
+
+    def pprint(self):
+        vars = ', '.join(vars.value for var in self.vars) or '()'
+        container = self.container.pprint()
+        body = self.body.pprint()
+        return pprint('For', vars, container, body)
+
+class WhileNode(ASTNode):
+    condition: ASTNode
+    body: BlockNode
+
+    def pprint(self):
+        condition = self.condition.pprint()
+        body = self.body.pprint()
+        return pprint('While', condition, body)
 
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
