@@ -7,6 +7,10 @@ from .lexer import Token
 def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
+## Enums
+class Types(enum.Enum):
+    INVALID = enum.auto()
+
 class ASTNode:
     type: Types = field(init=False)
 
