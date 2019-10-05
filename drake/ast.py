@@ -171,11 +171,7 @@ class LambdaNode(ASTNode):
     returns: ASTNode
 
     def pprint(self):
-        name = self.__class__.__name__[:-4]
-        params = ', '.join(param.value for param in self.params) or '()'
-        if ',' in params:
-            params = f'({params})'
-        return pprint(name, params, self.returns)
+        return pprint(self.__class__.__name__[:-4], self.params, self.returns)
 
 @dataclass
 class AssignmentNode(ASTNode):
@@ -240,8 +236,7 @@ class ForNode(ASTNode):
     body: BlockNode
 
     def pprint(self):
-        vars = ', '.join(vars.value for var in self.vars) or '()'
-        return pprint('For', vars, self.container, self.body)
+        return pprint('For', self.vars, self.container, self.body)
 
 class WhileNode(ASTNode):
     condition: ASTNode
