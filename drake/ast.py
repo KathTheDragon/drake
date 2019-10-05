@@ -38,11 +38,11 @@ class PrimaryNode(ASTNode):
         return f'{self.value.type} {self.value.value}'
 
 @dataclass
-class LiteralNode(Primary):
+class LiteralNode(PrimaryNode):
     value: Token
 
 @dataclass
-class IdentifierNode(Primary):
+class IdentifierNode(PrimaryNode):
     value: Token
     local: bool = True
 
