@@ -38,7 +38,7 @@ KEYWORD_OPERATORS = [
     'or',
     'xor',
 ]
-STRING = r'([^\\\n]|\\.)*?'
+STRING = r'(?:[^\\\n]|\\.)*?'
 TOKENS = {
     'COMMENT': r'//.*$',
     'ASSIGNMENT': r'[-+*/]?=(?!=)',
