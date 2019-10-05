@@ -13,9 +13,9 @@ def isprimary(*nodes):
 def pprint(name, *args):
     argstrings = [(arg.pprint() if isinstance(arg, ASTNode) else arg) for arg in args]
     if isprimary(*args):
-        return f'{name} (\n{',\n'.join((indent(arg) for arg in argstrings))}\n)'
+        return f'{name} (\n{",\n".join((indent(arg) for arg in argstrings))}\n)'
     else:
-        return f'{name} ( {', '.join(argstrings)} )'
+        return f'{name} ( {", ".join(argstrings)} )'
 
 ## Enums
 class Type(enum.Enum):
