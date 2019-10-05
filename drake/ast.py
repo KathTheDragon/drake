@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from typing import List
 from .lexer import Token
 
+## Helper functions
+def indent(string):
+    return '\n'.join('  '+line for line in string.splitlines())
+
 class ASTNode:
     type: Types = field(init=False)
 
@@ -45,7 +49,6 @@ class UnaryOpNode(ASTNode):
     operand: ASTNode
 
     def pprint(self):
-        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         if isinstance(self.operand, Primary):
             return f'Unary {self.operator.value} ({self.operand.pprint()})'
         else:
@@ -58,7 +61,6 @@ class BinaryOpNode(ASTNode):
     right: ASTNode
 
     def pprint(self):
-        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         left = self.left.pprint()
         right = self.right.pprint()
         if isinstance(self.left, Primary) and isinstance(self.right, Primary):
@@ -72,7 +74,6 @@ class AssignmentNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
-        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         target = self.target.pprint()
         expression = self.expression.pprint()
         if isinstance(self.target, Primary) and isinstance(self.expression, Primary):
@@ -91,7 +92,6 @@ class BlockNode(ASTNode):
         return len(self.expressions)
 
     def pprint(self):
-        indent = lambda s: '\n'.join('  '+line for line in s.splitlines())
         return '{\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
 
 
