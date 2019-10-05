@@ -9,18 +9,18 @@ class ASTNode():
 
 # Deprecate Primary in favour of Literal and Identifier
 @dataclass
-class Primary(ASTNode):
+class PrimaryNode(ASTNode):
     value: Token
 
     def pprint(self):
         return f'{self.value.type} {self.value.value}'
 
 @dataclass
-class Literal(Primary):
+class LiteralNode(Primary):
     value: Token
 
 @dataclass
-class Identifier(Primary):
+class IdentifierNode(Primary):
     value: Token
     local: bool = True
 
@@ -32,7 +32,7 @@ class Identifier(Primary):
             return f'nonlocal {string}'
 
 @dataclass
-class UnaryOp(ASTNode):
+class UnaryOpNode(ASTNode):
     operator: Token
     operand: ASTNode
 
@@ -44,7 +44,7 @@ class UnaryOp(ASTNode):
             return f'Unary {self.operator.value} (\n{indent(self.operand.pprint())}\n)'
 
 @dataclass
-class BinaryOp(ASTNode):
+class BinaryOpNode(ASTNode):
     left: ASTNode
     operator: Token
     right: ASTNode
@@ -59,7 +59,7 @@ class BinaryOp(ASTNode):
             return f'Binary {self.operator.value} (\n{indent(left)},\n{indent(right)}\n)'
 
 @dataclass
-class Assignment(ASTNode):
+class AssignmentNode(ASTNode):
     target: ASTNode
     expression: ASTNode
 
@@ -73,7 +73,7 @@ class Assignment(ASTNode):
             return f'Assign (\n{indent(target)},\n{indent(expression)}\n)'
 
 @dataclass
-class Block(ASTNode):
+class BlockNode(ASTNode):
     expressions: List[ASTNode]
 
     def __iter__(self):

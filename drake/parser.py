@@ -1,5 +1,15 @@
 import ast
-from .ast import Precedence, ASTNode, UnaryOp, BinaryOp, Primary, Literal, Identifier, Assignment, Block
+from .ast import (
+    Precedence,
+    ASTNode,
+    UnaryOpNode,
+    BinaryOpNode,
+    PrimaryNode,
+    LiteralNode,
+    IdentifierNode,
+    AssignmentNode,
+    BlockNode
+)
 from .lexer import Token
 from .exceptions import DrakeParserError
 
@@ -7,11 +17,11 @@ from .exceptions import DrakeParserError
 def makeASTNode(expression):
     if isinstance(expression, Token):
         if expression.type == 'IDENTIFIER':
-            return Identifier(expression)
+            return IdentifierNode(expression)
         elif expression.type in ('STRING', 'NUMBER'):
-            return Literal(expression)
+            return LiteralNode(expression)
     else:
-        return Primary(expression)
+        return PrimaryNode(expression)
 
 class Parser():
     def __init__(self, tokens):
@@ -44,7 +54,7 @@ class Parser():
             self.expression()
             expressions.append(self.stack.pop())
 
-        self.stack.append(Block(expressions))
+        self.stack.append(BlockNode(expressions))
 
     def expression(self):
         self.parsePrecedence(Precedence.ASSIGNMENT)
@@ -113,9 +123,9 @@ class Parser():
             target = makeASTNode(target)
 
         if operator.value[0] in '+-*/':
-            expression = BinaryOp(target, operator, expression)
+            expression = BinaryOpNode(target, operator, expression)
 
-        node = Assignment(target, expression)
+        node = AssignmentNode(target, expression)
         self.stack.append(node)
 
     def grouping(self):
@@ -131,7 +141,7 @@ class Parser():
         if not isinstance(operand, ASTNode):
             operand = makeASTNode(operand)
 
-        node = UnaryOp(operator, operand)
+        node = UnaryOpNode(operator, operand)
         self.stack.append(node)
 
     def binary(self):
@@ -148,7 +158,7 @@ class Parser():
         if not isinstance(left, ASTNode):
             left = makeASTNode(left)
 
-        node = BinaryOp(left, operator, right)
+        node = BinaryOpNode(left, operator, right)
         self.stack.append(node)
 
     def primary(self):

@@ -71,12 +71,12 @@ class ASTCompiler:
 
     def compileNode(self, node, values, *scopes):
         type = node.__class__.__name__
-        yield from getattr(self, f'compile{type}', 'compileInvalid')(node, values, *scopes)
+        yield from getattr(self, f'compile{type}', 'compileInvalidNode')(node, values, *scopes)
 
-    def compileInvalid(self, node, values, *scopes):
+    def compileInvalidNode(self, node, values, *scopes):
         yield Op.INVALID,  # InvalidNodeError
 
-    def compileLiteral(self, node, values, *scopes):
+    def compileLiteralNode(self, node, values, *scopes):
         type, value = node.value
         if type == 'NUMBER':
             if '.' in value:  # Real
@@ -87,7 +87,7 @@ class ASTCompiler:
         values.append(value)
         yield Op.LOAD_VALUE, index
 
-    def compileIdentifier(self, node, values, *scopes):
+    def compileIdentifierNode(self, node, values, *scopes):
         localscope = scopes[0]
         name = node.value.value
         if node.local:
@@ -106,16 +106,16 @@ class ASTCompiler:
                 index = -1  # NameError, not in any scope
             yield Op.LOAD_NONLOCAL, i, index
 
-    def compileUnaryOp(self, node, values, *scopes):
+    def compileUnaryOpNode(self, node, values, *scopes):
         yield from self.compileNode(node.operand, values, *scopes)
         yield UNARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
 
-    def compileBinaryOp(self, node, values, *scopes):
+    def compileBinaryOpNode(self, node, values, *scopes):
         yield from self.compileNode(node.right, values, *scopes)
         yield from self.compileNode(node.left, values, *scopes)
         yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
 
-    def compileAssignment(self, node, values, *scopes):
+    def compileAssignmentNode(self, node, values, *scopes):
         localscope = scopes[0]
         yield from self.compileNode(node.expression, values, *scopes)
         target = node.target
@@ -140,7 +140,7 @@ class ASTCompiler:
         else:
             yield Op.INVALID,
 
-    def compileBlock(self, node, values, *scopes):
+    def compileBlockNode(self, node, values, *scopes):
         last = len(node)
         for i, subnode in enumerate(node, 1):
             yield from self.compileNode(subnode, values, *scopes)
