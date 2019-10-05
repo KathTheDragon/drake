@@ -20,6 +20,19 @@ def pprint(name, *args):
 ## Enums
 class Types(enum.Enum):
     INVALID = enum.auto()
+    BOOLEAN = enum.auto()
+    STRING = enum.auto()
+    INTEGER = enum.auto()
+    DECIMAL = enum.auto()
+    COMPLEX = enum.auto()
+    TUPLE = enum.auto()
+    LIST = enum.auto()
+    MAP = enum.auto()
+    ITERATOR = enum.auto()  # Result of iter <Sequence>
+    LAMBDA = enum.auto()
+    CLASS = enum.auto()
+    INTERFACE = enum.auto()
+    EXCEPTION = enum.auto()
 
 ## Classes
 class ASTNode:
