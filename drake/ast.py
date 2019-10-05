@@ -7,11 +7,12 @@ from .lexer import Token
 def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
-def pprint(name, *args, inline=False):
-    if inline:
-        return f'{name} ( {', '.join(args)} )'
+def pprint(name, *args):
+    argstrings = [(arg.pprint() if isinstance(arg, ASTNode) else arg) for arg in args]
+    if isprimary(*args):
+        return f'{name} (\n{',\n'.join((indent(arg) for arg in argstrings))}\n)'
     else:
-        return f'{name} (\n{',\n'.join(args)}\n)'
+        return f'{name} ( {', '.join(argstrings)} )'
 
 ## Enums
 class Types(enum.Enum):
@@ -36,7 +37,7 @@ class PrimaryNode(ASTNode):
     value: Token
 
     def pprint(self):
-        return f'{self.value.type} {self.value.value}'
+        return f'{self.value.type.capitalise()} {self.value.value}'
 
 @dataclass
 class LiteralNode(PrimaryNode):
@@ -72,10 +73,7 @@ class UnaryOpNode(ASTNode):
     operand: ASTNode
 
     def pprint(self):
-        name = f'Unary {self.operator.value}'
-        operand = self.operand.pprint()
-        inline = isinstance(self.operand, PrimaryNode)
-        return pprint(name, operand, inline=inline)
+        return pprint(f'Unary {self.operator.value}', self.operand)
 
 @dataclass
 class BinaryOpNode(ASTNode):
@@ -84,11 +82,7 @@ class BinaryOpNode(ASTNode):
     right: ASTNode
 
     def pprint(self):
-        name = f'Binary {self.operator.value}'
-        left = self.left.pprint()
-        right = self.right.pprint()
-        inline = isinstance(self.left, PrimaryNode) and isinstance(self.right, PrimaryNode)
-        return pprint(name, *args, inline=inline)
+        return pprint(f'Binary {self.operator.value}', self.left, self.right)
 
 @dataclass
 class SubscriptNode(ASTNode):
@@ -96,10 +90,7 @@ class SubscriptNode(ASTNode):
     subscript: ASTNode
 
     def pprint(self):
-        container = self.container.pprint()
-        subscript = self.subscript.pprint()
-        inline = isinstance(self.container, PrimaryNode) and isinstance(self.subscript, PrimaryNode)
-        return pprint('Subscript', container, subscript, inline=inline)
+        return pprint('Subscript', self.container, self.subscript)
 
 @dataclass
 class AttrLookupNode(ASTNode):
@@ -107,67 +98,41 @@ class AttrLookupNode(ASTNode):
     attribute: IdentifierNode
 
     def pprint(self):
-        obj = self.obj.pprint()
-        attribute = self.attribute.pprint()
-        inline = isinstance(self.obj, PrimaryNode)
-        return pprint('AttrLookup', obj, attribute, inline=inline)
+        return pprint('AttrLookup', self.obj, self.attribute)
 
-class IterNode(ASTNode):
+class KeywordNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
-        expression = self.expression.pprint()
-        inline = isinstance(self.expression, PrimaryNode)
-        return pprint('iter', expression, inline=inline)
+        name = self.__class__.__name__[:-4]
+        return pprint(name, self.expression)
 
-class ReturnNode(ASTNode):
+class KeywordOptionalNode(KeywordNode):
     expression: Optional[ASTNode]
 
     def pprint(self):
         if expression is None:
-            return 'return'
+            return self.__class__.__name__[:-4]
         else:
-            expression = self.expression.pprint()
-            inline = isinstance(self.expression, PrimaryNode)
-            return pprint('return', expression, inline=inline)
+            return super().pprint()
 
-class BreakNode(ASTNode):
-    expression: Optional[ASTNode]
+class IterNode(KeywordNode):
+    pass
 
-    def pprint(self):
-        if expression is None:
-            return 'break'
-        else:
-            expression = self.expression.pprint()
-            inline = isinstance(self.expression, PrimaryNode)
-            return pprint('break', expression, inline=inline)
+class ReturnNode(KeywordOptionalNode):
+    pass
 
-class ContinueNode(ASTNode):
-    expression: Optional[ASTNode]
+class BreakNode(KeywordOptionalNode):
+    pass
 
-    def pprint(self):
-        if expression is None:
-            return 'continue'
-        else:
-            expression = self.expression.pprint()
-            inline = isinstance(self.expression, PrimaryNode)
-            return pprint('continue', expression, inline=inline)
+class ContinueNode(KeywordOptionalNode):
+    pass
 
-class YieldNode(ASTNode):
-    expression: ASTNode
+class YieldNode(KeywordNode):
+    pass
 
-    def pprint(self):
-        expression = self.expression.pprint()
-        inline = isinstance(self.expression, PrimaryNode)
-        return pprint('yield', expression, inline=inline)
-
-class YieldFromNode(ASTNode):
-    expression: ASTNode
-
-    def pprint(self):
-        expression = self.expression.pprint()
-        inline = isinstance(self.expression, PrimaryNode)
-        return pprint('yield from', expression, inline=inline)
+class YieldFromNode(KeywordNode):
+    pass
 
 @dataclass
 class LambdaNode(ASTNode):
@@ -179,8 +144,7 @@ class LambdaNode(ASTNode):
         params = ', '.join(param.value for param in self.params) or '()'
         if ',' in params:
             params = f'({params})'
-        returns = self.returns.pprint()
-        return pprint(name, params, returns)
+        return pprint(name, params, self.returns)
 
 @dataclass
 class AssignmentNode(ASTNode):
@@ -188,10 +152,7 @@ class AssignmentNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
-        target = self.target.pprint()
-        expression = self.expression.pprint()
-        inline = isinstance(self.target, PrimaryNode) and isinstance(self.expression, PrimaryNode)
-        return pprint('Assign', target, expression, inline=inline)
+        return pprint('Assign', self.target, self.expression)
 
 @dataclass
 class BlockNode(ASTNode):
@@ -226,13 +187,10 @@ class CaseNode(ASTNode):
     default: Optional[ASTNode]
 
     def pprint(self):
-        var = self.var.pprint()
-        cases = self.cases.pprint()
         if self.default is None:  # No else
-            return pprint('Case', var, cases)
+            return pprint('Case', self.var, self.cases)
         else:
-            default = self.default.pprint()
-            return pprint('Case', var, cases, default)
+            return pprint('Case', self.var, self.cases, self.default)
 
 class IfNode(ASTNode):
     condition: ASTNode
@@ -240,13 +198,10 @@ class IfNode(ASTNode):
     default: Optional[ASTNode]
 
     def pprint(self):
-        condition = self.condition.pprint()
-        then = self.then.pprint()
         if self.default is None:  # No else
-            return pprint('If', condition, then)
+            return pprint('If', self.condition, self.then)
         else:
-            default = self.default.pprint()
-            return pprint('If', condition, then, default)
+            return pprint('If', self.condition, self.then, self.default)
 
 class ForNode(ASTNode):
     vars: List[Tokens]
@@ -255,18 +210,14 @@ class ForNode(ASTNode):
 
     def pprint(self):
         vars = ', '.join(vars.value for var in self.vars) or '()'
-        container = self.container.pprint()
-        body = self.body.pprint()
-        return pprint('For', vars, container, body)
+        return pprint('For', vars, self.container, self.body)
 
 class WhileNode(ASTNode):
     condition: ASTNode
     body: BlockNode
 
     def pprint(self):
-        condition = self.condition.pprint()
-        body = self.body.pprint()
-        return pprint('While', condition, body)
+        return pprint('While', self.condition, self.body)
 
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
