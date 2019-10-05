@@ -132,12 +132,14 @@ class AttrLookupNode(ASTNode):
     def pprint(self):
         return pprint('AttrLookup', self.obj, self.attribute)
 
+@dataclass
 class KeywordNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
         return pprint(self.__class__.__name__[:-4], self.expression)
 
+@dataclass
 class KeywordOptionalNode(KeywordNode):
     expression: Optional[ASTNode]
 
@@ -147,21 +149,27 @@ class KeywordOptionalNode(KeywordNode):
         else:
             return super().pprint()
 
+@dataclass
 class IterNode(KeywordNode):
     pass
 
+@dataclass
 class ReturnNode(KeywordOptionalNode):
     pass
 
+@dataclass
 class BreakNode(KeywordOptionalNode):
     pass
 
+@dataclass
 class ContinueNode(KeywordOptionalNode):
     pass
 
+@dataclass
 class YieldNode(KeywordNode):
     pass
 
+@dataclass
 class YieldFromNode(KeywordNode):
     pass
 
@@ -205,9 +213,11 @@ class InterfaceNode(ASTNode):
     def pprint(self):
         return f'Interface ({self.body.pprint()[1:-1]})'
 
+@dataclass
 class ExceptionNode(ClassNode):
     pass
 
+@dataclass
 class CaseNode(ASTNode):
     var: IdentifierNode
     cases: MapNode
@@ -219,6 +229,7 @@ class CaseNode(ASTNode):
         else:
             return pprint('Case', self.var, self.cases, self.default)
 
+@dataclass
 class IfNode(ASTNode):
     condition: ASTNode
     then: ASTNode
@@ -230,6 +241,7 @@ class IfNode(ASTNode):
         else:
             return pprint('If', self.condition, self.then, self.default)
 
+@dataclass
 class ForNode(ASTNode):
     vars: List[Tokens]
     container: ASTNode
@@ -238,6 +250,7 @@ class ForNode(ASTNode):
     def pprint(self):
         return pprint('For', self.vars, self.container, self.body)
 
+@dataclass
 class WhileNode(ASTNode):
     condition: ASTNode
     body: BlockNode
