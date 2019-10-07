@@ -139,21 +139,11 @@ class KeywordNode(ASTNode):
         return pprint(self.__class__.__name__[:-4], self.expression)
 
 @dataclass
-class KeywordOptionalNode(KeywordNode):
-    expression: Optional[ASTNode]
-
-    def pprint(self):
-        if expression is None:
-            return self.__class__.__name__[:-4]
-        else:
-            return super().pprint()
-
-@dataclass
 class IterNode(KeywordNode):
     pass
 
 @dataclass
-class ReturnNode(KeywordOptionalNode):
+class ReturnNode(KeywordNode):
     pass
 
 @dataclass

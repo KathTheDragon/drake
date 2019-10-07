@@ -161,8 +161,7 @@ class ASTCompiler:
         yield Op.MAKE_ITERATOR,
 
     def ReturnNode(self, node, values, *scopes):
-        if node.expression is None:
-            yield Op.MAKE_UNIT, Unit.NONE
+        yield from self.Node(node.expression, values, scopes)
         yield Op.RETURN
 
     def BreakNode(self, node, values, *scopes):
