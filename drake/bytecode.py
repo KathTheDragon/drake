@@ -51,11 +51,11 @@ class Op(enum.Enum):
     RANGE = 0x5A
 
 OP_LENGTHS = {
-    'LOAD_VALUE': 2,
-    'LOAD_LOCAL': 2,
-    'STORE_LOCAL': 2,
-    'LOAD_NONLOCAL': 3,
-    'STORE_NONLOCAL': 3,
+    Op.LOAD_VALUE: 2,
+    Op.LOAD_LOCAL: 2,
+    Op.STORE_LOCAL: 2,
+    Op.LOAD_NONLOCAL: 3,
+    Op.STORE_NONLOCAL: 3,
 }
 
 
@@ -69,7 +69,7 @@ class Bytecode(bytearray):
         bytecode = Bytecode()
         for instruction in instructions:
             op = instruction[0]
-            oplength = OP_LENGTHS.get(op._name_, 1)
+            oplength = OP_LENGTHS.get(op, 1)
             if oplength == len(instruction):
                 bytecode.append(op._value_)
                 bytecode.extend(instruction[1:])
@@ -79,7 +79,7 @@ class Bytecode(bytearray):
         ip = 0
         while ip < len(self):
             op = Op(self[ip])
-            oplength = OP_LENGTHS.get(op._name_, 1)
+            oplength = OP_LENGTHS.get(op, 1)
             nextip = ip + oplength
             args = self[ip+1:nextip]
             ip = nextip
