@@ -99,7 +99,7 @@ class ASTCompiler:
         yield Op.LOAD_VALUE, index
 
     def UnitNode(self, node, values, *scopes):
-        yield Op.MAKE_UNIT, Unit(node.unit.value.upper())
+        yield Op.MAKE_UNIT, Unit(node.unit.value.upper())._value_
 
     def IdentifierNode(self, node, values, *scopes):
         localscope = scopes[0]
