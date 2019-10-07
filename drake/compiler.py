@@ -61,22 +61,22 @@ class ASTCompiler:
 
     def compile(self):
         values = []
-        insbytecode = Bytecode.assemble(self.compileNode(self.ast, values, []))
-        valuebytecode = Bytecode.assemble(self.compileValues(values))
+        insbytecode = Bytecode.assemble(self.Node(self.ast, values, []))
+        valuebytecode = Bytecode.assemble(self.Values(values))
         haltbytecode = Bytecode.assemble((Op.HALT,))
         return valuebytecode + insbytecode + haltbytecode
 
-    def compileValues(self, values):
+    def Values(self, values):
         yield from ()
 
-    def compileNode(self, node, values, *scopes):
+    def Node(self, node, values, *scopes):
         type = node.__class__.__name__
-        yield from getattr(self, f'compile{type}', 'compileInvalidNode')(node, values, *scopes)
+        yield from getattr(self, type, 'InvalidNode')(node, values, *scopes)
 
-    def compileInvalidNode(self, node, values, *scopes):
+    def InvalidNode(self, node, values, *scopes):
         yield Op.INVALID,  # InvalidNodeError
 
-    def compileLiteralNode(self, node, values, *scopes):
+    def LiteralNode(self, node, values, *scopes):
         type, value = node.value
         if type == 'NUMBER':
             if '.' in value:  # Real
@@ -87,7 +87,7 @@ class ASTCompiler:
         values.append(value)
         yield Op.LOAD_VALUE, index
 
-    def compileIdentifierNode(self, node, values, *scopes):
+    def IdentifierNode(self, node, values, *scopes):
         localscope = scopes[0]
         name = node.value.value
         if node.local:
@@ -106,18 +106,18 @@ class ASTCompiler:
                 index = -1  # NameError, not in any scope
             yield Op.LOAD_NONLOCAL, i, index
 
-    def compileUnaryOpNode(self, node, values, *scopes):
-        yield from self.compileNode(node.operand, values, *scopes)
+    def UnaryOpNode(self, node, values, *scopes):
+        yield from self.Node(node.operand, values, *scopes)
         yield UNARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
 
-    def compileBinaryOpNode(self, node, values, *scopes):
-        yield from self.compileNode(node.right, values, *scopes)
-        yield from self.compileNode(node.left, values, *scopes)
+    def BinaryOpNode(self, node, values, *scopes):
+        yield from self.Node(node.right, values, *scopes)
+        yield from self.Node(node.left, values, *scopes)
         yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
 
-    def compileAssignmentNode(self, node, values, *scopes):
+    def AssignmentNode(self, node, values, *scopes):
         localscope = scopes[0]
-        yield from self.compileNode(node.expression, values, *scopes)
+        yield from self.Node(node.expression, values, *scopes)
         target = node.target
         if isinstance(target, ast.Identifier):
             name = target.value.value
@@ -140,9 +140,9 @@ class ASTCompiler:
         else:
             yield Op.INVALID,
 
-    def compileBlockNode(self, node, values, *scopes):
+    def BlockNode(self, node, values, *scopes):
         last = len(node)
         for i, subnode in enumerate(node, 1):
-            yield from self.compileNode(subnode, values, *scopes)
+            yield from self.Node(subnode, values, *scopes)
             if i != last:  # Last expression stays on the stack as the block's value
                 yield Op.POP,
