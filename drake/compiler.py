@@ -151,7 +151,8 @@ class ASTCompiler:
         yield Op.GET_SUBSCRIPT,
 
     def AttrLookupNode(self, node, values, *scopes):
-        yield Op.INVALID,  # Not implemented
+        yield from self.Node(node.obj, values, *scopes)
+        yield from self.LiteralNode(node.attribute)
 
     def CallNode(self, node, values, *scopes):
         yield Op.INVALID,  # Not implemented
