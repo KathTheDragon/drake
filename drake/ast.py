@@ -24,32 +24,15 @@ def pprint(name, *args):
     else:
         return f'{name} ( {", ".join(argstrings)} )'
 
-## Enums
-class Type(enum.Enum):
-    INVALID = enum.auto()
-    BOOLEAN = enum.auto()
-    STRING = enum.auto()
-    INTEGER = enum.auto()
-    DECIMAL = enum.auto()
-    COMPLEX = enum.auto()
-    TUPLE = enum.auto()
-    LIST = enum.auto()
-    MAP = enum.auto()
-    ITERATOR = enum.auto()  # Result of iter <Sequence>
-    LAMBDA = enum.auto()
-    CLASS = enum.auto()
-    INTERFACE = enum.auto()
-    EXCEPTION = enum.auto()
-
 ## Classes
 class ASTNode:
-    type: Type = field(init=False)
+    type: str = field(init=False)
 
     def __post_init__(self):
         self.type = self.getType()
 
     def getType(self):
-        return Type.INVALID
+        return ''
 
     def pprint(self):
         raise NotImplementedError
