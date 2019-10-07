@@ -157,12 +157,14 @@ class ReturnNode(KeywordOptionalNode):
     pass
 
 @dataclass
-class BreakNode(KeywordOptionalNode):
-    pass
+class BreakNode(ASTNode):
+    def pprint(self):
+        return 'Break'
 
 @dataclass
-class ContinueNode(KeywordOptionalNode):
-    pass
+class ContinueNode(ASTNode):
+    def pprint(self):
+        return 'Continue'
 
 @dataclass
 class YieldNode(KeywordNode):
