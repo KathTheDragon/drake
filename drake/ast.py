@@ -45,6 +45,17 @@ class LiteralNode(ASTNode):
         return f'{self.value.type.capitalise()} {self.value.value}'
 
 @dataclass
+class UnitNode(ASTNode):
+    unit: Token
+
+    def pprint(self):
+        return {
+            'none': 'NoneType none',
+            'true': 'Boolean true',
+            'false': 'Boolean false',
+        }.get(self.unit.value, 'Unknown')
+
+@dataclass
 class IdentifierNode(ASTNode):
     name: Token
     local: bool = True
@@ -114,6 +125,14 @@ class AttrLookupNode(ASTNode):
 
     def pprint(self):
         return pprint('AttrLookup', self.obj, self.attribute)
+
+@dataclass
+class CallNode(ASTNode):
+    function: ASTNode
+    arguments: List[ASTNode]
+
+    def pprint(self):
+        return pprint('Call', self.function, *self.arguments)
 
 @dataclass
 class KeywordNode(ASTNode):
