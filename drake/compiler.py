@@ -155,7 +155,10 @@ class ASTCompiler:
         yield from self.LiteralNode(node.attribute)
 
     def CallNode(self, node, values, *scopes):
-        yield Op.INVALID,  # Not implemented
+        for arg in node.arguments:
+            yield from self.Node(arg, values, *scopes)
+        yield from self.Node(node.function)
+        yield Op.CALL, len(node.arguments)
 
     def IterNode(self, node, values, *scopes):
         yield from self.Node(node.expression, values, scopes)
