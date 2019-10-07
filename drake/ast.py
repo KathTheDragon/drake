@@ -28,9 +28,6 @@ def pprint(name, *args):
 class ASTNode:
     type: str = field(init=False)
 
-    def __post_init__(self):
-        self.type = self.getType()
-
     def getType(self):
         return ''
 
