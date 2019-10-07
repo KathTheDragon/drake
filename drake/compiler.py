@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, InitVar
 from typing import Dict
-from .ast import ASTNode
 from .bytecode import Op, Bytecode
+from . import ast
 
 ## Constants
 UNARY_OPS = {
@@ -53,7 +53,7 @@ class Real:
 
 @dataclass
 class ASTCompiler:
-    ast: ASTNode
+    ast: ast.ASTNode
     bytecode: Bytecode = field(init=False)
 
     def __post_init__(self):
