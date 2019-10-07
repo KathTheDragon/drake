@@ -58,6 +58,10 @@ OP_LENGTHS = {
     Op.STORE_NONLOCAL: 3,
 }
 
+class Unit(enum.Enum):
+    FALSE = 0
+    TRUE = 1
+    NONE = 2
 
 class Bytecode(bytearray):
     def __repr__(self):
