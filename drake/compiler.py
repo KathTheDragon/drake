@@ -165,13 +165,9 @@ class ASTCompiler:
         yield Op.RETURN
 
     def BreakNode(self, node, values, *scopes):
-        if node.expression is None:
-            yield Op.MAKE_UNIT, Unit.NONE
         yield Op.BREAK
 
     def ContinueNode(self, node, values, *scopes):
-        if node.expression is None:
-            yield Op.MAKE_UNIT, Unit.NONE
         yield Op.CONTINUE
 
     def YieldNode(self, node, values, *scopes):
