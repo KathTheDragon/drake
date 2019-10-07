@@ -10,6 +10,7 @@ class Op(enum.Enum):
     RETURN = 0x02
     CONTINUE = 0x03
     BREAK = 0x04
+    CALL = 0x05
     # Stack
     POP = 0x08
     PUSH = 0x09
@@ -81,6 +82,7 @@ OP_LENGTHS = {
     Op.CONTINUE: 2,
     Op.BREAK: 2,
     Op.PUSH: 2,
+    Op.CALL: 2,
     Op.MAKE_UNIT: 2,
     Op.MAKE_STRING: 2,
     Op.MAKE_INTEGER: 2,
