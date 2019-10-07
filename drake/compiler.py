@@ -85,14 +85,17 @@ class ASTCompiler:
         yield Op.INVALID,  # InvalidNodeError
 
     def LiteralNode(self, node, values, *scopes):
-        index = len(values)
-        values.append(value)
         value = {
             'INTEGER': int,
             'DECIMAL': Decimal,
             'IMAG_INTEGER': lambda v: ComplexInteger(0, int(v)),
             'IMAG_DECIMAL': lambda v: ComplexInteger(0, Decimal(v)),
         }.get(node.value.type)(node.value.value)
+        try:
+            index = values.index(value)
+        except ValueError:
+            index = len(values)
+            values.append(value)
         yield Op.LOAD_VALUE, index
 
     def UnitNode(self, node, values, *scopes):
