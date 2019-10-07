@@ -39,16 +39,14 @@ BINARY_OPS = {
 
 ## Classes
 @dataclass
-class Real:
+class Decimal:
     value: InitVar[str]
-    integer: int = field(init=False)
     mantissa: int = field(init=False)
     exponent: int = field(init=False)
 
     def __post_init__(self, value):
         integer, fraction = value.split('.')
-        self.integer = int(integer)
-        self.mantissa = int(fraction)
+        self.mantissa = int(value.replace('.', ''))
         self.exponent = len(fraction)
 
 @dataclass
