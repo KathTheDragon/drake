@@ -119,7 +119,7 @@ class ASTCompiler:
         localscope = scopes[0]
         yield from self.Node(node.expression, values, *scopes)
         target = node.target
-        if isinstance(target, ast.Identifier):
+        if isinstance(target, ast.IdentifierNode):
             name = target.value.value
             if target.local:
                 if name in localscope:
