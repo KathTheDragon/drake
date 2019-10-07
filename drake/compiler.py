@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, InitVar
 from typing import Dict
-from .bytecode import Op, Bytecode
 from . import ast
+from .bytecode import Op, Unit, Bytecode
 
 ## Constants
 UNARY_OPS = {
@@ -87,6 +87,9 @@ class ASTCompiler:
         values.append(value)
         yield Op.LOAD_VALUE, index
 
+    def UnitNode(self, node, values, *scopes):
+        yield Op.MAKE_UNIT, Unit(node.unit.value.upper())
+
     def IdentifierNode(self, node, values, *scopes):
         localscope = scopes[0]
         name = node.value.value
@@ -106,6 +109,22 @@ class ASTCompiler:
                 index = -1  # NameError, not in any scope
             yield Op.LOAD_NONLOCAL, i, index
 
+    def ListNode(self, node, values, *scopes):
+        for item in node.items:
+            yield from self.Node(item, values, *scopes)
+        yield Op.MAKE_LIST, len(node.items)
+
+    def TupleNode(self, node, values, *scopes):
+        for item in node.items:
+            yield from self.Node(item, values, *scopes)
+        yield Op.MAKE_TUPLE, len(node.items)
+
+    def MapNode(self, node, values, *scopes):
+        for pair in node.items:
+            yield from self.Node(pair.name, values, *scopes)
+            yield from self.Node(pair.value, values, *scopes)
+        yield Op.MAKE_MAP, len(node.items)
+
     def UnaryOpNode(self, node, values, *scopes):
         yield from self.Node(node.operand, values, *scopes)
         yield UNARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
@@ -114,6 +133,47 @@ class ASTCompiler:
         yield from self.Node(node.right, values, *scopes)
         yield from self.Node(node.left, values, *scopes)
         yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
+
+    def SubscriptNode(self, node, values, *scopes):
+        yield from self.Node(node.container, values, *scopes)
+        yield from self.Node(node.subscript, values, *scopes)
+        yield Op.GET_SUBSCRIPT,
+
+    def AttrLookupNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def CallNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def IterNode(self, node, values, *scopes):
+        yield from self.Node(node.expression, values, scopes)
+        yield Op.MAKE_ITERATOR,
+
+    def ReturnNode(self, node, values, *scopes):
+        if node.expression is None:
+            yield Op.MAKE_UNIT, Unit.NONE
+        yield Op.RETURN
+
+    def BreakNode(self, node, values, *scopes):
+        if node.expression is None:
+            yield Op.MAKE_UNIT, Unit.NONE
+        yield Op.BREAK
+
+    def ContinueNode(self, node, values, *scopes):
+        if node.expression is None:
+            yield Op.MAKE_UNIT, Unit.NONE
+        yield Op.CONTINUE
+
+    def YieldNode(self, node, values, *scopes):
+        yield from self.Node(node.expression, values, scopes)
+        yield Op.YIELD,
+
+    def YieldFromNode(self, node, values, *scopes):
+        yield from self.Node(node.expression, values, scopes)
+        yield Op.YIELD_FROM,
+
+    def LambdaNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
 
     def AssignmentNode(self, node, values, *scopes):
         localscope = scopes[0]
@@ -146,3 +206,24 @@ class ASTCompiler:
             yield from self.Node(subnode, values, *scopes)
             if i != last:  # Last expression stays on the stack as the block's value
                 yield Op.POP,
+
+    def ClassNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def InterfaceNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def ExceptionNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def CaseNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def IfNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def ForNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
+
+    def WhileNode(self, node, values, *scopes):
+        yield Op.INVALID,  # Not implemented
