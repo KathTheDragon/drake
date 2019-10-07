@@ -1,54 +1,55 @@
 import enum
 from dataclasses import dataclass, field
 
-OPS = [
-    'INVALID',
+## Classes
+class Op(enum.Enum):
+    INVALID = -1
     # Program
-    'NOP',
-    'HALT',
+    NOP = 0x00
+    HALT = 0x01
     # Stack
-    'POP',
+    POP = 0x08
     # Memory
-    'LOAD_VALUE',
-    'LOAD_LOCAL',
-    'STORE_LOCAL',
-    'LOAD_NONLOCAL',
-    'STORE_NONLOCAL',
+    LOAD_VALUE = 0x20
+    LOAD_LOCAL = 0x24
+    STORE_LOCAL = 0x25
+    LOAD_NONLOCAL = 0x28
+    STORE_NONLOCAL = 0x29
     # Arithmetic
-    'NEGATION',
-    'ADD',
-    'SUBTRACT',
-    'MULTIPLY',
-    'DIVIDE',
-    'MODULUS',
-    'POWER',
+    NEGATION = 0x30
+    ADD = 0x31
+    SUBTRACT = 0x32
+    MULTIPLY = 0x33
+    DIVIDE = 0x34
+    MODULUS = 0x35
+    POWER = 0x36
     # Bitwise
-    'BITWISE_NOT',
-    'BITWISE_AND',
-    'BITWISE_OR',
-    'BITWISE_XOR',
-    'BITSHIFT_LEFT',
-    'BITSHIFT_RIGHT',
+    BITWISE_NOT = 0x40
+    BITWISE_AND = 0x41
+    BITWISE_OR = 0x42
+    BITWISE_XOR = 0x43
+    BITSHIFT_LEFT = 0x44
+    BITSHIFT_RIGHT = 0x45
     # Boolean
-    'BOOLEAN_NOT',
-    'BOOLEAN_AND',
-    'BOOLEAN_OR',
-    'BOOLEAN_XOR',
+    BOOLEAN_NOT = 0x48
+    BOOLEAN_AND = 0x49
+    BOOLEAN_OR = 0x4A
+    BOOLEAN_XOR = 0x4B
     # Comparison
-    'IS',
-    'IS_NOT',
-    'EQUALS',
-    'NOT_EQUALS',
-    'LESS_THAN',
-    'LESS_EQUALS',
-    'GREATER_THAN',
-    'GREATER_EQUALS',
+    IS = 0x50
+    IS_NOT = 0x51
+    EQUALS = 0x52
+    NOT_EQUALS = 0x53
+    LESS_THAN = 0x54
+    LESS_EQUALS = 0x55
+    GREATER_THAN = 0x56
+    GREATER_EQUALS = 0x57
     # Containment
-    'IN',
-    'NOT_IN',
+    IN = 0x58
+    NOT_IN = 0x59
     # Misc
-    'RANGE',
-]
+    RANGE = 0x5A
+
 OP_LENGTHS = {
     'LOAD_VALUE': 2,
     'LOAD_LOCAL': 2,
@@ -57,8 +58,6 @@ OP_LENGTHS = {
     'STORE_NONLOCAL': 3,
 }
 
-## Classes
-Op = enum.Enum('Op', ' '.join(OPS), start=-1)
 
 class Bytecode(bytearray):
     def __repr__(self):
