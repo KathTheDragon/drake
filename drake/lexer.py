@@ -84,6 +84,8 @@ def lex(source):
             column = match.start()
             if type in ('COMMENT', 'WHITESPACE'):
                 continue
+            elif type == 'STRING':
+                value = value[1:-1]
             elif type in ('IMAG_INTEGER', 'IMAG_DECIMAL'):
                 value = value.strip('j')
             yield Token(type, value, linenum, column)
