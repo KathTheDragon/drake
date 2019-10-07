@@ -39,6 +39,8 @@ KEYWORD_OPERATORS = [
     'xor',
 ]
 STRING = r'(?:[^\\\n]|\\.)*?'
+INTEGER = r'0|[1-9]\d*'
+DECIMAL = r'0|\d*[1-9]'
 TOKENS = {
     'COMMENT': r'//.*$',
     'ASSIGNMENT': r'[-+*/]?=(?!=)',
@@ -51,7 +53,10 @@ TOKENS = {
     'KEYWORD': fr'(?:{"|".join(KEYWORDS)})(?!\w)',
     'IDENTIFIER': r'[a-zA-Z_]\w*[!?]?',
     'STRING': fr'\'{STRING}\'|\"{STRING}\"',
-    'NUMBER': r'\d+(?:\.\d+)?',
+    'IMAG_DECIMAL': fr'(?:{INTEGER})\.(?:{DECIMAL})j',
+    'IMAG_INTEGER': fr'{INTEGER}j',
+    'DECIMAL': fr'(?:{INTEGER})\.(?:{DECIMAL})',
+    'INTEGER': INTEGER,
     'WHITESPACE': r'[ \t]+',
     'UNKNOWN': r'.+?'
 }
