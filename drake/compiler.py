@@ -50,6 +50,16 @@ class Decimal:
         self.exponent = len(fraction)
 
 @dataclass
+class ComplexInteger:
+    real: int
+    imag: int
+
+@dataclass
+class ComplexDecimal:
+    real: Decimal
+    imag: Decimal
+
+@dataclass
 class ASTCompiler:
     ast: ast.ASTNode
     bytecode: Bytecode = field(init=False)
@@ -75,14 +85,14 @@ class ASTCompiler:
         yield Op.INVALID,  # InvalidNodeError
 
     def LiteralNode(self, node, values, *scopes):
-        type, value = node.value
-        if type == 'NUMBER':
-            if '.' in value:  # Real
-                value = Real(value)
-            else:
-                value = int(value)
         index = len(values)
         values.append(value)
+        value = {
+            'INTEGER': int,
+            'DECIMAL': Decimal,
+            'IMAG_INTEGER': lambda v: ComplexInteger(0, int(v)),
+            'IMAG_DECIMAL': lambda v: ComplexInteger(0, Decimal(v)),
+        }.get(node.value.type)(node.value.value)
         yield Op.LOAD_VALUE, index
 
     def UnitNode(self, node, values, *scopes):
