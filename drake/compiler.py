@@ -65,7 +65,23 @@ class ASTCompiler:
         return valuebytecode + insbytecode + haltbytecode
 
     def Values(self, values):
-        yield from ()
+        # PUSH each byte (or maybe there'll be a PUSH_LONG for pushing multiple bytes)
+        # Then MAKE_ the value, with argument how many bytes to pop from the stack
+        # Finally STORE_VALUE
+        for value in values:
+            if isinstance(value, str):
+                continue
+                yield Op.MAKE_STRING, -1
+            elif isinstance(value, int):
+                continue
+                yield Op.MAKE_INTEGER, -1
+            elif isinstance(value, Decimal):
+                continue
+                yield Op.MAKE_DECIMAL, -1
+            else:
+                yield Op.INVALID,
+                continue
+            yield Op.STORE_VALUE,
 
     def Node(self, node, values, *scopes):
         type = node.__class__.__name__
