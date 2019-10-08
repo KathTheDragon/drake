@@ -7,34 +7,27 @@ class Op(enum.Enum):
     # Program
     NOP = 0x00
     HALT = 0x01
-    RETURN = 0x02
-    CONTINUE = 0x03
-    BREAK = 0x04
-    CALL = 0x05
+    CALL = 0x02
+    RETURN = 0x03
+    CONTINUE = 0x04
+    BREAK = 0x05
     # Stack
-    POP = 0x08
-    PUSH = 0x09
+    POP = 0x10
+    PUSH = 0x11
     # Values
-    MAKE_UNIT = 0x10  # Makes finite types (none, bool, etc)
-    MAKE_STRING = 0x11
-    MAKE_INTEGER = 0x12
-    MAKE_DECIMAL = 0x13
-    MAKE_IMAGINARY = 0x14
-    MAKE_LIST = 0x18
-    MAKE_TUPLE = 0x19
-    MAKE_MAP = 0x1A
-    MAKE_ITERATOR = 0x1B
-    MAKE_LAMBDA = 0x1C
-    MAKE_CLASS = 0x1D
-    MAKE_INTERFACE = 0x1E
-    MAKE_EXCEPTION = 0x1F
-    # Memory
-    LOAD_VALUE = 0x20
-    LOAD_LOCAL = 0x24
-    STORE_LOCAL = 0x25
-    DELETE_LOCAL = 0x26
-    LOAD_NONLOCAL = 0x28
-    STORE_NONLOCAL = 0x29
+    MAKE_UNIT = 0x20  # Makes finite types (none, bool, etc)
+    MAKE_STRING = 0x21
+    MAKE_INTEGER = 0x22
+    MAKE_DECIMAL = 0x23
+    MAKE_IMAGINARY = 0x24
+    MAKE_LIST = 0x28
+    MAKE_TUPLE = 0x29
+    MAKE_MAP = 0x2A
+    MAKE_ITERATOR = 0x2B
+    MAKE_LAMBDA = 0x2C
+    MAKE_CLASS = 0x2D
+    MAKE_INTERFACE = 0x2E
+    MAKE_EXCEPTION = 0x2F
     # Arithmetic
     NEGATION = 0x30
     ADD = 0x31
@@ -69,13 +62,20 @@ class Op(enum.Enum):
     NOT_IN = 0x59
     # Misc
     RANGE = 0x5A
+    # Memory
+    LOAD_VALUE = 0x60
+    LOAD_LOCAL = 0x64
+    STORE_LOCAL = 0x65
+    DELETE_LOCAL = 0x66
+    LOAD_NONLOCAL = 0x68
+    STORE_NONLOCAL = 0x69
     # Subscript
-    GET_SUBSCRIPT = 0x60
-    SET_SUBSCRIPT = 0x61
-    DEL_SUBSCRIPT = 0x62
+    GET_SUBSCRIPT = 0x70
+    SET_SUBSCRIPT = 0x71
+    DEL_SUBSCRIPT = 0x72
     # Attributes
-    GET_ATTRIBUTE = 0x64
-    SET_ATTRIBUTE = 0x65
+    GET_ATTRIBUTE = 0x74
+    SET_ATTRIBUTE = 0x75
 
 OP_LENGTHS = {
     Op.RETURN: 2,
