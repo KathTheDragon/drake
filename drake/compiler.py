@@ -136,7 +136,10 @@ class ASTCompiler:
     def BinaryOpNode(self, node, values, *scopes):
         yield from self.Node(node.right, values, *scopes)
         yield from self.Node(node.left, values, *scopes)
-        yield BINARY_OPS.get(node.operator.value, Op.INVALID),  # InvalidOperatorError
+        type, value = node.operator
+        if type == 'ASSIGNMENT':
+            value = value.strip('=')
+        yield BINARY_OPS.get(value, Op.INVALID),  # InvalidOperatorError
 
     def SubscriptNode(self, node, values, *scopes):
         yield from self.Node(node.container, values, *scopes)
