@@ -59,10 +59,9 @@ class ASTCompiler:
 
     def compile(self):
         values = []
-        insbytecode = Bytecode.assemble(self.Node(self.ast, values, []))
+        insbytecode = Bytecode.assemble(self.Program(self.ast, values))
         valuebytecode = Bytecode.assemble(self.Values(values))
-        haltbytecode = Bytecode.assemble((Op.HALT,))
-        return valuebytecode + insbytecode + haltbytecode
+        return valuebytecode + insbytecode
 
     def Values(self, values):
         # PUSH each byte (or maybe there'll be a PUSH_LONG for pushing multiple bytes)
@@ -82,6 +81,10 @@ class ASTCompiler:
                 yield Op.INVALID,
                 continue
             yield Op.STORE_VALUE,
+
+    def Program(self, node, values):
+        yield from self.Node(node, values, [])
+        yield Op.HALT,
 
     def Node(self, node, values, *scopes):
         type = node.__class__.__name__
