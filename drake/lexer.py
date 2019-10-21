@@ -78,12 +78,14 @@ class Token:
 def lex(source):
     brackets = []
     for linenum, line in enumerate(source.splitlines()):
+        empty = True
         for match in TOKEN_REGEX.finditer(line):
             type = match.lastgroup
             value = match.group()
             column = match.start()
             if type in ('COMMENT', 'WHITESPACE'):
                 continue
+            empty = False
             if type == 'KEYWORD':
                 if value == 'none':
                     type = 'NONE'
@@ -94,4 +96,5 @@ def lex(source):
             elif type in ('IMAG_INTEGER', 'IMAG_DECIMAL'):
                 value = value.strip('j')
             yield Token(type, value, linenum, column)
-        yield Token('NEWLINE', '', linenum, len(line))
+        if not empty:
+            yield Token('NEWLINE', '', linenum, len(line))
