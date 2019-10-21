@@ -73,17 +73,6 @@ class LiteralNode(ASTNode):
         return f'{self.value.type.capitalise()} {self.value.value}'
 
 @dataclass
-class UnitNode(ASTNode):
-    unit: Token
-
-    def pprint(self):
-        return {
-            'none': 'NoneType none',
-            'true': 'Boolean true',
-            'false': 'Boolean false',
-        }.get(self.unit.value, 'Unknown')
-
-@dataclass
 class IdentifierNode(ASTNode):
     name: Token
     local: bool = True
