@@ -271,20 +271,21 @@ class WhileNode(ASTNode):
 
 class Precedence(enum.IntEnum):
     NONE       = enum.auto()
-    ASSIGNMENT = enum.auto()   # -> = += -= *= /=
-    OR         = enum.auto()   # boolean or
-    XOR        = enum.auto()   # boolean xor
-    AND        = enum.auto()   # boolean and
-    EQUALITY   = enum.auto()   # == != in is
-    COMPARISON = enum.auto()   # < > <= >=
-    RANGE      = enum.auto()   # ..
-    BIT_OR     = enum.auto()   # bitwise |
-    BIT_XOR    = enum.auto()   # bitwise ^
-    BIT_AND    = enum.auto()   # bitwise &
-    SHIFT      = enum.auto()   # >> <<
-    ADD        = enum.auto()   # + -
-    MULT       = enum.auto()   # * /
-    EXP        = enum.auto()   # **
-    UNARY      = enum.auto()   # ! -
-    CALL       = enum.auto()   # . () []
-    PRIMARY    = enum.auto()
+    ASSIGNMENT = enum.auto()  # : = += -= *= /=
+    FLOW       = enum.auto()  # if case for while
+    LAMBDA     = enum.auto()  # ->
+    OR         = enum.auto()  # or
+    XOR        = enum.auto()  # xor
+    AND        = enum.auto()  # and
+    COMPARISON = enum.auto()  # in is == != < > <= >=
+    RANGE      = enum.auto()  # ..
+    BIT_OR     = enum.auto()  # |
+    BIT_XOR    = enum.auto()  # ^
+    BIT_AND    = enum.auto()  # &
+    SHIFT      = enum.auto()  # >> <<
+    ADD        = enum.auto()  # + -
+    MULT       = enum.auto()  # * / %
+    EXP        = enum.auto()  # **
+    UNARY      = enum.auto()  # not ! -
+    CALL       = enum.auto()  # . ...(...) ...[...]
+    PRIMARY    = enum.auto()  # literal identifier tuple list map block
