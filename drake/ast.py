@@ -3,6 +3,37 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 from .lexer import Token
 
+__all__ = [
+    ASTNode,
+    LiteralNode,
+    IdentifierNode,
+    ListNode,
+    TupleNode,
+    PairNode,
+    MapNode,
+    UnaryOpNode,
+    BinaryOpNode,
+    SubscriptNode,
+    AttrLookupNode,
+    CallNode,
+    IterNode,
+    ReturnNode,
+    BreakNode,
+    ContinueNode,
+    YieldNode,
+    YieldFromNode,
+    LambdaNode,
+    AssignmentNode,
+    BlockNode,
+    ClassNode,
+    InterfaceNode,
+    ExceptionNode,
+    CaseNode,
+    IfNode,
+    ForNode,
+    WhileNode
+]
+
 ## Helper functions
 def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
