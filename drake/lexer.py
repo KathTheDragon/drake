@@ -7,7 +7,7 @@ KEYWORDS = [
     'break',
     'case',
     'class',
-    'constant',
+    'const',
     'continue',
     'del'
     'else',
