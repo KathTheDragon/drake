@@ -70,7 +70,7 @@ class LiteralNode(ASTNode):
     value: Token
 
     def pprint(self):
-        return f'{self.value.type.capitalise()} {self.value.value}'
+        return f'{self.value.type.capitalize()} {self.value.value}'
 
 @dataclass
 class IdentifierNode(ASTNode):
