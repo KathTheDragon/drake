@@ -1,13 +1,5 @@
-from .ast import (
-    Precedence,
-    ASTNode,
-    UnaryOpNode,
-    BinaryOpNode,
-    LiteralNode,
-    IdentifierNode,
-    AssignmentNode,
-    BlockNode
-)
+from .ast import *
+from .ast import Precedence
 from .lexer import Token
 from .exceptions import DrakeParserError
 
