@@ -84,6 +84,11 @@ def lex(source):
             column = match.start()
             if type in ('COMMENT', 'WHITESPACE'):
                 continue
+            if type == 'KEYWORD':
+                if value == 'none':
+                    type = 'NONE'
+                elif value in ('true', 'false'):
+                    type = 'BOOLEAN'
             elif type == 'STRING':
                 value = value[1:-1]
             elif type in ('IMAG_INTEGER', 'IMAG_DECIMAL'):
