@@ -59,6 +59,10 @@ def pprint(name, *args):
 class ASTNode:
     type: str = field(init=False)
 
+    @property
+    def nodetype(self):
+        return self.__class__.__name__[:-4]
+
     def getType(self):
         return ''
 
@@ -88,7 +92,7 @@ class SequenceNode(ASTNode):
     items: List[ASTNode]
 
     def pprint(self):
-        return pprint(self.__class__.__name__[:-4], *self.items)
+        return pprint(self.nodetype, *self.items)
 
 @dataclass
 class ListNode(SequenceNode):
@@ -156,7 +160,7 @@ class KeywordNode(ASTNode):
     expression: ASTNode
 
     def pprint(self):
-        return pprint(self.__class__.__name__[:-4], self.expression)
+        return pprint(self.nodetype, self.expression)
 
 @dataclass
 class IterNode(KeywordNode):
@@ -190,7 +194,7 @@ class LambdaNode(ASTNode):
     returns: ASTNode
 
     def pprint(self):
-        return pprint(self.__class__.__name__[:-4], self.params, self.returns)
+        return pprint(self.nodetype, self.params, self.returns)
 
 @dataclass
 class AssignmentNode(ASTNode):
