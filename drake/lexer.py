@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-from .exceptions import DrakeSyntaxError
 
 ## Constants
 KEYWORDS = [
