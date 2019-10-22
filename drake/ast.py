@@ -194,11 +194,15 @@ class LambdaNode(ASTNode):
 
 @dataclass
 class AssignmentNode(ASTNode):
+    mode: str
     target: ASTNode
     expression: ASTNode
 
     def pprint(self):
-        return pprint('Assign', self.target, self.expression)
+        if self.mode:
+            return pprint(f'{self.mode} Assign', self.target, self.expression)
+        else:
+            return pprint('Assign', self.target, self.expression)
 
 @dataclass
 class BlockNode(ASTNode):
