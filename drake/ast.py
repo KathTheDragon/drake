@@ -79,13 +79,9 @@ class LiteralNode(ASTNode):
 @dataclass
 class IdentifierNode(ASTNode):
     name: Token
-    local: bool = True
 
     def pprint(self):
-        if self.local:
-            return f'Identifier {self.name.value}'
-        else:
-            return f'nonlocal Identifier {self.name.value}'
+        return f'Identifier {self.name.value}'
 
 @dataclass
 class SequenceNode(ASTNode):
