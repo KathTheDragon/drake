@@ -90,10 +90,6 @@ def lex(source):
                     type = 'NONE'
                 elif value in ('true', 'false'):
                     type = 'BOOLEAN'
-            elif type == 'STRING':
-                value = value[1:-1]
-            elif type in ('IMAG_INTEGER', 'IMAG_DECIMAL'):
-                value = value.strip('j')
             yield Token(type, value, linenum, column)
         if not empty:
             yield Token('NEWLINE', '', linenum, len(line))

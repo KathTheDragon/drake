@@ -94,7 +94,9 @@ class ASTCompiler:
         yield Op.INVALID,  # InvalidNodeError
 
     def LiteralNode(self, node, values, *scopes):
-        type = node.value.type
+        type, value = node.value
+        if type.startswith('IMAG_'):
+            value = value.strip('j')
         value = {
             'INTEGER': int,
             'DECIMAL': Decimal,
