@@ -59,15 +59,19 @@ class DescentParser:
         except StopIteration:
             self.next = EOF
 
-    def matches(self, type: str, value: Values=()) -> bool:
-        if self.current.type != type:
-            return False
+    def matches(self, type: Values, value: Values=()) -> bool:
+        if isinstance(type, str):
+            if self.current.type != type:
+                return False
+        else:
+            if self.current.type not in type:
+                return False
         if isinstance(value, str):
             return self.current.value == value
         else:
             return self.current.value in value
 
-    def consume(self, type: str, value: Values) -> None:
+    def consume(self, type: Values, value: Values) -> None:
         if self.matches(type, value):
             self.advance()
         else:
