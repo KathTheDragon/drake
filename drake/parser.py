@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Iterator, List, Tuple, Union
+from typing import Callable, Iterator, List, Tuple, Union
 from .ast import *
 from .ast import Precedence
 from .lexer import Token
@@ -51,6 +51,7 @@ class DescentParser:
         self.advance()
         self.ast = self.parse()
 
+    # Basic token functions
     def advance(self) -> None:
         self.current = self.next
         try:
@@ -71,4 +72,23 @@ class DescentParser:
             self.advance()
         else:
             raise expectedToken(value, self.current)
+
+    # Pattern functions
+    def leftassoc(self, func: Callable, operator: Values) -> ASTNode:
+        expr = func()
+        while self.matches('OPERATOR', operator):
+            op = self.current
+            self.advance()
+            right = func()
+            expr = BinaryOpNode(expr, op, right)
+        return expr
+
+    def rightassoc(self, func: Callable, operator: Values) -> ASTNode:
+        expr = func()
+        if not self.matches('OPERATOR', operator):
+            return expr
+        op = self.current
+        self.advance()
+        right = self.rightassoc(func, operator)
+        return BinaryOpNode(expr, op, right)
 
