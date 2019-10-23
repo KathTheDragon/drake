@@ -15,7 +15,7 @@ __all__ = [
     UnaryOpNode,
     BinaryOpNode,
     SubscriptNode,
-    AttrLookupNode,
+    LookupNode,
     CallNode,
     IterNode,
     ReturnNode,
@@ -147,12 +147,12 @@ class SubscriptNode(ASTNode):
         return pprint('Subscript', self.container, self.subscript)
 
 @dataclass
-class AttrLookupNode(ASTNode):
+class LookupNode(ASTNode):
     obj: ASTNode
     attribute: IdentifierNode
 
     def pprint(self):
-        return pprint('AttrLookup', self.obj, self.attribute)
+        return pprint('Lookup', self.obj, self.attribute)
 
 @dataclass
 class CallNode(ASTNode):
