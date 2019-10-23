@@ -66,7 +66,7 @@ class DescentParser:
         try:
             self.next = next(self.tokens)
         except StopIteration:
-            self.next = EOF
+            pass
 
     def matches(self, type: Values, value: Values=()) -> bool:
         if isinstance(type, str):
