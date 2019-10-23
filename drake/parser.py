@@ -50,21 +50,18 @@ class DrakeCompilerWarning(Warning):
 @dataclass
 class DescentParser:
     self: Iterator[Token]
-    current: Token = field(init=False)
-    next: Token = field(init=False, default=EOF)
+    current: Token = field(init=False, default=EOF)
     ast: BlockNode = field(init=False)
     log: List[Exception] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         self.advance()
-        self.advance()
         self.ast = self.parse()
 
     # Basic token functions
     def advance(self) -> None:
-        self.current = self.next
         try:
-            self.next = next(self.tokens)
+            self.current = next(self.tokens)
         except StopIteration:
             pass
 
