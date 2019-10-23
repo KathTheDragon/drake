@@ -5,7 +5,7 @@ from .ast import Precedence
 from .lexer import Token
 
 ## Constants
-EOF = Token('EOF', '', -1, 0)
+EOF = Token('EOF', '', 0, 0)
 LITERAL = (
     'STRING',
     'INTEGER',
