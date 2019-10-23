@@ -93,3 +93,4 @@ def lex(source):
             yield Token(type, value, linenum, column)
         if not empty:
             yield Token('NEWLINE', '', linenum, len(line))
+    yield Token('EOF', '', linenum+1, 0)
