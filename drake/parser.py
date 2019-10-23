@@ -6,6 +6,15 @@ from .lexer import Token
 
 ## Constants
 EOF = Token('EOF', '', -1, 0)
+LITERAL = (
+    'STRING',
+    'INTEGER',
+    'DECIMAL',
+    'IMAG_INTEGER',
+    'IMAG_DECIMAL',
+    'BOOLEAN',
+    'NONE'
+)
 Values = Union[str, Tuple[str]]
 
 ## Exceptions
