@@ -7,6 +7,7 @@ __all__ = [
     ASTNode,
     LiteralNode,
     IdentifierNode,
+    GroupingNode,
     ListNode,
     TupleNode,
     PairNode,
@@ -82,6 +83,16 @@ class IdentifierNode(ASTNode):
 
     def pprint(self):
         return f'Identifier {self.name.value}'
+
+@dataclass
+class GroupingNode(ASTNode):
+    expr: ASTNode
+
+    def pprint(self):
+        if isprimary(self.expr):
+            return f'({self.expr.pprint()})'
+        else:
+            return f'(\n{self.expr.pprint()}\n)'
 
 @dataclass
 class SequenceNode(ASTNode):
