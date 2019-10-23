@@ -6,6 +6,7 @@ from .lexer import Token
 
 ## Constants
 EOF = Token('EOF', '', -1, 0)
+Values = Union[str, Tuple[str]]
 
 ## Exceptions
 class DrakeSyntaxError(Exception):
@@ -57,7 +58,7 @@ class DescentParser:
         except StopIteration:
             self.next = EOF
 
-    def matches(self, type: str, value: Union[str, Tuple[str]]=()) -> bool:
+    def matches(self, type: str, value: Values=()) -> bool:
         if self.current.type != type:
             return False
         if isinstance(value, str):
@@ -65,7 +66,7 @@ class DescentParser:
         else:
             return self.current.value in value
 
-    def consume(self, type: str, value: Union[str, Tuple[str]]) -> None:
+    def consume(self, type: str, value: Values) -> None:
         if self.matches(type, value):
             self.advance()
         else:
