@@ -77,8 +77,10 @@ class DescentParser:
                 return False
         if isinstance(value, str):
             return self.current.value == value
-        else:
+        elif values:
             return self.current.value in value
+        else:
+            return True
 
     def consume(self, type: Values, value: Values) -> None:
         if self.matches(type, value):
