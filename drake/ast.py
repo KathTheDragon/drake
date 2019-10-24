@@ -52,10 +52,10 @@ def pprint(name, *args):
         else:
             argstrings.append(arg)
     if isprimary(*args):
+        return f'{name} ( {", ".join(argstrings)} )'
+    else:
         delimiter = ',\n'  # Can't use this directly in the f-string
         return f'{name} (\n{delimiter.join((indent(arg) for arg in argstrings))}\n)'
-    else:
-        return f'{name} ( {", ".join(argstrings)} )'
 
 ## Classes
 class ASTNode:
