@@ -79,7 +79,7 @@ class DescentParser:
         else:
             return True
 
-    def consume(self, type: Values, value: Values) -> None:
+    def consume(self, type: Values, value: Values=()) -> None:
         if self.matches(type, value):
             self.advance()
         else:
