@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Union
 from .lexer import Token
 
 __all__ = [
@@ -198,11 +198,11 @@ class YieldFromNode(KeywordNode):
 
 @dataclass
 class LambdaNode(ASTNode):
-    params: List[Token]
+    params: List[Union[IdentifierNode, 'AssignmentNode']]
     returns: ASTNode
 
     def pprint(self):
-        return pprint(self.nodetype, self.params, self.returns)
+        return pprint(self.nodetype, *self.params, self.returns)
 
 @dataclass
 class AssignmentNode(ASTNode):
