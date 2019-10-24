@@ -227,7 +227,7 @@ class BlockNode(ASTNode):
         return len(self.expressions)
 
     def pprint(self):
-        return '{\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
+        return 'Block {\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
 
 @dataclass
 class ClassNode(LambdaNode):
