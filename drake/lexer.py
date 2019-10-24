@@ -93,5 +93,5 @@ def lex(source):
                     type = 'BOOLEAN'
             yield Token(type, value, linenum, column)
         if not empty:
-            yield Token('NEWLINE', '', linenum, len(line))
-    yield Token('EOF', '', linenum+1, 0)
+            yield Token('NEWLINE', 'nl', linenum, len(line))
+    yield Token('EOF', 'eof', linenum+1, 0)
