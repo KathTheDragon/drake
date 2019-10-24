@@ -130,8 +130,13 @@ class DescentParser:
                     while not self.matches(('NEWLINE', endtype)):
                         self.advance()
         elif self.matches('COMMA'):
+            newline = None
             while self.matches('COMMA'):
                 self.advance()
+                if newline is None:
+                    newline = self.matches('NEWLINE')
+                if newline:
+                    self.consume('NEWLINE')
                 try:
                     expressions.append(func())
                 except DrakeSyntaxError as e:
