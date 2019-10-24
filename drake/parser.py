@@ -168,7 +168,10 @@ class DescentParser:
         if self.matches('KEYWORD', ('nonlocal', 'const')):
             mode = self.current.value
             self.advance()
-            target = self.parseIdentifier()
+            if not self.matches('IDENTIFIER'):
+                raise DrakeSyntaxError('expected identifier', self.current)
+            target = IdentifierNode(self.current)
+            self.advance()
             if not self.matches('ASSIGNMENT'):
                 raise expectedToken('=', self.current)
         else:
