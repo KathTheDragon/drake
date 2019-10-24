@@ -281,10 +281,14 @@ class DescentParser:
             params = expression.items
         else:
             params = [expression]
+        errors = []
         for param in params:
-            if not isinstance(param, (IdentifierNode, AssignmentNode)):
+            if isinstance(param, AssignmentNode):
+                self.log.pop()
+            elif not isinstance(param, IdentifierNode):
                 # Need to fix this to use a more useful token
-                self.log.append(DrakeSyntaxError('invalid lambda argument', self.current))
+                errors.append(DrakeSyntaxError('invalid lambda argument', self.current))
+        self.log.extend(errors)
         self.advance()
         returns = self.parseLambda()
         return LambdaNode(params, returns)
