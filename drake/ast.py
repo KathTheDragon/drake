@@ -269,7 +269,7 @@ class IfNode(ASTNode):
 
 @dataclass
 class ForNode(ASTNode):
-    vars: List[Tokens]
+    vars: List[Token]
     container: ASTNode
     body: BlockNode
 
