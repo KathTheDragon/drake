@@ -104,3 +104,295 @@ class DescentParser:
         right = self.rightassoc(func, operator)
         return BinaryOpNode(expr, op, right)
 
+    def list(self, func: Callable, endtype: str) -> List[ASTNode]:
+        expressions = []
+        if self.matches('NEWLINE'):
+            self.advance()
+        if self.matches(endtype):
+            return expressions
+        try:
+            expressions.append(func())
+        except DrakeSyntaxError as e:
+            self.log.append(e)
+            while not self.matches(('NEWLINE', endtype)):
+                self.advance()
+        if self.matches(endtype):
+            return expressions
+        if self.matches('NEWLINE'):
+            while self.matches('NEWLINE'):
+                self.advance()
+                if self.matches(endtype):
+                    return expressions
+                try:
+                    expressions.append(func())
+                except DrakeSyntaxError as e:
+                    self.log.append(e)
+                    while not self.matches(('NEWLINE', endtype)):
+                        self.advance()
+        elif self.matches('COMMA'):
+            while self.matches('COMMA'):
+                self.advance()
+                try:
+                    expressions.append(func())
+                except DrakeSyntaxError as e:
+                    self.log.append(e)
+                    while not self.matches(('COMMA', endtype)):
+                        self.advance()
+            if self.matches('NEWLINE'):
+                self.advance()
+        return expressions
+
+    # Parsing functions
+    def parse(self) -> BlockNode:
+        program = self.list(self.parseAssignment, 'EOF')
+        self.consume('EOF')
+        return BlockNode(program)
+
+    def parsePairList(self) -> List[ASTNode]:
+        return self.list(self.parsePair, 'RBRACKET')
+
+    def parsePair(self) -> ASTNode:
+        expr = self.parseAssignment()
+        if not self.matches('COLON'):
+            return expr
+        if isinstance(expr, AssignmentNode):
+            self.log.append(DrakeSyntaxError('cannot use assignment as a pair key', self.current))
+        self.advance()
+        value = self.parseExpression()
+        return PairNode(expr, value)
+
+    def parseAssignList(self) -> List[ASTNode]:
+        return self.list(self.parseAssignment, 'RBRACKET')
+
+    def parseAssignment(self) -> ASTNode:
+        if self.matches('KEYWORD', ('nonlocal', 'const')):
+            mode = self.current.value
+            self.advance()
+            target = self.parseIdentifier()
+            if not self.matches('ASSIGNMENT'):
+                raise expectedToken('=', self.current)
+        else:
+            mode = ''
+            target = self.parseExpression()
+            if not self.matches('ASSIGNMENT'):
+                return target
+            if not isinstance(target, IdentifierNode):
+                # Need to fix this to use a more useful token
+                self.log.append(DrakeSyntaxError('invalid target for assignment', self.current))
+        operator = self.current
+        self.advance()
+        expression = self.parseAssignment()
+        if operator.value != '=':
+            operator.type = 'OPERATOR'
+            expression = BinaryOpNode(target, operator, expression)
+        if isinstance(expression, (LambdaNode, ClassNode, InterfaceNode, ExceptionNode)) and mode != 'const':
+            # Need to fix this to use a more useful token
+            self.log.append(DrakeCompilerWarning(f'{expression.nodetype.lower()} should be assigned to a constant', operator))
+        return AssignmentNode(mode, target, expression)
+
+    def parseExprList(self) -> List[ASTNode]:
+        return self.list(self.parseExpression, 'RBRACKET')
+
+    def parseExpression(self) -> ASTNode:
+        return self.parseKeyword()
+
+    def parseKeyword(self) -> ASTNode:
+        if self.matches('KEYWORD', 'return'):
+            self.advance()
+            return ReturnNode(self.parseFlow())
+        elif self.matches('KEYWORD', 'yield'):
+            self.advance()
+            return YieldNode(self.parseFlow())
+        elif self.matches('KEYWORD', 'yield from'):
+            self.advance()
+            return YieldFromNode(self.parseFlow())
+        elif self.matches('KEYWORD', 'break'):
+            self.advance()
+            return BreakNode()
+        elif self.matches('KEYWORD', 'continue'):
+            self.advance()
+            return ContinueNode()
+        else:
+            return self.parseFlow()
+
+    def parseFlow(self) -> ASTNode:
+        if self.matches('KEYWORD', 'if'):
+            self.advance()
+            condition = self.parseFlow()
+            self.consume('KEYWORD', 'then')
+            then = self.parseFlow()
+            if self.matches('KEYWORD', 'else'):
+                self.advance()
+                default = self.parseFlow()
+            else:
+                default = None
+            return IfNode(condition, then, default)
+        elif self.matches('KEYWORD', 'case'):
+            self.advance()
+            value = self.parseFlow()
+            self.consume('KEYWORD', 'in')
+            cases = self.parseFlow()
+            if self.matches('KEYWORD', 'else'):
+                self.advance()
+                default = self.parseFlow()
+            else:
+                default = None
+            return CaseNode(value, cases, default)
+        elif self.matches('KEYWORD', 'for'):
+            self.advance()
+            vars = []
+            if not self.matches('IDENTIFIER'):
+                self.log.append(DrakeSyntaxError('invalid loop variable', self.current))
+            vars.append(self.current)
+            self.advance()
+            while self.matches('COMMA'):
+                self.advance()
+                if not self.matches('IDENTIFIER'):
+                    self.log.append(DrakeSyntaxError('invalid loop variable', self.current))
+                vars.append(self.current)
+                self.advance()
+            self.consume('KEYWORD', 'in')
+            container = self.parseFlow()
+            body = self.parseBlock()
+            return ForNode(vars, container, body)
+        elif self.matches('KEYWORD', 'while'):
+            self.advance()
+            condition = self.parseFlow()
+            body = self.parseBlock()
+            return WhileNode(condition, body)
+        else:
+            return self.parseLambda()
+
+    def parseLambda(self) -> ASTNode:
+        expression = self.parseBoolOr()
+        if not self.matches('LAMBDA'):
+            return expression
+        if isinstance(expression, GroupingNode):
+            params = [expression.expr]
+        elif isinstance(expression, TupleNode):
+            params = expression.items
+        else:
+            params = [expression]
+        for param in params:
+            if not isinstance(param, (IdentifierNode, AssignmentNode)):
+                # Need to fix this to use a more useful token
+                self.log.append(DrakeSyntaxError('invalid lambda argument', self.current))
+        self.advance()
+        returns = self.parseLambda()
+        return LambdaNode(params, returns)
+
+    def parseBoolOr(self) -> ASTNode:
+        return self.rightassoc(self.parseBoolXor, 'or')
+
+    def parseBoolXor(self) -> ASTNode:
+        return self.rightassoc(self.parseBoolAnd, 'xor')
+
+    def parseBoolAnd(self) -> ASTNode:
+        return self.rightassoc(self.parseComparison, 'and')
+
+    def parseComparison(self) -> ASTNode:
+        return self.leftassoc(self.parseRange, ('in','not in','is','is not','==','!=','<','<=','>','>='))
+
+    def parseRange(self) -> ASTNode:
+        left = self.parseBitOr()
+        if not self.matches('OPERATOR', '..'):
+            return left
+        operator = self.current
+        self.advance()
+        right = self.parseBitOr()
+        return BinaryOpNode(left, operator, right)
+
+    def parseBitOr(self) -> ASTNode:
+        return self.leftassoc(self.parseBitXor, '|')
+
+    def parseBitXor(self) -> ASTNode:
+        return self.leftassoc(self.parseBitAnd, '^')
+
+    def parseBitAnd(self) -> ASTNode:
+        return self.leftassoc(self.parseBitShift, '&')
+
+    def parseBitShift(self) -> ASTNode:
+        return self.leftassoc(self.parseAdd, ('<<', '>>'))
+
+    def parseAdd(self) -> ASTNode:
+        return self.leftassoc(self.parseMult, ('+', '-'))
+
+    def parseMult(self) -> ASTNode:
+        return self.leftassoc(self.parseExp, ('*', '/', '%'))
+
+    def parseExp(self) -> ASTNode:
+        return self.rightassoc(self.parseUnary, '**')
+
+    def parseUnary(self) -> ASTNode:
+        if not self.matches('OPERATOR', ('not', '!', '-')):
+            return self.parseCall()
+        operator = self.current
+        operand = self.parseUnary()
+        return UnaryOpNode(operator, operand)
+
+    def parseCall(self) -> ASTNode:
+        expr = self.parsePrimary()
+        while True:
+            if self.matches('DOT'):
+                self.advance()
+                attribute = self.parseIdentifier()
+                expr = LookupNode(expr, attribute)
+            elif self.matches('LBRACKET', '('):
+                self.advance()
+                arguments = self.parseAssignList()
+                self.consume('RBRACKET', ')')
+                expr = CallNode(expr, arguments)
+            elif self.matches('LBRACKET', '['):
+                self.advance()
+                subscript = self.parseExprList()
+                self.consume(']')
+                expr = SubscriptNode(expr, subscript)
+            else:
+                return expr
+
+    def parsePrimary(self) -> ASTNode:
+        if self.matches('LBRACKET', '('):
+            self.advance()
+            items = self.parseAssignList()
+            if len(items) == 1:
+                if not self.matches('COMMA'):
+                    expr = items[0]
+                    if isinstance(item, AssignNode):
+                        # Need to fix this to use a more useful token
+                        self.log.append(DrakeSyntaxError('cannot put assignment inside grouping', self.current))
+                    self.consume('RBRACKET', ')')
+                    return GroupingNode(expr)
+                self.advance()
+            for item in items:
+                if isinstance(item, AssignNode):
+                    # Need to fix this to use a more useful token
+                    self.log.append(DrakeSyntaxError('cannot put assignment inside tuple', self.current))
+            self.consume('RBRACKET', ')')
+            return TupleNode(items)
+        elif self.matches('LBRACKET', '['):
+            self.advance()
+            items = self.parseExprList()
+            self.consume('RBRACKET', ']')
+            return ListNode(items)
+        elif self.matches('LBRACKET', '{'):
+            self.advance()
+            items = self.parsePairList()
+            if all(isinstance(item, PairNode) for item in items):
+                self.consume('RBRACKET', '}')
+                return MapNode(items)
+            for item in items:
+                if isinstance(item, PairNode):
+                    # Need to fix this to use a more useful token
+                    self.log.append(DrakeSyntaxError('cannot put pairing inside block', self.current))
+            self.consume('RBRACKET', '}')
+            return BlockNode(items)
+        elif self.matches(LITERAL):
+            expr = LiteralNode(self.current)
+            self.advance()
+            return expr
+        elif self.matches('IDENTIFIER'):
+            expr = IdentifierNode(self.current)
+            self.advance()
+            return expr
+        else:
+            raise DrakeSyntaxError('invalid syntax', self.current)
