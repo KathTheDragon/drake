@@ -111,11 +111,11 @@ class TupleNode(SequenceNode):
 
 @dataclass
 class PairNode(ASTNode):
-    name: ASTNode
+    key: ASTNode
     value: ASTNode
 
     def pprint():
-        pprint('Pair', self.name, self.value)
+        pprint('Pair', self.key, self.value)
 
 @dataclass
 class MapNode(SequenceNode):
