@@ -49,7 +49,7 @@ class DrakeCompilerWarning(Warning):
 ## Classes
 @dataclass
 class DescentParser:
-    self: Iterator[Token]
+    tokens: Iterator[Token]
     current: Token = field(init=False, default=EOF)
     ast: BlockNode = field(init=False)
     log: List[Exception] = field(init=False, default_factory=list)
