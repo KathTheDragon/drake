@@ -74,7 +74,7 @@ class DescentParser:
                 return False
         if isinstance(value, str):
             return self.current.value == value
-        elif values:
+        elif value:
             return self.current.value in value
         else:
             return True
