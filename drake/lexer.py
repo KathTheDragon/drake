@@ -54,7 +54,7 @@ TOKENS = {
     'IDENTIFIER': r'[a-zA-Z_]\w*[!?]?',
     'STRING': fr'\'{STRING}\'|\"{STRING}\"',
     'IMAG_DECIMAL': fr'(?:{INTEGER})\.(?:{DECIMAL})j',
-    'IMAG_INTEGER': fr'{INTEGER}j',
+    'IMAG_INTEGER': fr'(?:{INTEGER})j',
     'DECIMAL': fr'(?:{INTEGER})\.(?:{DECIMAL})',
     'INTEGER': INTEGER,
     'WHITESPACE': r'[ \t]+',
