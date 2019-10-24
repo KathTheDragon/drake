@@ -372,14 +372,14 @@ class DescentParser:
             if len(items) == 1:
                 if not self.matches('COMMA'):
                     expr = items[0]
-                    if isinstance(item, AssignNode):
+                    if isinstance(expr, AssignmentNode):
                         # Need to fix this to use a more useful token
                         self.log.append(DrakeSyntaxError('cannot put assignment inside grouping', self.current))
                     self.consume('RBRACKET', ')')
                     return GroupingNode(expr)
                 self.advance()
             for item in items:
-                if isinstance(item, AssignNode):
+                if isinstance(item, AssignmentNode):
                     # Need to fix this to use a more useful token
                     self.log.append(DrakeSyntaxError('cannot put assignment inside tuple', self.current))
             self.consume('RBRACKET', ')')
