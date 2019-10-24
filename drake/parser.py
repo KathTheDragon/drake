@@ -23,14 +23,14 @@ class DrakeSyntaxError(Exception):
         value = token.value
         linenum = token.linenum
         column = token.column
-        super().__init__(f'{error}: {value} @ {linenum}:{column}')
+        super().__init__(f'{error}: {value!r} @ {linenum}:{column}')
         self.error = error
         self.value = value
         self.linenum = linenum
         self.column = column
 
 def expectedToken(expected, token):
-    return DrakeSyntaxError(f'expected {expected}', token)
+    return DrakeSyntaxError(f'expected {expected!r}', token)
 
 def unexpectedToken(token):
     return DrakeSyntaxError('unexpected token', token)
