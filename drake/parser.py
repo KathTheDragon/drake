@@ -347,7 +347,10 @@ class DescentParser:
         while True:
             if self.matches('DOT'):
                 self.advance()
-                attribute = self.parseIdentifier()
+                if not self.matches('IDENTIFIER'):
+                    raise DrakeSyntaxError('expected identifier', self.current)
+                attribute = IdentifierNode(self.current)
+                self.advance()
                 expr = LookupNode(expr, attribute)
             elif self.matches('LBRACKET', '('):
                 self.advance()
