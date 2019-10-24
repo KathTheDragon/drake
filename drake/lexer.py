@@ -8,7 +8,7 @@ KEYWORDS = [
     'class',
     'const',
     'continue',
-    'del'
+    'del',
     'else',
     'exception',
     'false',
