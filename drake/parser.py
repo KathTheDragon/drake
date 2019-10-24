@@ -83,7 +83,7 @@ class DescentParser:
         if self.matches(type, value):
             self.advance()
         else:
-            raise expectedToken(value, self.current)
+            raise expectedToken(value or type, self.current)
 
     # Pattern functions
     def leftassoc(self, func: Callable, operator: Values) -> ASTNode:
