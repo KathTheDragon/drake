@@ -33,7 +33,7 @@ def expectedToken(expected, token):
     return DrakeSyntaxError(f'expected {expected!r}', token)
 
 def unexpectedToken(token):
-    return DrakeSyntaxError('unexpected token', token)
+    return DrakeSyntaxError(f'unexpected {token.type.lower()}', token)
 
 class DrakeCompilerWarning(Warning):
     def __init__(self, warning, token):
