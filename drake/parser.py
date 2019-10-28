@@ -114,7 +114,7 @@ class DescentParser:
             expressions.append(func())
         except DrakeSyntaxError as e:
             self.log.append(e)
-            while not self.matches(('NEWLINE', endtype)):
+            while not self.matches(('NEWLINE', 'COMMA', endtype)):
                 self.advance()
         if self.matches(endtype):
             return expressions
