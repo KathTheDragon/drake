@@ -162,22 +162,21 @@ class DescentParser:
 
     def parseAssignment(self) -> ASTNode:
         if self.matches('KEYWORD', ('nonlocal', 'const')):
-            mode = self.current.value
+            mode = self.current
             self.advance()
-            if not self.matches('IDENTIFIER'):
-                raise DrakeSyntaxError('expected identifier', self.current)
-            target = IdentifierNode(self.current)
-            self.advance()
+            target = self.parseExpression()
             if not self.matches('ASSIGNMENT'):
-                raise expectedToken('=', self.current)
+                self.log.append(unexpectedToken(mode))
+                return target
+            mode = mode.value
         else:
             mode = ''
             target = self.parseExpression()
             if not self.matches('ASSIGNMENT'):
                 return target
-            if not isinstance(target, IdentifierNode):
-                # Need to fix this to use a more useful token
-                self.log.append(DrakeSyntaxError('invalid target for assignment', self.current))
+        if not isinstance(target, IdentifierNode):
+            # Need to fix this to use a more useful token
+            self.log.append(DrakeSyntaxError('invalid target for assignment', self.current))
         operator = self.current
         self.advance()
         expression = self.parseAssignment()
