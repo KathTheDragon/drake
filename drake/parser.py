@@ -118,33 +118,24 @@ class DescentParser:
                 self.advance()
         if self.matches(endtype):
             return expressions
+        delimiter = self.current.type
+        newline = None
+        while self.matches(delimiter):
+            self.advance()
+            if self.matches(endtype):
+                return expressions
+            if newline is None:
+                newline = self.matches('NEWLINE')
+            if newline:
+                self.consume('NEWLINE')
+            try:
+                expressions.append(func())
+            except DrakeSyntaxError as e:
+                self.log.append(e)
+                while not self.matches((delimiter, endtype)):
+                    self.advance()
         if self.matches('NEWLINE'):
-            while self.matches('NEWLINE'):
-                self.advance()
-                if self.matches(endtype):
-                    return expressions
-                try:
-                    expressions.append(func())
-                except DrakeSyntaxError as e:
-                    self.log.append(e)
-                    while not self.matches(('NEWLINE', endtype)):
-                        self.advance()
-        elif self.matches('COMMA'):
-            newline = None
-            while self.matches('COMMA'):
-                self.advance()
-                if newline is None:
-                    newline = self.matches('NEWLINE')
-                if newline:
-                    self.consume('NEWLINE')
-                try:
-                    expressions.append(func())
-                except DrakeSyntaxError as e:
-                    self.log.append(e)
-                    while not self.matches(('COMMA', endtype)):
-                        self.advance()
-            if self.matches('NEWLINE'):
-                self.advance()
+            self.advance()
         return expressions
 
     # Parsing functions
