@@ -45,7 +45,7 @@ def pprint(name, *args):
     argstrings = []
     for arg in args:
         if isinstance(arg, ASTNode):
-            argstrings.append(arg.pprint())
+            argstrings.append(str(arg))
         elif isinstance(arg, list):
             argstrings.append(f'({", ".join(item.value for item in arg)})')
         else:
@@ -58,44 +58,44 @@ def pprint(name, *args):
 
 ## Classes
 class ASTNode:
+    def __str__(self):
+        raise NotImplementedError
 
     @property
     def nodetype(self):
         return self.__class__.__name__[:-4]
 
 
-    def pprint(self):
-        raise NotImplementedError
 
 @dataclass
 class LiteralNode(ASTNode):
     value: Token
 
-    def pprint(self):
+    def __str__(self):
         return f'{self.value.type.capitalize()} {self.value.value}'
 
 @dataclass
 class IdentifierNode(ASTNode):
     name: Token
 
-    def pprint(self):
+    def __str__(self):
         return f'Identifier {self.name.value}'
 
 @dataclass
 class GroupingNode(ASTNode):
     expr: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         if isprimary(self.expr):
-            return f'({self.expr.pprint()})'
+            return f'({self.expr})'
         else:
-            return f'(\n{self.expr.pprint()}\n)'
+            return f'(\n{self.expr}\n)'
 
 @dataclass
 class SequenceNode(ASTNode):
     items: List[ASTNode]
 
-    def pprint(self):
+    def __str__(self):
         return pprint(self.nodetype, *self.items)
 
 @dataclass
@@ -111,8 +111,8 @@ class PairNode(ASTNode):
     key: ASTNode
     value: ASTNode
 
-    def pprint():
         pprint('Pair', self.key, self.value)
+    def __str__():
 
 @dataclass
 class MapNode(SequenceNode):
@@ -123,7 +123,7 @@ class UnaryOpNode(ASTNode):
     operator: Token
     operand: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint(f'Unary {self.operator.value}', self.operand)
 
 @dataclass
@@ -132,7 +132,7 @@ class BinaryOpNode(ASTNode):
     operator: Token
     right: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint(f'Binary {self.operator.value}', self.left, self.right)
 
 @dataclass
@@ -140,7 +140,7 @@ class SubscriptNode(ASTNode):
     container: ASTNode
     subscript: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint('Subscript', self.container, self.subscript)
 
 @dataclass
@@ -148,7 +148,7 @@ class LookupNode(ASTNode):
     obj: ASTNode
     attribute: IdentifierNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
 @dataclass
@@ -156,14 +156,14 @@ class CallNode(ASTNode):
     function: ASTNode
     arguments: List[ASTNode]
 
-    def pprint(self):
+    def __str__(self):
         return pprint('Call', self.function, *self.arguments)
 
 @dataclass
 class KeywordNode(ASTNode):
     expression: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint(self.nodetype, self.expression)
 
 @dataclass
@@ -176,12 +176,12 @@ class ReturnNode(KeywordNode):
 
 @dataclass
 class BreakNode(ASTNode):
-    def pprint(self):
+    def __str__(self):
         return 'Break'
 
 @dataclass
 class ContinueNode(ASTNode):
-    def pprint(self):
+    def __str__(self):
         return 'Continue'
 
 @dataclass
@@ -197,7 +197,7 @@ class LambdaNode(ASTNode):
     params: List[Union[IdentifierNode, 'AssignmentNode']]
     returns: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint(self.nodetype, *self.params, self.returns)
 
 @dataclass
@@ -206,7 +206,7 @@ class AssignmentNode(ASTNode):
     target: ASTNode
     expression: ASTNode
 
-    def pprint(self):
+    def __str__(self):
         if self.mode:
             return pprint(f'{self.mode} Assign', self.target, self.expression)
         else:
@@ -222,8 +222,8 @@ class BlockNode(ASTNode):
     def __len__(self):
         return len(self.expressions)
 
-    def pprint(self):
-        return 'Block {\n' + '\n'.join(indent(node.pprint()) for node in self) + '\n}'
+    def __str__(self):
+        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
 
 @dataclass
 class ClassNode(LambdaNode):
@@ -239,7 +239,7 @@ class CaseNode(ASTNode):
     cases: MapNode
     default: Optional[ASTNode]
 
-    def pprint(self):
+    def __str__(self):
         if self.default is None:  # No else
             return pprint('Case', self.var, self.cases)
         else:
@@ -251,7 +251,7 @@ class IfNode(ASTNode):
     then: ASTNode
     default: Optional[ASTNode]
 
-    def pprint(self):
+    def __str__(self):
         if self.default is None:  # No else
             return pprint('If', self.condition, self.then)
         else:
@@ -263,7 +263,7 @@ class ForNode(ASTNode):
     container: ASTNode
     body: BlockNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint('For', self.vars, self.container, self.body)
 
 @dataclass
@@ -271,7 +271,7 @@ class WhileNode(ASTNode):
     condition: ASTNode
     body: BlockNode
 
-    def pprint(self):
+    def __str__(self):
         return pprint('While', self.condition, self.body)
 
 class Precedence(enum.IntEnum):
