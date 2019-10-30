@@ -27,7 +27,6 @@ __all__ = [
     'AssignmentNode',
     'BlockNode',
     'ClassNode',
-    'InterfaceNode',
     'ExceptionNode',
     'CaseNode',
     'IfNode',
@@ -232,13 +231,6 @@ class BlockNode(ASTNode):
 @dataclass
 class ClassNode(LambdaNode):
     returns: BlockNode
-
-@dataclass
-class InterfaceNode(ASTNode):
-    body: BlockNode
-
-    def pprint(self):
-        return f'Interface ({self.body.pprint()[1:-1]})'
 
 @dataclass
 class ExceptionNode(ClassNode):
