@@ -414,4 +414,4 @@ class DescentParser:
             self.advance()
             return expr
         else:
-            raise DrakeSyntaxError('invalid syntax', self.current)
+            raise unexpectedToken(self.current)
