@@ -5,6 +5,8 @@ from .lexer import Token
 
 __all__ = [
     'ASTNode',
+    'TypeNode',
+    'TypehintNode',
     'LiteralNode',
     'IdentifierNode',
     'GroupingNode',
@@ -66,7 +68,25 @@ class ASTNode:
     def nodetype(self):
         return self.__class__.__name__[:-4]
 
+@dataclass
+class TypeNode(ASTNode):
+    type: Token
+    params: List['TypeNode']
 
+    def __str__(self):
+        type = self.type.value
+        if self.params:
+            return f'{type}[{", ".join(self.params)}]'
+        else:
+            return type
+
+@dataclass
+class TypehintNode(ASTNode):
+    typehint: TypeNode
+    expr: ASTNode
+
+    def __str__(self):
+        return f'<{self.typehint}> {self.expr}'
 
 @dataclass
 class LiteralNode(ASTNode):

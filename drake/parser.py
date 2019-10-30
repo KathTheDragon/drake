@@ -336,7 +336,26 @@ class DescentParser:
         return self.leftassoc(self.parseExp, ('*', '/', '%'))
 
     def parseExp(self) -> ASTNode:
-        return self.rightassoc(self.parseUnary, '**')
+        return self.rightassoc(self.parseTypehint, '**')
+
+    def parseTypehint(self) -> ASTNode:
+        if self.matches('OPERATOR', '<'):
+            self.advance()
+            typehint = self.parseType()
+            self.consume('OPERATOR', '>')
+            return TypehintNode(typehint, self.parseUnary())
+        else:
+            return self.parseUnary()
+
+    def parseType(self) -> TypeNode:
+        type = self.current
+        self.consume('IDENTIFIER')
+        if self.matches('LBRACKET', '['):
+            params = self.list(self.parseType, 'RBRACKET')
+            self.consume('RBACKET', ']')
+        else:
+            params = []
+        return TypeNode(type, params)
 
     def parseUnary(self) -> ASTNode:
         if not self.matches('OPERATOR', ('not', '!', '-', "*", "**")):
