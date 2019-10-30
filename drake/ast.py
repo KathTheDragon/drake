@@ -208,7 +208,7 @@ class AssignmentNode(ASTNode):
 
     def __str__(self):
         if self.mode:
-            return pprint(f'{self.mode} Assign', self.target, self.expression)
+            return pprint(f'Assign {self.mode}', self.target, self.expression)
         else:
             return pprint('Assign', self.target, self.expression)
 
