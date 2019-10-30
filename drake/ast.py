@@ -24,6 +24,7 @@ __all__ = [
     'YieldNode',
     'YieldFromNode',
     'LambdaNode',
+    'MultimethodNode',
     'AssignmentNode',
     'BlockNode',
     'ClassNode',
@@ -199,6 +200,10 @@ class LambdaNode(ASTNode):
 
     def __str__(self):
         return pprint(self.nodetype, *self.params, self.returns)
+
+@dataclass
+class MultimethodNode(SequenceNode):
+    items: List[LambdaNode]
 
 @dataclass
 class AssignmentNode(ASTNode):
