@@ -339,7 +339,7 @@ class DescentParser:
         return self.rightassoc(self.parseUnary, '**')
 
     def parseUnary(self) -> ASTNode:
-        if not self.matches('OPERATOR', ('not', '!', '-')):
+        if not self.matches('OPERATOR', ('not', '!', '-', "*", "**")):
             return self.parseCall()
         operator = self.current
         self.advance()
