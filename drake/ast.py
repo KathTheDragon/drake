@@ -111,8 +111,8 @@ class PairNode(ASTNode):
     key: ASTNode
     value: ASTNode
 
-        pprint('Pair', self.key, self.value)
     def __str__():
+        return pprint('Pair', self.key, self.value)
 
 @dataclass
 class MapNode(SequenceNode):
