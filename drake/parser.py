@@ -342,6 +342,7 @@ class DescentParser:
         if not self.matches('OPERATOR', ('not', '!', '-')):
             return self.parseCall()
         operator = self.current
+        self.advance()
         operand = self.parseUnary()
         return UnaryOpNode(operator, operand)
 
