@@ -16,6 +16,7 @@ KEYWORDS = [
     'if',
     'interface',
     'iter',
+    'multi',
     'mutable',
     'none',
     'nonlocal',
