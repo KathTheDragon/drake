@@ -183,7 +183,7 @@ class DescentParser:
         if operator.value != '=':
             operator.type = 'OPERATOR'
             expression = BinaryOpNode(target, operator, expression)
-        if isinstance(expression, (LambdaNode, ClassNode, InterfaceNode, ExceptionNode)) and mode != 'const':
+        if isinstance(expression, (LambdaNode, ClassNode, ExceptionNode)) and mode != 'const':
             # Need to fix this to use a more useful token
             self.log.append(DrakeCompilerWarning(f'{expression.nodetype.lower()} should be assigned to a constant', operator))
         return AssignmentNode(mode, target, expression)
