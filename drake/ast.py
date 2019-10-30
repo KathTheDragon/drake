@@ -58,14 +58,11 @@ def pprint(name, *args):
 
 ## Classes
 class ASTNode:
-    type: str = field(init=False)
 
     @property
     def nodetype(self):
         return self.__class__.__name__[:-4]
 
-    def getType(self):
-        return ''
 
     def pprint(self):
         raise NotImplementedError
