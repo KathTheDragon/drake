@@ -218,6 +218,11 @@ class DescentParser:
                 if not isinstance(LambdaNode):
                     self.log.append(DrakeSyntaxError(f'invalid multimethod', keyword))
             return MultimethodNode(list(block))
+        elif self.matches('KEYWORD', 'class'):
+            keyword = self.current
+            self.advance()
+            constructor = self.parseLambda()
+            return ClassNode(constructor.params, constructor.returns)
         else:
             return self.parseFlow()
 
