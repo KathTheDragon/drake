@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Iterator, List, Tuple, Union
 from .ast import *
 from .ast import Precedence
-from .lexer import Token
+from .lexer import Token, lex
 
 ## Constants
 EOF = Token('EOF', 'eof', 0, 0)
@@ -49,14 +49,10 @@ class DrakeCompilerWarning(Warning):
 ## Classes
 @dataclass
 class DescentParser:
-    tokens: Iterator[Token]
+    source: str
+    tokens: Iterator[Token] = field(init=False, default=iter([]))
     current: Token = field(init=False, default=EOF)
-    ast: BlockNode = field(init=False)
     log: List[Exception] = field(init=False, default_factory=list)
-
-    def __post_init__(self) -> None:
-        self.advance()
-        self.ast = self.parse()
 
     # Basic token functions
     def advance(self) -> None:
@@ -140,6 +136,9 @@ class DescentParser:
 
     # Parsing functions
     def parse(self) -> BlockNode:
+        self.tokens = lex(self.source)
+        self.advance()
+        self.log = []
         program = self.list(self.parseAssignment, 'EOF')
         self.consume('EOF')
         return BlockNode(program)
