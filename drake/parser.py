@@ -240,7 +240,7 @@ class DescentParser:
         elif self.matches('KEYWORD', 'case'):
             self.advance()
             value = self.parseFlow()
-            self.consume('KEYWORD', 'in')
+            self.consume('OPERATOR', 'in')
             cases = self.parseFlow()
             if self.matches('KEYWORD', 'else'):
                 self.advance()
@@ -250,13 +250,13 @@ class DescentParser:
             return CaseNode(value, cases, default)
         elif self.matches('KEYWORD', 'for'):
             self.advance()
-            vars = self.list(self.parseTypehint, 'KEYWORD')
+            vars = self.list(self.parseTypehint, 'OPERATOR', 'in')
             for var in vars:
                 if isinstance(var, TypehintNode):
                     var = var.expr
                 if not isinstance(var, IdentifierNode):
                     self.log.append(DrakeSyntaxError('invalid loop variable', self.current))
-            self.consume('KEYWORD', 'in')
+            self.consume('OPERATOR', 'in')
             container = self.parseFlow()
             body = self.parseBlock()
             return ForNode(vars, container, body)
