@@ -100,11 +100,11 @@ class DescentParser:
         right = self.rightassoc(func, operator)
         return BinaryOpNode(expr, op, right)
 
-    def list(self, func: Callable, endtype: str) -> List[ASTNode]:
+    def list(self, func: Callable, endtype: str, endvalue: Values=()) -> List[ASTNode]:
         expressions = []
         if self.matches('NEWLINE'):
             self.advance()
-        if self.matches(endtype):
+        if self.matches(endtype, endvalue):
             return expressions
         try:
             expressions.append(func())
@@ -112,13 +112,13 @@ class DescentParser:
             self.log.append(e)
             while not self.matches(('NEWLINE', 'COMMA', endtype)):
                 self.advance()
-        if self.matches(endtype):
+        if self.matches(endtype, endvalue):
             return expressions
         delimiter = self.current.type
         newline = None
         while self.matches(delimiter):
             self.advance()
-            if self.matches(endtype):
+            if self.matches(endtype, endvalue):
                 return expressions
             if newline is None:
                 newline = self.matches('NEWLINE')
