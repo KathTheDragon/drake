@@ -239,7 +239,7 @@ class DescentParser:
             return IfNode(condition, then, default)
         elif self.matches('KEYWORD', 'case'):
             self.advance()
-            value = self.parseFlow()
+            value = self.parseCall()
             self.consume('OPERATOR', 'in')
             cases = self.parseFlow()
             if self.matches('KEYWORD', 'else'):
