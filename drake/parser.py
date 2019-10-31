@@ -377,7 +377,7 @@ class DescentParser:
             elif self.matches('LBRACKET', '['):
                 self.advance()
                 subscript = self.parseExprList()
-                self.consume(']')
+                self.consume('RBRACKET', ']')
                 expr = SubscriptNode(expr, subscript)
             else:
                 return expr
