@@ -132,7 +132,7 @@ class PairNode(ASTNode):
     key: ASTNode
     value: ASTNode
 
-    def __str__():
+    def __str__(self):
         return pprint('Pair', self.key, self.value)
 
 @dataclass
