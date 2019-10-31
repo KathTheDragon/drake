@@ -428,3 +428,9 @@ class DescentParser:
             return expr
         else:
             raise unexpectedToken(self.current)
+
+    def parseBlock(self) -> BlockNode:
+        self.consume('LBRACKET', '{')
+        block = BlockNode(self.list(self.parseAssignment, 'RBRACKET'))
+        self.consume('RBRACKET', '}')
+        return block
