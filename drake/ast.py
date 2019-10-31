@@ -159,10 +159,10 @@ class BinaryOpNode(ASTNode):
 @dataclass
 class SubscriptNode(ASTNode):
     container: ASTNode
-    subscript: ASTNode
+    subscript: List[ASTNode]
 
     def __str__(self):
-        return pprint('Subscript', self.container, self.subscript)
+        return pprint('Subscript', self.container, *self.subscript)
 
 @dataclass
 class LookupNode(ASTNode):
@@ -284,12 +284,12 @@ class IfNode(ASTNode):
 
 @dataclass
 class ForNode(ASTNode):
-    vars: List[Token]
+    vars: List[ASTNode]
     container: ASTNode
     body: BlockNode
 
     def __str__(self):
-        return pprint('For', self.vars, self.container, self.body)
+        return pprint('For', *self.vars, self.container, self.body)
 
 @dataclass
 class WhileNode(ASTNode):
