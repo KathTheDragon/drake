@@ -214,7 +214,7 @@ class DescentParser:
             self.advance()
             block = self.parseBlock()
             for expr in block:
-                if not isinstance(LambdaNode):
+                if not isinstance(expr, LambdaNode):
                     self.log.append(DrakeSyntaxError(f'invalid multimethod', keyword))
             return MultimethodNode(list(block))
         elif self.matches('KEYWORD', 'class'):
