@@ -13,6 +13,7 @@ KEYWORDS = [
     'exception',
     'false',
     'for',
+    'from',
     'if',
     'interface',
     'iter',
@@ -24,7 +25,6 @@ KEYWORDS = [
     'then',
     'true',
     'while',
-    'yield from',
     'yield',
 ]
 KEYWORD_OPERATORS = [

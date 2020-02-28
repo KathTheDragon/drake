@@ -200,9 +200,10 @@ class DescentParser:
         if self.maybe('KEYWORD', 'return'):
             return ReturnNode(self.parseFlow())
         elif self.maybe('KEYWORD', 'yield'):
-            return YieldNode(self.parseFlow())
-        elif self.maybe('KEYWORD', 'yield from'):
-            return YieldFromNode(self.parseFlow())
+            if self.maybe('KEYWORD', 'from'):
+                return YieldFromNode(self.parseFlow())
+            else:
+                return YieldNode(self.parseFlow())
         elif self.maybe('KEYWORD', 'break'):
             return BreakNode()
         elif self.maybe('KEYWORD', 'continue'):
