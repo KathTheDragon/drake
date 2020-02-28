@@ -60,6 +60,11 @@ class DescentParser:
         except StopIteration:
             pass
 
+    def pop(self) -> Token:
+        token = self.current
+        self.advance()
+        return token
+
     def matches(self, type: Values, value: Values=()) -> bool:
         if isinstance(type, str):
             if self.current.type != type:
@@ -91,8 +96,7 @@ class DescentParser:
     def leftassoc(self, func: Callable, operator: Values) -> ParseNode:
         expr = func()
         while self.matches('OPERATOR', operator):
-            op = self.current
-            self.advance()
+            op = self.pop()
             right = func()
             expr = BinaryOpNode(expr, op, right)
         return expr
@@ -101,8 +105,7 @@ class DescentParser:
         expr = func()
         if not self.matches('OPERATOR', operator):
             return expr
-        op = self.current
-        self.advance()
+        op = self.pop()
         right = self.rightassoc(func, operator)
         return BinaryOpNode(expr, op, right)
 
@@ -163,8 +166,7 @@ class DescentParser:
 
     def parseAssignment(self) -> ParseNode:
         if self.matches('KEYWORD', ('nonlocal', 'const')):
-            mode = self.current
-            self.advance()
+            mode = self.pop()
             target = self.parseExpression()
             if not self.matches('ASSIGNMENT'):
                 self.log.append(unexpectedToken(mode))
@@ -178,8 +180,7 @@ class DescentParser:
         if not isinstance(target, IdentifierNode):
             # Need to fix this to use a more useful token
             self.log.append(DrakeSyntaxError('invalid target for assignment', self.current))
-        operator = self.current
-        self.advance()
+        operator = self.pop()
         expression = self.parseAssignment()
         if operator.value != '=':
             operator.type = 'OPERATOR'
@@ -287,8 +288,7 @@ class DescentParser:
         left = self.parseBitOr()
         if not self.matches('OPERATOR', '..'):
             return left
-        operator = self.current
-        self.advance()
+        operator = self.pop()
         right = self.parseBitOr()
         return BinaryOpNode(left, operator, right)
 
@@ -335,8 +335,7 @@ class DescentParser:
     def parseUnary(self) -> ParseNode:
         if not self.matches('OPERATOR', ('not', '!', '-', "*", "**")):
             return self.parseCall()
-        operator = self.current
-        self.advance()
+        operator = self.pop()
         operand = self.parseUnary()
         return UnaryOpNode(operator, operand)
 
@@ -346,8 +345,7 @@ class DescentParser:
             if self.maybe('DOT'):
                 if not self.matches('IDENTIFIER'):
                     raise DrakeSyntaxError('expected identifier', self.current)
-                attribute = IdentifierNode(self.current)
-                self.advance()
+                attribute = IdentifierNode(self.pop())
                 expr = LookupNode(expr, attribute)
             elif self.maybe('LBRACKET', '('):
                 arguments = self.parseAssignList()
@@ -393,12 +391,10 @@ class DescentParser:
             self.consume('RBRACKET', '}')
             return BlockNode(items)
         elif self.matches(LITERAL):
-            expr = LiteralNode(self.current)
-            self.advance()
+            expr = LiteralNode(self.pop())
             return expr
         elif self.matches('IDENTIFIER'):
-            expr = IdentifierNode(self.current)
-            self.advance()
+            expr = IdentifierNode(self.pop())
             return expr
         else:
             raise unexpectedToken(self.current)
