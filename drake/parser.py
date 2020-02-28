@@ -74,6 +74,13 @@ class DescentParser:
         else:
             return True
 
+    def maybe(self, type: Values, value: Values=()) -> bool:
+        if self.matches(type, value):
+            self.advance()
+            return True
+        else:
+            return False
+
     def consume(self, type: Values, value: Values=()) -> None:
         if self.matches(type, value):
             self.advance()
@@ -101,8 +108,7 @@ class DescentParser:
 
     def list(self, func: Callable, endtype: str, endvalue: Values=()) -> List[ParseNode]:
         expressions = []
-        if self.matches('NEWLINE'):
-            self.advance()
+        self.maybe('NEWLINE')
         if self.matches(endtype, endvalue):
             return expressions
         try:
@@ -115,8 +121,7 @@ class DescentParser:
             return expressions
         delimiter = self.current.type
         newline = None
-        while self.matches(delimiter):
-            self.advance()
+        while self.maybe(delimiter):
             if self.matches(endtype, endvalue):
                 return expressions
             if newline is None:
@@ -129,8 +134,7 @@ class DescentParser:
                 self.log.append(e)
                 while not self.matches((delimiter, endtype)):
                     self.advance()
-        if self.matches('NEWLINE'):
-            self.advance()
+        self.maybe('NEWLINE')
         return expressions
 
     # Parsing functions
@@ -147,11 +151,10 @@ class DescentParser:
 
     def parsePair(self) -> ParseNode:
         expr = self.parseAssignment()
-        if not self.matches('COLON'):
+        if not self.maybe('COLON'):
             return expr
         if isinstance(expr, AssignmentNode):
             self.log.append(DrakeSyntaxError('cannot use assignment as a pair key', self.current))
-        self.advance()
         value = self.parseExpression()
         return PairNode(expr, value)
 
@@ -193,54 +196,42 @@ class DescentParser:
         return self.parseKeyword()
 
     def parseKeyword(self) -> ParseNode:
-        if self.matches('KEYWORD', 'return'):
-            self.advance()
+        if self.maybe('KEYWORD', 'return'):
             return ReturnNode(self.parseFlow())
-        elif self.matches('KEYWORD', 'yield'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'yield'):
             return YieldNode(self.parseFlow())
-        elif self.matches('KEYWORD', 'yield from'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'yield from'):
             return YieldFromNode(self.parseFlow())
-        elif self.matches('KEYWORD', 'break'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'break'):
             return BreakNode()
-        elif self.matches('KEYWORD', 'continue'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'continue'):
             return ContinueNode()
-        elif self.matches('KEYWORD', 'object'):
-            keyword = self.current
-            self.advance()
+        elif self.maybe('KEYWORD', 'object'):
             constructor = self.parseLambda()
             return ObjectNode(constructor.params, constructor.returns)
         else:
             return self.parseFlow()
 
     def parseFlow(self) -> ParseNode:
-        if self.matches('KEYWORD', 'if'):
-            self.advance()
+        if self.maybe('KEYWORD', 'if'):
             condition = self.parseFlow()
             self.consume('KEYWORD', 'then')
             then = self.parseFlow()
-            if self.matches('KEYWORD', 'else'):
-                self.advance()
+            if self.maybe('KEYWORD', 'else'):
                 default = self.parseFlow()
             else:
                 default = None
             return IfNode(condition, then, default)
-        elif self.matches('KEYWORD', 'case'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'case'):
             value = self.parseCall()
             self.consume('OPERATOR', 'in')
             cases = self.parseFlow()
-            if self.matches('KEYWORD', 'else'):
-                self.advance()
+            if self.maybe('KEYWORD', 'else'):
                 default = self.parseFlow()
             else:
                 default = None
             return CaseNode(value, cases, default)
-        elif self.matches('KEYWORD', 'for'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'for'):
             vars = self.list(self.parseTypehint, 'OPERATOR', 'in')
             for var in vars:
                 if isinstance(var, TypehintNode):
@@ -251,8 +242,7 @@ class DescentParser:
             container = self.parseFlow()
             body = self.parseBlock()
             return ForNode(vars, container, body)
-        elif self.matches('KEYWORD', 'while'):
-            self.advance()
+        elif self.maybe('KEYWORD', 'while'):
             condition = self.parseFlow()
             body = self.parseBlock()
             return WhileNode(condition, body)
@@ -353,20 +343,17 @@ class DescentParser:
     def parseCall(self) -> ParseNode:
         expr = self.parsePrimary()
         while True:
-            if self.matches('DOT'):
-                self.advance()
+            if self.maybe('DOT'):
                 if not self.matches('IDENTIFIER'):
                     raise DrakeSyntaxError('expected identifier', self.current)
                 attribute = IdentifierNode(self.current)
                 self.advance()
                 expr = LookupNode(expr, attribute)
-            elif self.matches('LBRACKET', '('):
-                self.advance()
+            elif self.maybe('LBRACKET', '('):
                 arguments = self.parseAssignList()
                 self.consume('RBRACKET', ')')
                 expr = CallNode(expr, arguments)
-            elif self.matches('LBRACKET', '['):
-                self.advance()
+            elif self.maybe('LBRACKET', '['):
                 subscript = self.parseExprList()
                 self.consume('RBRACKET', ']')
                 expr = SubscriptNode(expr, subscript)
@@ -374,31 +361,27 @@ class DescentParser:
                 return expr
 
     def parsePrimary(self) -> ParseNode:
-        if self.matches('LBRACKET', '('):
-            self.advance()
+        if self.maybe('LBRACKET', '('):
             items = self.parseAssignList()
             if len(items) == 1:
-                if not self.matches('COMMA'):
+                if not self.maybe('COMMA'):
                     expr = items[0]
                     if isinstance(expr, AssignmentNode):
                         # Need to fix this to use a more useful token
                         self.log.append(DrakeSyntaxError('cannot put assignment inside grouping', self.current))
                     self.consume('RBRACKET', ')')
                     return GroupingNode(expr)
-                self.advance()
             for item in items:
                 if isinstance(item, AssignmentNode):
                     # Need to fix this to use a more useful token
                     self.log.append(DrakeSyntaxError('cannot put assignment inside tuple', self.current))
             self.consume('RBRACKET', ')')
             return TupleNode(items)
-        elif self.matches('LBRACKET', '['):
-            self.advance()
+        elif self.maybe('LBRACKET', '['):
             items = self.parseExprList()
             self.consume('RBRACKET', ']')
             return ListNode(items)
-        elif self.matches('LBRACKET', '{'):
-            self.advance()
+        elif self.maybe('LBRACKET', '{'):
             items = self.parsePairList()
             if all(isinstance(item, PairNode) for item in items):
                 self.consume('RBRACKET', '}')
