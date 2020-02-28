@@ -208,14 +208,6 @@ class DescentParser:
         elif self.matches('KEYWORD', 'continue'):
             self.advance()
             return ContinueNode()
-        elif self.matches('KEYWORD', 'multi'):
-            keyword = self.current
-            self.advance()
-            block = self.parseBlock()
-            for expr in block:
-                if not isinstance(expr, LambdaNode):
-                    self.log.append(DrakeSyntaxError(f'invalid multimethod', keyword))
-            return MultimethodNode(list(block))
         elif self.matches('KEYWORD', 'object'):
             keyword = self.current
             self.advance()
