@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Callable, Iterator, List, Tuple, Union
-from .ast import *
-from .ast import Precedence
+from .parsetree import *
 from .lexer import Token, lex
 
 ## Constants
@@ -82,7 +81,7 @@ class DescentParser:
             raise expectedToken(value or type, self.current)
 
     # Pattern functions
-    def leftassoc(self, func: Callable, operator: Values) -> ASTNode:
+    def leftassoc(self, func: Callable, operator: Values) -> ParseNode:
         expr = func()
         while self.matches('OPERATOR', operator):
             op = self.current
@@ -91,7 +90,7 @@ class DescentParser:
             expr = BinaryOpNode(expr, op, right)
         return expr
 
-    def rightassoc(self, func: Callable, operator: Values) -> ASTNode:
+    def rightassoc(self, func: Callable, operator: Values) -> ParseNode:
         expr = func()
         if not self.matches('OPERATOR', operator):
             return expr
@@ -100,7 +99,7 @@ class DescentParser:
         right = self.rightassoc(func, operator)
         return BinaryOpNode(expr, op, right)
 
-    def list(self, func: Callable, endtype: str, endvalue: Values=()) -> List[ASTNode]:
+    def list(self, func: Callable, endtype: str, endvalue: Values=()) -> List[ParseNode]:
         expressions = []
         if self.matches('NEWLINE'):
             self.advance()
@@ -143,10 +142,10 @@ class DescentParser:
         self.consume('EOF')
         return BlockNode(program)
 
-    def parsePairList(self) -> List[ASTNode]:
+    def parsePairList(self) -> List[ParseNode]:
         return self.list(self.parsePair, 'RBRACKET')
 
-    def parsePair(self) -> ASTNode:
+    def parsePair(self) -> ParseNode:
         expr = self.parseAssignment()
         if not self.matches('COLON'):
             return expr
@@ -156,10 +155,10 @@ class DescentParser:
         value = self.parseExpression()
         return PairNode(expr, value)
 
-    def parseAssignList(self) -> List[ASTNode]:
+    def parseAssignList(self) -> List[ParseNode]:
         return self.list(self.parseAssignment, 'RBRACKET')
 
-    def parseAssignment(self) -> ASTNode:
+    def parseAssignment(self) -> ParseNode:
         if self.matches('KEYWORD', ('nonlocal', 'const')):
             mode = self.current
             self.advance()
@@ -182,18 +181,18 @@ class DescentParser:
         if operator.value != '=':
             operator.type = 'OPERATOR'
             expression = BinaryOpNode(target, operator, expression)
-        if isinstance(expression, (LambdaNode, ClassNode, ExceptionNode)) and mode != 'const':
+        if isinstance(expression, (LambdaNode, ObjectNode, ExceptionNode)) and mode != 'const':
             # Need to fix this to use a more useful token
             self.log.append(DrakeCompilerWarning(f'{expression.nodetype.lower()} should be assigned to a constant', operator))
         return AssignmentNode(mode, target, expression)
 
-    def parseExprList(self) -> List[ASTNode]:
+    def parseExprList(self) -> List[ParseNode]:
         return self.list(self.parseExpression, 'RBRACKET')
 
-    def parseExpression(self) -> ASTNode:
+    def parseExpression(self) -> ParseNode:
         return self.parseKeyword()
 
-    def parseKeyword(self) -> ASTNode:
+    def parseKeyword(self) -> ParseNode:
         if self.matches('KEYWORD', 'return'):
             self.advance()
             return ReturnNode(self.parseFlow())
@@ -217,15 +216,15 @@ class DescentParser:
                 if not isinstance(expr, LambdaNode):
                     self.log.append(DrakeSyntaxError(f'invalid multimethod', keyword))
             return MultimethodNode(list(block))
-        elif self.matches('KEYWORD', 'class'):
+        elif self.matches('KEYWORD', 'object'):
             keyword = self.current
             self.advance()
             constructor = self.parseLambda()
-            return ClassNode(constructor.params, constructor.returns)
+            return ObjectNode(constructor.params, constructor.returns)
         else:
             return self.parseFlow()
 
-    def parseFlow(self) -> ASTNode:
+    def parseFlow(self) -> ParseNode:
         if self.matches('KEYWORD', 'if'):
             self.advance()
             condition = self.parseFlow()
@@ -268,7 +267,7 @@ class DescentParser:
         else:
             return self.parseLambda()
 
-    def parseLambda(self) -> ASTNode:
+    def parseLambda(self) -> ParseNode:
         expression = self.parseBoolOr()
         if not self.matches('LAMBDA'):
             return expression
@@ -290,19 +289,19 @@ class DescentParser:
         returns = self.parseLambda()
         return LambdaNode(params, returns)
 
-    def parseBoolOr(self) -> ASTNode:
+    def parseBoolOr(self) -> ParseNode:
         return self.rightassoc(self.parseBoolXor, 'or')
 
-    def parseBoolXor(self) -> ASTNode:
+    def parseBoolXor(self) -> ParseNode:
         return self.rightassoc(self.parseBoolAnd, 'xor')
 
-    def parseBoolAnd(self) -> ASTNode:
+    def parseBoolAnd(self) -> ParseNode:
         return self.rightassoc(self.parseComparison, 'and')
 
-    def parseComparison(self) -> ASTNode:
+    def parseComparison(self) -> ParseNode:
         return self.leftassoc(self.parseRange, ('in','not in','is','is not','==','!=','<','<=','>','>='))
 
-    def parseRange(self) -> ASTNode:
+    def parseRange(self) -> ParseNode:
         left = self.parseBitOr()
         if not self.matches('OPERATOR', '..'):
             return left
@@ -311,28 +310,28 @@ class DescentParser:
         right = self.parseBitOr()
         return BinaryOpNode(left, operator, right)
 
-    def parseBitOr(self) -> ASTNode:
+    def parseBitOr(self) -> ParseNode:
         return self.leftassoc(self.parseBitXor, '|')
 
-    def parseBitXor(self) -> ASTNode:
+    def parseBitXor(self) -> ParseNode:
         return self.leftassoc(self.parseBitAnd, '^')
 
-    def parseBitAnd(self) -> ASTNode:
+    def parseBitAnd(self) -> ParseNode:
         return self.leftassoc(self.parseBitShift, '&')
 
-    def parseBitShift(self) -> ASTNode:
+    def parseBitShift(self) -> ParseNode:
         return self.leftassoc(self.parseAdd, ('<<', '>>'))
 
-    def parseAdd(self) -> ASTNode:
+    def parseAdd(self) -> ParseNode:
         return self.leftassoc(self.parseMult, ('+', '-'))
 
-    def parseMult(self) -> ASTNode:
+    def parseMult(self) -> ParseNode:
         return self.leftassoc(self.parseExp, ('*', '/', '%'))
 
-    def parseExp(self) -> ASTNode:
+    def parseExp(self) -> ParseNode:
         return self.rightassoc(self.parseTypehint, '**')
 
-    def parseTypehint(self) -> ASTNode:
+    def parseTypehint(self) -> ParseNode:
         if self.matches('OPERATOR', '<'):
             self.advance()
             typehint = self.parseType()
@@ -351,7 +350,7 @@ class DescentParser:
             params = []
         return TypeNode(type, params)
 
-    def parseUnary(self) -> ASTNode:
+    def parseUnary(self) -> ParseNode:
         if not self.matches('OPERATOR', ('not', '!', '-', "*", "**")):
             return self.parseCall()
         operator = self.current
@@ -359,7 +358,7 @@ class DescentParser:
         operand = self.parseUnary()
         return UnaryOpNode(operator, operand)
 
-    def parseCall(self) -> ASTNode:
+    def parseCall(self) -> ParseNode:
         expr = self.parsePrimary()
         while True:
             if self.matches('DOT'):
@@ -382,7 +381,7 @@ class DescentParser:
             else:
                 return expr
 
-    def parsePrimary(self) -> ASTNode:
+    def parsePrimary(self) -> ParseNode:
         if self.matches('LBRACKET', '('):
             self.advance()
             items = self.parseAssignList()

@@ -51,7 +51,7 @@ class Decimal:
 
 @dataclass
 class ASTCompiler:
-    ast: ast.ASTNode
+    ast: ast.ParseNode
     bytecode: Bytecode = field(init=False)
 
     def __post_init__(self):
@@ -234,7 +234,7 @@ class ASTCompiler:
             if i != last:  # Last expression stays on the stack as the block's value
                 yield Op.POP,
 
-    def ClassNode(self, node, values, *scopes):
+    def ObjectNode(self, node, values, *scopes):
         yield Op.INVALID,  # Not implemented
 
     def InterfaceNode(self, node, values, *scopes):

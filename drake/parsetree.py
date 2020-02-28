@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 from .lexer import Token
 
 __all__ = [
-    'ASTNode',
+    'ParseNode',
     'TypeNode',
     'TypehintNode',
     'LiteralNode',
@@ -29,7 +29,7 @@ __all__ = [
     'MultimethodNode',
     'AssignmentNode',
     'BlockNode',
-    'ClassNode',
+    'ObjectNode',
     'ExceptionNode',
     'CaseNode',
     'IfNode',
@@ -47,7 +47,7 @@ def isprimary(*nodes):
 def pprint(name, *args):
     argstrings = []
     for arg in args:
-        if isinstance(arg, ASTNode):
+        if isinstance(arg, ParseNode):
             argstrings.append(str(arg))
         elif isinstance(arg, list):
             argstrings.append(f'({", ".join(item.value for item in arg)})')
@@ -60,7 +60,7 @@ def pprint(name, *args):
         return f'{name} (\n{delimiter.join((indent(arg) for arg in argstrings))}\n)'
 
 ## Classes
-class ASTNode:
+class ParseNode:
     def __str__(self):
         raise NotImplementedError
 
@@ -69,7 +69,7 @@ class ASTNode:
         return self.__class__.__name__[:-4]
 
 @dataclass
-class TypeNode(ASTNode):
+class TypeNode(ParseNode):
     type: Token
     params: List['TypeNode']
 
@@ -81,30 +81,30 @@ class TypeNode(ASTNode):
             return type
 
 @dataclass
-class TypehintNode(ASTNode):
+class TypehintNode(ParseNode):
     typehint: TypeNode
-    expr: ASTNode
+    expr: ParseNode
 
     def __str__(self):
         return f'<{self.typehint}> {self.expr}'
 
 @dataclass
-class LiteralNode(ASTNode):
+class LiteralNode(ParseNode):
     value: Token
 
     def __str__(self):
         return f'{self.value.type.capitalize()} {self.value.value}'
 
 @dataclass
-class IdentifierNode(ASTNode):
+class IdentifierNode(ParseNode):
     name: Token
 
     def __str__(self):
         return f'Identifier {self.name.value}'
 
 @dataclass
-class GroupingNode(ASTNode):
-    expr: ASTNode
+class GroupingNode(ParseNode):
+    expr: ParseNode
 
     def __str__(self):
         if isprimary(self.expr):
@@ -113,8 +113,8 @@ class GroupingNode(ASTNode):
             return f'(\n{self.expr}\n)'
 
 @dataclass
-class SequenceNode(ASTNode):
-    items: List[ASTNode]
+class SequenceNode(ParseNode):
+    items: List[ParseNode]
 
     def __str__(self):
         return pprint(self.nodetype, *self.items)
@@ -128,9 +128,9 @@ class TupleNode(SequenceNode):
     pass
 
 @dataclass
-class PairNode(ASTNode):
-    key: ASTNode
-    value: ASTNode
+class PairNode(ParseNode):
+    key: ParseNode
+    value: ParseNode
 
     def __str__(self):
         return pprint('Pair', self.key, self.value)
@@ -140,49 +140,49 @@ class MapNode(SequenceNode):
     items: List[PairNode]
 
 @dataclass
-class UnaryOpNode(ASTNode):
+class UnaryOpNode(ParseNode):
     operator: Token
-    operand: ASTNode
+    operand: ParseNode
 
     def __str__(self):
         return pprint(f'Unary {self.operator.value}', self.operand)
 
 @dataclass
-class BinaryOpNode(ASTNode):
-    left: ASTNode
+class BinaryOpNode(ParseNode):
+    left: ParseNode
     operator: Token
-    right: ASTNode
+    right: ParseNode
 
     def __str__(self):
         return pprint(f'Binary {self.operator.value}', self.left, self.right)
 
 @dataclass
-class SubscriptNode(ASTNode):
-    container: ASTNode
-    subscript: List[ASTNode]
+class SubscriptNode(ParseNode):
+    container: ParseNode
+    subscript: List[ParseNode]
 
     def __str__(self):
         return pprint('Subscript', self.container, *self.subscript)
 
 @dataclass
-class LookupNode(ASTNode):
-    obj: ASTNode
+class LookupNode(ParseNode):
+    obj: ParseNode
     attribute: IdentifierNode
 
     def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
 @dataclass
-class CallNode(ASTNode):
-    function: ASTNode
-    arguments: List[ASTNode]
+class CallNode(ParseNode):
+    function: ParseNode
+    arguments: List[ParseNode]
 
     def __str__(self):
         return pprint('Call', self.function, *self.arguments)
 
 @dataclass
-class KeywordNode(ASTNode):
-    expression: ASTNode
+class KeywordNode(ParseNode):
+    expression: ParseNode
 
     def __str__(self):
         return pprint(self.nodetype, self.expression)
@@ -196,12 +196,12 @@ class ReturnNode(KeywordNode):
     pass
 
 @dataclass
-class BreakNode(ASTNode):
+class BreakNode(ParseNode):
     def __str__(self):
         return 'Break'
 
 @dataclass
-class ContinueNode(ASTNode):
+class ContinueNode(ParseNode):
     def __str__(self):
         return 'Continue'
 
@@ -214,9 +214,9 @@ class YieldFromNode(KeywordNode):
     pass
 
 @dataclass
-class LambdaNode(ASTNode):
+class LambdaNode(ParseNode):
     params: List[Union[IdentifierNode, 'AssignmentNode']]
-    returns: ASTNode
+    returns: ParseNode
 
     def __str__(self):
         return pprint(self.nodetype, *self.params, self.returns)
@@ -226,10 +226,10 @@ class MultimethodNode(SequenceNode):
     items: List[LambdaNode]
 
 @dataclass
-class AssignmentNode(ASTNode):
+class AssignmentNode(ParseNode):
     mode: str
-    target: ASTNode
-    expression: ASTNode
+    target: ParseNode
+    expression: ParseNode
 
     def __str__(self):
         if self.mode:
@@ -238,8 +238,8 @@ class AssignmentNode(ASTNode):
             return pprint('Assign', self.target, self.expression)
 
 @dataclass
-class BlockNode(ASTNode):
-    expressions: List[ASTNode]
+class BlockNode(ParseNode):
+    expressions: List[ParseNode]
 
     def __iter__(self):
         yield from self.expressions
@@ -251,18 +251,18 @@ class BlockNode(ASTNode):
         return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
 
 @dataclass
-class ClassNode(LambdaNode):
+class ObjectNode(LambdaNode):
     returns: BlockNode
 
 @dataclass
-class ExceptionNode(ClassNode):
+class ExceptionNode(ObjectNode):
     pass
 
 @dataclass
-class CaseNode(ASTNode):
+class CaseNode(ParseNode):
     var: IdentifierNode
     cases: MapNode
-    default: Optional[ASTNode]
+    default: Optional[ParseNode]
 
     def __str__(self):
         if self.default is None:  # No else
@@ -271,10 +271,10 @@ class CaseNode(ASTNode):
             return pprint('Case', self.var, self.cases, self.default)
 
 @dataclass
-class IfNode(ASTNode):
-    condition: ASTNode
-    then: ASTNode
-    default: Optional[ASTNode]
+class IfNode(ParseNode):
+    condition: ParseNode
+    then: ParseNode
+    default: Optional[ParseNode]
 
     def __str__(self):
         if self.default is None:  # No else
@@ -283,39 +283,18 @@ class IfNode(ASTNode):
             return pprint('If', self.condition, self.then, self.default)
 
 @dataclass
-class ForNode(ASTNode):
-    vars: List[ASTNode]
-    container: ASTNode
+class ForNode(ParseNode):
+    vars: List[ParseNode]
+    container: ParseNode
     body: BlockNode
 
     def __str__(self):
         return pprint('For', *self.vars, self.container, self.body)
 
 @dataclass
-class WhileNode(ASTNode):
-    condition: ASTNode
+class WhileNode(ParseNode):
+    condition: ParseNode
     body: BlockNode
 
     def __str__(self):
         return pprint('While', self.condition, self.body)
-
-class Precedence(enum.IntEnum):
-    NONE       = enum.auto()
-    ASSIGNMENT = enum.auto()  # : = += -= *= /=
-    FLOW       = enum.auto()  # if case for while
-    LAMBDA     = enum.auto()  # ->
-    OR         = enum.auto()  # or
-    XOR        = enum.auto()  # xor
-    AND        = enum.auto()  # and
-    COMPARISON = enum.auto()  # in is == != < > <= >=
-    RANGE      = enum.auto()  # ..
-    BIT_OR     = enum.auto()  # |
-    BIT_XOR    = enum.auto()  # ^
-    BIT_AND    = enum.auto()  # &
-    SHIFT      = enum.auto()  # >> <<
-    ADD        = enum.auto()  # + -
-    MULT       = enum.auto()  # * / %
-    EXP        = enum.auto()  # **
-    UNARY      = enum.auto()  # not ! -
-    CALL       = enum.auto()  # . ...(...) ...[...]
-    PRIMARY    = enum.auto()  # literal identifier tuple list map block
