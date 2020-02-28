@@ -39,7 +39,7 @@ class DrakeCompilerWarning(Warning):
         value = token.value
         linenum = token.linenum
         column = token.column
-        super().__init__(f'{warning}: {value} @ {linenum}:{column}')
+        super().__init__(f'{warning}: {value!r} @ {linenum}:{column}')
         self.warning = warning
         self.value = value
         self.linenum = linenum
