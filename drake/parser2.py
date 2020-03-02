@@ -108,22 +108,18 @@ class Parser:
             parser, item = item(parser)
             items.append(item)
             try:
-                while True:
-                    try:
+                with OPTIONAL:
+                    while True:
                         parser, item = item(parser.newline())
                         items.append(item)
-                    except InvalidSyntax:
-                        break
             except InvalidSyntax:
-                while True:
-                    try:
+                with OPTIONAL:
+                    while True:
                         parser = parser.match(',')
                         with OPTIONAL:
                             parser = parser.newline()
                         parser, item = item(parser)
                         items.append(item)
-                    except InvalidSyntax:
-                        break
                 with OPTIONAL:
                     parser = parser.match(',')
         with OPTIONAL:
@@ -132,13 +128,11 @@ class Parser:
 
     def leftrecurse(parser, operators, operand):
         parser, left = operand(parser)
-        while True:
-            try:
+        with OPTIONAL:
+            while True:
                 parser, op = parser.choice(*operators)
                 parser, right = operand(parser)
                 left = BinaryOpNode(left, op, right)
-            except InvalidSyntax:
-                break
         return parser._with(parsed=left)
 
     def rightrecurse(parser, operators, operand):
