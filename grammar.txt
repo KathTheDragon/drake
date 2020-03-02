@@ -1,53 +1,66 @@
-List[item] -> item "," item ("," item)* ","?
-            | "\n"? item "\n" item ("\n" item)* "\n"?
-            | "\n"? item "," "\n" item ("," "\n" item)* (","? "\n")?
-            | item?
-Op[op, operand] -> operand (op operand)*
+List[item] -> "\n"? (item ("\n" item)* | item ("," "\n"? item)* ","?)? "\n"?
+Left[op, operand]
+           -> operand (op operand)*
+Right[op, operand]
+           -> operand (op Right[op, operand])?
 
-program    -> List[assignment] "EOF"
-assignment -> ("nonlocal" | "const")? vars "=" assignment
-            | expression
-vars       -> "(" List[IDENTIFIERS] ")"
-            | IDENTIFIER
-params     -> List[vparam] ("," List[kwparam])?
-            | List[kwparam]
-vparam     -> typehint "*"? IDENTIFIER
-kwparam    -> typehint "**" IDENTIFIER
-            | typehint IDENTIFIER "=" expression
+program    -> List[declaration] "EOF"
+declaration-> typehint IDENTIFIER
+            | assignment
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-expression -> "(" params ")" "->" expression
-            | "if" assignment "then" expression ("else" expression)
-            | "case" assingment "in" map "else" expression
-            | "for" vars "in" expression block
-            | "while" assignment block
-            | "iter" expression
-            | "object" expression
-            | "mutable" expression
-            | "return" expression
-            | "yield" "from" assignment
-            | "yield" assignment
-            | "break"
-            | "continue"
+assignment -> targets "=" assignment  # const a, nonlocal b, c = (1, 2, 3) ?
+            | expression
+targets    -> "(" List[target] ")" | target
+target     -> ("nonlocal" | "const")? IDENTIFIER
+expression -> if | case | for | while | iter | object | mutable | return | yield | yieldfrom | break | continue
+            | lambda
             | boolor
-boolor     -> Op["or", boolxor]
-boolxor    -> Op["xor", booland]
-booland    -> Op["and", comparison]
-comparison -> Op[comp, bitor]
-bitor      -> Op["|", bitxor]
-bitxor     -> Op["^", bitand]
-bitand     -> Op["&", bitshift]
-bitshift   -> Op[("<<" | ">>"), add]
-add        -> Op[("+" | "-"), mult]
-mult       -> Op[("*" | "/" | "%"), exp]
-exp        -> Op["**", unary]
-unary      -> ("not" | "!" | "-" | "*" | "**")* primary
-primary    -> atom ("." IDENTIFIER | "(" List[assignment] ")" | "[" List[expression] "]")*
-atom       -> "{" List[pair] "}"
-            | "{" List[assignment] "}"
-            | "[" assignment ".." assignment? "]"
-            | "[" List[assignment] "]"
-            | "(" expression ")"
-            | "(" List[assignment] ")"
-            | literal
+if         -> "if" assignment "then" expression ("else" expression)
+case       -> "case" assignment "in" map ("else" expression)
+for        -> "for" vars "in" expression block
+vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
+while      -> "while" assignment block
+iter       -> "iter" expression
+object     -> "object" block
+mutable    -> "mutable" expression
+return     -> "return" expression
+yield      -> "yield" "from" assignment
+yieldfrom  -> "yield" assignment
+break      -> "break"
+continue   -> "continue"
+lambda     -> "(" params ")" "->" expression
+params     -> "\n"? vparam ("\n" vparam)* "\n" kwparam ("\n" kwparam)* "\n"?
+            | "\n"? vparam ("," "\n"? vparam)* "," "\n"? kwparam ("," "\n"? kwparam)* ","? "\n"?
+            | List[vparam]
+            | List[kwparam]
+vparam     -> typehint "*"? IDENTIFIER
+kwparam    -> typehint (IDENTIFIER "=" expression | "**" IDENTIFIER)
+boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
+boolxor    -> Right["xor", booland]     # parity()
+booland    -> Right["and", comparison]  # all() - return the first falsey argument, else the last
+comparison -> Right[comp, bitor]        # comp()
+bitor      -> Left["|", bitxor]         # bitor()
+bitxor     -> Left["^", bitand]         # bitxor()
+bitand     -> Left["&", bitshift]       # bitand()
+bitshift   -> Left[("<<" | ">>"), add]  # bitshift(); a >> b -> a << -b; a << b << ... -> bitshift(a, sum(b, ...))
+add        -> Left[("+" | "-"), mult]   # sum(); sum(sum(*addends), neg(sum(*subtrahends)))
+mult       -> Left[("*" | "/"), mod]    # product(); product(product(*multipicands), reciprocal(product(*divisors)))
+mod        -> Left["%", exp]            # mod()
+exp        -> Right["**", unary]        # power()
+unary      -> ("not" | "!" | "-")* primary  # inv(), bitinv(), neg()
+primary    -> atom ("." IDENTIFIER | "(" arglist ")" | list)*
+arglist    -> "\n"? varg ("\n" varg)* "\n" kwarg ("\n" kwarg)* "\n"?
+            | "\n"? varg ("," "\n"? varg)* "," "\n"? kwarg ("," "\n"? kwarg)* ","? "\n"?
+            | List[varg]
+            | List[kwarg]
+varg       -> "*"? expression
+kwarg      -> IDENTIFIER "=" expression | "**" expression
+atom       -> mapping | block | listrange | list | group | tuple | literal
+mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
+block      -> "{" List[declaration] "}"
+list       -> "[" (assignment ".." expression? ("," expression)? | List[assignment]) "]"
+group      -> "(" expression ")"
+tuple      -> "(" List[assignment] ")"
+literal    -> IDENTIFIER | STRING | NUMBER
