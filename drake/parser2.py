@@ -148,3 +148,29 @@ class Parser:
             parser, right = parser.rightrecurse(operators, operand)
             left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
+
+    # Node matching methods
+    def program(parser):
+        parser, expressions = parser.nodelist(Parser.declaration)
+        parser = parser.raw_match(EOF, 'eof')
+        return BlockNode(expressions)
+
+    def declaration(parser):
+        try:
+            parser, typehint = parser.typehint()
+            parser, name = parser.identifier()
+            return parser._with(parsed=DeclarationNode(typehint, name))
+        except InvalidSyntax:
+            return parser.assignment()
+
+    def typehint(parser):
+        parser, type = parser.match('<').type()
+        return parser.match('>')._with(parsed=type)
+
+    def type(parser):
+        parser, type = parser.identifier()
+        with OPTIONAL:
+            parser, params = parser.match('[').nodelist(Parser.type)
+            parser = parser.match(']')
+            type = TypeNode(type, params)
+        return parser._with(parsed=type)
