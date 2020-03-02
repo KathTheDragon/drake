@@ -57,7 +57,8 @@ TOKENS = {
     'IMAG_INTEGER': fr'(?:{INTEGER})j',
     'DECIMAL': fr'(?:{INTEGER})\.(?:{DECIMAL})',
     'INTEGER': INTEGER,
-    'WHITESPACE': r'[ \t]+',
+    'NEWLINE': r'[\r\n]+',
+    'WHITESPACE': r'\s+',
     'UNKNOWN': r'.+?'
 }
 TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKENS.items()))
