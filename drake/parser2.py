@@ -1,6 +1,6 @@
 import contextlib, re
 from dataclasses import dataclass, field
-from typing import Callable, Generic, Iterator, List, Tuple, TypeVar, Union
+from typing import Any
 from .parsetree import *
 
 ## Tokens
@@ -43,13 +43,12 @@ class Parser:
     cursor: int = 0
     linenum: int = 0
     column: int = 0
-    parsed: str = None
-    parsetree: ParseNode = None
+    parsed: Any = None
 
     def __iter__(parser):
         return parser, parser.parsed
 
-    def _with(parser, cursor=None, linenum=None, column=None, parsed=None, parsetree=None):
+    def _with(parser, cursor=None, linenum=None, column=None, parsed=None):
         if cursor is None:
             cursor = parser.cursor
         if linenum is None:
@@ -58,9 +57,7 @@ class Parser:
             column = parser.column
         if parsed is None:
             parsed = parser.parsed
-        if parsetree is None:
-            parsetree = parser.parsetree
-        return Parser(parser.source, cursor, linenum, column, parsed, parsetree)
+        return Parser(parser.source, cursor, linenum, column, parsed)
 
     # Basic matching methods
     def raw_match(parser, pattern, text):
