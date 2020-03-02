@@ -1,4 +1,4 @@
-List[item] -> "\n"? (item ("\n" item)* | item ("," "\n"? item)* ","?)? "\n"?
+List[item] -> "\n"? item (("\n" item)* | ("," "\n"? item)* ","?)? "\n"?
 Left[op, operand]
            -> operand (op operand)*
 Right[op, operand]
@@ -9,9 +9,8 @@ declaration-> typehint IDENTIFIER
             | assignment
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-assignment -> targets "=" assignment  # const a, nonlocal b, c = (1, 2, 3) ?
+assignment -> ("(" List[target] ")" | target) "=" assignment  # const a, nonlocal b, c = (1, 2, 3) ?
             | expression
-targets    -> "(" List[target] ")" | target
 target     -> ("nonlocal" | "const")? IDENTIFIER
 expression -> if | case | for | while | iter | object | mutable | return | yield | yieldfrom | break | continue
             | lambda
