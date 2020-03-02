@@ -129,3 +129,22 @@ class Parser:
         with OPTIONAL:
             parser = parser.newline()
         return parser._with(parsed=items)
+
+    def leftrecurse(parser, operators, operand):
+        parser, left = operand(parser)
+        while True:
+            try:
+                parser, op = parser.choice(*operators)
+                parser, right = operand(parser)
+                left = BinaryOpNode(left, op, right)
+            except InvalidSyntax:
+                break
+        return parser._with(parsed=left)
+
+    def rightrecurse(parser, operators, operand):
+        parser, left = operand(parser)
+        with OPTIONAL:
+            parser, op = parser.choice(*operators)
+            parser, right = parser.rightrecurse(operators, operand)
+            left = BinaryOpNode(left, op, right)
+        return parser._with(parsed=left)
