@@ -91,6 +91,14 @@ class Parser:
             parser = parser.newline()
         return parser
 
+    def choice(parser, *tokens):
+        for token in tokens:
+            try:
+                return parser.match(token)
+            except InvalidSyntax as e:
+                pass
+        raise e
+
     # Generic matching methods
     def nodelist(parser, item):
         with OPTIONAL:
