@@ -43,41 +43,50 @@ class Parser:
     cursor: int = 0
     linenum: int = 0
     column: int = 0
+    parsed: str = None
     parsetree: ParseNode = None
 
-    def _with(parser, cursor=None, linenum=None, column=None, parsetree=None):
+    def __iter__(parser):
+        return parser, parser.parsed
+
+    def _with(parser, cursor=None, linenum=None, column=None, parsed=None, parsetree=None):
         if cursor is None:
             cursor = parser.cursor
         if linenum is None:
             linenum = parser.linenum
         if column is None:
             column = parser.column
+        if parsed is None:
+            parsed = parser.parsed
         if parsetree is None:
             parsetree = parser.parsetree
-        return Parser(parser.source, cursor, linenum, column, parsetree)
+        return Parser(parser.source, cursor, linenum, column, parsed, parsetree)
 
     # Basic matching methods
-    def match_re(parser, pattern, text):
+    def raw_match(parser, pattern, text):
         match = pattern.match(parser.source, parser.cursor)
         if match is None:
             raise Expected(text, parser)
         cursor = match.end()
         column = parser.column + (cursor - parser.cursor)
-        return parser._with(cursor=cursor, column=column), match.group()
-
-    def match(parser, token):
-        return parser.match_re(re.compile(re.escape(token)), token)
+        return parser._with(cursor=cursor, column=column, parsed=match.group())
 
     def skip(parser):
         with OPTIONAL:
-            parser, _ = parser.match_re(WHITESPACE, 'whitespace')
+            parser = parser.raw_match(WHITESPACE, 'whitespace')
         with OPTIONAL:
-            parser, _ = parser.match_re(COMMENT, 'comment')
+            parser = parser.raw_match(COMMENT, 'comment')
         return parser
 
+    def match(parser, pattern, text=''):
+        if isinstance(pattern, str):
+            text = text or pattern
+            pattern = re.compile(re.escape(pattern))
+        parser, value = parser.raw_match(pattern, text)
+        return parser.skip()._with(parsed=value)
+
     def newline(parser):
-        parser, _ = parser.match_re(NEWLINE, 'newline')
-        parser = parser._with(linenum=parser.linenum+1, column=0).skip()
+        parser = parser.match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0)
         with OPTIONAL:
             parser = parser.newline()
         return parser
@@ -87,10 +96,10 @@ class Parser:
         with OPTIONAL:
             parser = parser.newline()
         with OPTIONAL:
+            items = []
+            parser, item = item(parser)
+            items.append(item)
             try:
-                items = []
-                parser, item = item(parser)
-                items.append(item)
                 while True:
                     try:
                         parser, item = item(parser.newline())
@@ -98,19 +107,17 @@ class Parser:
                     except InvalidSyntax:
                         break
             except InvalidSyntax:
-                items = []
-                parser = item(parser)
-                items.append(parser.parsed)
                 while True:
                     try:
                         parser = parser.match(',')
                         with OPTIONAL:
                             parser = parser.newline()
-                        parser = item(parser)
-                        items.append(parser.parsed)
+                        parser, item = item(parser)
+                        items.append(item)
                     except InvalidSyntax:
                         break
                 with OPTIONAL:
                     parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
+        return parser._with(parsed=items)
