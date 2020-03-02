@@ -174,3 +174,21 @@ class Parser:
             parser = parser.match(']')
             type = TypeNode(type, params)
         return parser._with(parsed=type)
+
+    def assignment(parser):
+        try:
+            try:
+                parser, target = parser.match('(').nodelist(Parser.target)
+                parser = parser.match(')')
+            except InvalidSyntax:
+                parser, target = parser.target()
+            try:
+                parser, value = parser.match('=').assignment()
+            except InvalidSyntax:
+                parser, op = parser.choice(*AUGMENTED_ASSIGNMENT)
+                op = op.rstrip('=')
+                parser, value = parser.assignment()
+                value = BinaryOpNode(target, op, value)
+            return parser._with(parsed=AssignmentNode(target, value))
+        except InvalidSyntax:
+            return parser.expression()
