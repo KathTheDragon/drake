@@ -69,18 +69,18 @@ class Parser:
         return parser._with(cursor=cursor, column=column, parsed=match.group())
 
     def skip(parser):
+        parsed = parser.parsed
         with OPTIONAL:
             parser = parser.raw_match(WHITESPACE, 'whitespace')
         with OPTIONAL:
             parser = parser.raw_match(COMMENT, 'comment')
-        return parser
+        return parser._with(parsed=parsed)
 
     def match(parser, pattern, text=''):
         if isinstance(pattern, str):
             text = text or pattern
             pattern = re.compile(re.escape(pattern))
-        parser, value = parser.raw_match(pattern, text)
-        return parser.skip()._with(parsed=value)
+        return parser.raw_match(pattern, text).skip()
 
     def newline(parser):
         parser = parser.match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0)
