@@ -130,8 +130,8 @@ class Parser:
         parser, left = operand(parser)
         with OPTIONAL:
             while True:
-                parser, op = parser.choice(*operators, parse=True)
-                parser, right = operand(parser)
+                _parser, op = parser.choice(*operators, parse=True)
+                parser, right = operand(_parser)
                 left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
 
