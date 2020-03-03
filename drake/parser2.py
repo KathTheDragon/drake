@@ -102,26 +102,26 @@ class Parser:
     def nodelist(parser, item):
         with OPTIONAL:
             parser = parser.newline()
-        with OPTIONAL:
-            items = []
-            _parser, item = item(parser)
+        items = []
+        parser, item = item(parser)
+        items.append(item)
+        try:
+            parser, item = item(parser.newline())
             items.append(item)
-            try:
-                with OPTIONAL:
-                    while True:
-                        _parser, item = item(_parser.newline())
-                        items.append(item)
-            except InvalidSyntax:
-                with OPTIONAL:
-                    while True:
-                        _parser = _parser.match(',')
-                        with OPTIONAL:
-                            _parser = _parser.newline()
-                        _parser, item = item(_parser)
-                        items.append(item)
-                with OPTIONAL:
-                    _parser = _parser.match(',')
-            parser = _parser
+            with OPTIONAL:
+                while True:
+                    parser, item = item(parser.newline())
+                    items.append(item)
+        except InvalidSyntax:
+            with OPTIONAL:
+                while True:
+                    _parser = parser.match(',')
+                    with OPTIONAL:
+                        _parser = _parser.newline()
+                    parser, item = item(_parser)
+                    items.append(item)
+            with OPTIONAL:
+                parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
         return parser._with(parsed=items)
