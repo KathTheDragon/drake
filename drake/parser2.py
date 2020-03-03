@@ -131,7 +131,7 @@ class Parser:
         parser, left = operand(parser)
         with OPTIONAL:
             while True:
-                _parser, op = parser.choice(*operators, parse=True)
+                _parser, op = parser.choices(*operators, parse=True)
                 parser, right = operand(_parser)
                 left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
@@ -139,7 +139,7 @@ class Parser:
     def rightrecurse(parser, operators, operand):
         parser, left = operand(parser)
         with OPTIONAL:
-            _parser, op = parser.choice(*operators, parse=True)
+            _parser, op = parser.choices(*operators, parse=True)
             parser, right = _parser.rightrecurse(operators, operand)
             left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
@@ -178,7 +178,7 @@ class Parser:
             try:
                 _parser, value = _parser.match('=').assignment()
             except InvalidSyntax:
-                _parser, op = _parser.choice(*AUGMENTED_ASSIGNMENT, parse=True)
+                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True)
                 op = op.rstrip('=')
                 _parser, value = _parser.assignment()
                 value = BinaryOpNode(target, op, value)
