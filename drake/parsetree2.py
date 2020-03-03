@@ -134,7 +134,7 @@ class PairNode(ParseNode):
         return pprint('Pair', self.key, self.value)
 
 @dataclass
-class MapNode(SequenceNode):
+class MappingNode(SequenceNode):
     items: List[PairNode]
 
 @dataclass
