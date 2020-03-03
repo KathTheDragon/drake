@@ -24,6 +24,7 @@ vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
 while      -> "while" assignment block
 iter       -> "iter" expression
 object     -> "object" block
+exception  -> "exception" block
 mutable    -> "mutable" expression
 return     -> "return" expression
 yield      -> "yield" "from" assignment
