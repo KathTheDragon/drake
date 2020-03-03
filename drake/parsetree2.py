@@ -81,12 +81,12 @@ class TypeNode(ParseNode):
             return type
 
 @dataclass
-class TypehintNode(ParseNode):
+class DeclarationNode(ParseNode):
     typehint: TypeNode
-    expr: ParseNode
+    name: ParseNode
 
     def __str__(self):
-        return f'<{self.typehint}> {self.expr}'
+        return f'<{self.typehint}> {self.name}'
 
 @dataclass
 class LiteralNode(ParseNode):

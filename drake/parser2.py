@@ -1,7 +1,7 @@
 import contextlib, re
 from dataclasses import dataclass, field
 from typing import Any
-from .parsetree import *
+from .parsetree2 import *
 
 ## Tokens
 WHITESPACE = re.compile(r'[^\S\r\n]*')
