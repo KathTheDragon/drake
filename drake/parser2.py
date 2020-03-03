@@ -72,12 +72,11 @@ class Parser:
             return parser._with(cursor=cursor, column=column)
 
     def skip(parser):
-        parsed = parser.parsed
         with OPTIONAL:
             parser = parser.raw_match(WHITESPACE, 'whitespace')
         with OPTIONAL:
             parser = parser.raw_match(COMMENT, 'comment')
-        return parser._with(parsed=parsed)
+        return parser
 
     def match(parser, pattern, text='', parse=False):
         if isinstance(pattern, str):
@@ -145,8 +144,7 @@ class Parser:
 
     # Node matching methods
     def program(parser):
-        parser, expressions = parser.nodelist(Parser.declaration)
-        parser = parser.raw_match(EOF, 'eof')
+        parser, expressions = parser.nodelist(Parser.declaration).raw_match(EOF, 'eof')
         return BlockNode(expressions)
 
     def declaration(parser):
@@ -164,16 +162,14 @@ class Parser:
     def type(parser):
         parser, type = parser.identifier()
         with OPTIONAL:
-            parser, params = parser.match('[').nodelist(Parser.type)
-            parser = parser.match(']')
+            parser, params = parser.match('[').nodelist(Parser.type).match(']')
             type = TypeNode(type, params)
         return parser._with(parsed=type)
 
     def assignment(parser):
         try:
             try:
-                parser, targets = parser.match('(').nodelist(Parser.target)
-                parser = parser.match(')')
+                parser, targets = parser.match('(').nodelist(Parser.target).match(')')
             except InvalidSyntax:
                 parser, target = parser.target()
                 targets = [target]
