@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 __all__ = [
     'ParseNode',
@@ -58,6 +58,7 @@ def pprint(name, *args):
         return f'{name} (\n{delimiter.join((indent(arg) for arg in argstrings))}\n)'
 
 ## Classes
+@dataclass
 class ParseNode:
     def __str__(self):
         raise NotImplementedError
@@ -67,38 +68,34 @@ class ParseNode:
         return self.__class__.__name__[:-4]
 
 @dataclass
-class TypeNode(ParseNode):
-    type: str
-    params: List['TypeNode']
-
-    def __str__(self):
-        type = self.type.value
-        if self.params:
-            return f'{type}[{", ".join(self.params)}]'
-        else:
-            return type
-
-@dataclass
-class DeclarationNode(ParseNode):
-    typehint: TypeNode
+class IdentifierNode(ParseNode):
     name: str
 
     def __str__(self):
-        return f'<{self.typehint}> {self.name}'
+        return f'Identifier {self.name}'
 
 @dataclass
 class LiteralNode(ParseNode):
     value: str
 
     def __str__(self):
-        return f'{self.nodetype()} {self.value}'
+        return f'{self.nodetype} {self.value}'
 
 @dataclass
-class IdentifierNode(ParseNode):
-    name: str
+class StringNode(LiteralNode):
+    pass
 
-    def __str__(self):
-        return f'Identifier {self.name}'
+@dataclass
+class NumberNode(LiteralNode):
+    pass
+
+@dataclass
+class BooleanNode(LiteralNode):
+    pass
+
+@dataclass
+class NoneNode(LiteralNode):
+    pass
 
 @dataclass
 class GroupingNode(ParseNode):
@@ -138,21 +135,17 @@ class MappingNode(SequenceNode):
     items: List[PairNode]
 
 @dataclass
-class UnaryOpNode(ParseNode):
-    operator: str
-    operand: ParseNode
+class BlockNode(ParseNode):  # Not inheriting from SequenceNode, though it is a kind of sequence
+    expressions: List[ParseNode]
+
+    def __iter__(self):
+        yield from self.expressions
+
+    def __len__(self):
+        return len(self.expressions)
 
     def __str__(self):
-        return pprint(f'Unary {self.operator}', self.operand)
-
-@dataclass
-class BinaryOpNode(ParseNode):
-    left: ParseNode
-    operator: str
-    right: ParseNode
-
-    def __str__(self):
-        return pprint(f'Binary {self.operator}', self.left, self.right)
+        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
 
 @dataclass
 class SubscriptNode(ParseNode):
@@ -179,6 +172,31 @@ class CallNode(ParseNode):
         return pprint('Call', self.function, *self.arguments)
 
 @dataclass
+class UnaryOpNode(ParseNode):
+    operator: str
+    operand: ParseNode
+
+    def __str__(self):
+        return pprint(f'Unary {self.operator}', self.operand)
+
+@dataclass
+class BinaryOpNode(ParseNode):
+    left: ParseNode
+    operator: str
+    right: ParseNode
+
+    def __str__(self):
+        return pprint(f'Binary {self.operator}', self.left, self.right)
+
+@dataclass
+class LambdaNode(ParseNode):
+    params: List[Union[IdentifierNode, 'AssignmentNode']]
+    returns: ParseNode
+
+    def __str__(self):
+        return pprint(self.nodetype, *self.params, self.returns)
+
+@dataclass
 class KeywordNode(ParseNode):
     expression: ParseNode
 
@@ -190,7 +208,30 @@ class IterNode(KeywordNode):
     pass
 
 @dataclass
+class ObjectNode(ParseNode):
+    definition: BlockNode
+
+    def __str__(self):
+        return pprint('Object', *self.definition)
+
+@dataclass
+class ExceptionNode(ObjectNode):
+    pass
+
+@dataclass
+class MutableNode(KeywordNode):
+    pass
+
+@dataclass
 class ReturnNode(KeywordNode):
+    pass
+
+@dataclass
+class YieldNode(KeywordNode):
+    pass
+
+@dataclass
+class YieldFromNode(KeywordNode):
     pass
 
 @dataclass
@@ -204,53 +245,16 @@ class ContinueNode(ParseNode):
         return 'Continue'
 
 @dataclass
-class YieldNode(KeywordNode):
-    pass
-
-@dataclass
-class YieldFromNode(KeywordNode):
-    pass
-
-@dataclass
-class LambdaNode(ParseNode):
-    params: List[Union[IdentifierNode, 'AssignmentNode']]
-    returns: ParseNode
+class IfNode(ParseNode):
+    condition: ParseNode
+    then: ParseNode
+    default: Optional[ParseNode]
 
     def __str__(self):
-        return pprint(self.nodetype, *self.params, self.returns)
-
-@dataclass
-class AssignmentNode(ParseNode):
-    mode: str
-    target: ParseNode
-    expression: ParseNode
-
-    def __str__(self):
-        if self.mode:
-            return pprint(f'Assign {self.mode}', self.target, self.expression)
+        if self.default is None:  # No else
+            return pprint('If', self.condition, self.then)
         else:
-            return pprint('Assign', self.target, self.expression)
-
-@dataclass
-class BlockNode(ParseNode):
-    expressions: List[ParseNode]
-
-    def __iter__(self):
-        yield from self.expressions
-
-    def __len__(self):
-        return len(self.expressions)
-
-    def __str__(self):
-        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
-
-@dataclass
-class ObjectNode(LambdaNode):
-    returns: BlockNode
-
-@dataclass
-class ExceptionNode(ObjectNode):
-    pass
+            return pprint('If', self.condition, self.then, self.default)
 
 @dataclass
 class CaseNode(ParseNode):
@@ -263,18 +267,6 @@ class CaseNode(ParseNode):
             return pprint('Case', self.var, self.cases)
         else:
             return pprint('Case', self.var, self.cases, self.default)
-
-@dataclass
-class IfNode(ParseNode):
-    condition: ParseNode
-    then: ParseNode
-    default: Optional[ParseNode]
-
-    def __str__(self):
-        if self.default is None:  # No else
-            return pprint('If', self.condition, self.then)
-        else:
-            return pprint('If', self.condition, self.then, self.default)
 
 @dataclass
 class ForNode(ParseNode):
@@ -292,3 +284,42 @@ class WhileNode(ParseNode):
 
     def __str__(self):
         return pprint('While', self.condition, self.body)
+
+@dataclass
+class Target(ParseNode):  # Just a wrapper to cooperate with pprint
+    mode: str
+    name: str
+
+    def __str__(self):
+        if mode:
+            return f'{mode} {name}'
+        else:
+            return name
+
+@dataclass
+class AssignmentNode(ParseNode):
+    targets: List[Target]
+    expression: ParseNode
+
+    def __str__(self):
+        return pprint('Assign', *self.targets, self.expression)
+
+@dataclass
+class TypeNode(ParseNode):
+    type: str
+    params: List['TypeNode']
+
+    def __str__(self):
+        type = self.type.value
+        if self.params:
+            return f'{type}[{", ".join(self.params)}]'
+        else:
+            return type
+
+@dataclass
+class DeclarationNode(ParseNode):
+    typehint: TypeNode
+    name: str
+
+    def __str__(self):
+        return f'<{self.typehint}> {self.name}'
