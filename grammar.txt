@@ -57,7 +57,7 @@ arglist    -> "\n"? varg ("\n" varg)* "\n" kwarg ("\n" kwarg)* "\n"?
             | List[kwarg]
 varg       -> "*"? expression
 kwarg      -> IDENTIFIER "=" expression | "**" expression
-atom       -> mapping | block | listrange | list | group | tuple | literal
+atom       -> mapping | block | list | group | tuple | literal
 mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
 block      -> "{" List[declaration] "}"
