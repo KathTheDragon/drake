@@ -1,7 +1,6 @@
 import enum
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
-from .lexer import Token
 
 __all__ = [
     'ParseNode',
@@ -69,7 +68,7 @@ class ParseNode:
 
 @dataclass
 class TypeNode(ParseNode):
-    type: Token
+    type: str
     params: List['TypeNode']
 
     def __str__(self):
@@ -82,24 +81,24 @@ class TypeNode(ParseNode):
 @dataclass
 class DeclarationNode(ParseNode):
     typehint: TypeNode
-    name: ParseNode
+    name: str
 
     def __str__(self):
         return f'<{self.typehint}> {self.name}'
 
 @dataclass
 class LiteralNode(ParseNode):
-    value: Token
+    value: str
 
     def __str__(self):
-        return f'{self.value.type.capitalize()} {self.value.value}'
+        return f'{self.nodetype()} {self.value}'
 
 @dataclass
 class IdentifierNode(ParseNode):
-    name: Token
+    name: str
 
     def __str__(self):
-        return f'Identifier {self.name.value}'
+        return f'Identifier {self.name}'
 
 @dataclass
 class GroupingNode(ParseNode):
@@ -140,20 +139,20 @@ class MapNode(SequenceNode):
 
 @dataclass
 class UnaryOpNode(ParseNode):
-    operator: Token
+    operator: str
     operand: ParseNode
 
     def __str__(self):
-        return pprint(f'Unary {self.operator.value}', self.operand)
+        return pprint(f'Unary {self.operator}', self.operand)
 
 @dataclass
 class BinaryOpNode(ParseNode):
     left: ParseNode
-    operator: Token
+    operator: str
     right: ParseNode
 
     def __str__(self):
-        return pprint(f'Binary {self.operator.value}', self.left, self.right)
+        return pprint(f'Binary {self.operator}', self.left, self.right)
 
 @dataclass
 class SubscriptNode(ParseNode):
