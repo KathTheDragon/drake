@@ -90,13 +90,14 @@ class Parser:
             parser = parser.newline()
         return parser
 
-    def choice(parser, *tokens, parse=False):
+    def choices(parser, *tokens, parse=False):
+        exception = ValueError('items cannot be empty')
         for token in tokens:
             try:
                 return parser.match(token, parse=parse)
             except InvalidSyntax as e:
-                pass
-        raise e
+                exception = e
+        raise exception
 
     # Generic matching methods
     def nodelist(parser, item):
