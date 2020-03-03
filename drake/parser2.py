@@ -104,23 +104,24 @@ class Parser:
             parser = parser.newline()
         with OPTIONAL:
             items = []
-            parser, item = item(parser)
+            _parser, item = item(parser)
             items.append(item)
             try:
                 with OPTIONAL:
                     while True:
-                        parser, item = item(parser.newline())
+                        _parser, item = item(_parser.newline())
                         items.append(item)
             except InvalidSyntax:
                 with OPTIONAL:
                     while True:
-                        parser = parser.match(',')
+                        _parser = _parser.match(',')
                         with OPTIONAL:
-                            parser = parser.newline()
-                        parser, item = item(parser)
+                            _parser = _parser.newline()
+                        _parser, item = item(_parser)
                         items.append(item)
                 with OPTIONAL:
-                    parser = parser.match(',')
+                    _parser = _parser.match(',')
+            parser = _parser
         with OPTIONAL:
             parser = parser.newline()
         return parser._with(parsed=items)
@@ -137,8 +138,8 @@ class Parser:
     def rightrecurse(parser, operators, operand):
         parser, left = operand(parser)
         with OPTIONAL:
-            parser, op = parser.choice(*operators, parse=True)
-            parser, right = parser.rightrecurse(operators, operand)
+            _parser, op = parser.choice(*operators, parse=True)
+            parser, right = _parser.rightrecurse(operators, operand)
             left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
 
@@ -149,9 +150,9 @@ class Parser:
 
     def declaration(parser):
         try:
-            parser, typehint = parser.typehint()
-            parser, name = parser.identifier()
-            return parser._with(parsed=DeclarationNode(typehint, name))
+            _parser, typehint = parser.typehint()
+            _parser, name = _parser.identifier()
+            return _parser._with(parsed=DeclarationNode(typehint, name))
         except InvalidSyntax:
             return parser.assignment()
 
@@ -169,17 +170,17 @@ class Parser:
     def assignment(parser):
         try:
             try:
-                parser, targets = parser.match('(').nodelist(Parser.target).match(')')
+                _parser, targets = parser.match('(').nodelist(Parser.target).match(')')
             except InvalidSyntax:
-                parser, target = parser.target()
+                _parser, target = parser.target()
                 targets = [target]
             try:
-                parser, value = parser.match('=').assignment()
+                _parser, value = _parser.match('=').assignment()
             except InvalidSyntax:
-                parser, op = parser.choice(*AUGMENTED_ASSIGNMENT, parse=True)
+                _parser, op = _parser.choice(*AUGMENTED_ASSIGNMENT, parse=True)
                 op = op.rstrip('=')
-                parser, value = parser.assignment()
+                _parser, value = _parser.assignment()
                 value = BinaryOpNode(target, op, value)
-            return parser._with(parsed=AssignmentNode(targets, value))
+            return _parser._with(parsed=AssignmentNode(targets, value))
         except InvalidSyntax:
             return parser.expression()
