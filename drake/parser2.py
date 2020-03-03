@@ -60,13 +60,16 @@ class Parser:
         return Parser(parser.source, cursor, linenum, column, parsed)
 
     # Basic matching methods
-    def raw_match(parser, pattern, text):
+    def raw_match(parser, pattern, text, parse=False):
         match = pattern.match(parser.source, parser.cursor)
         if match is None:
             raise Expected(text, parser)
         cursor = match.end()
         column = parser.column + (cursor - parser.cursor)
-        return parser._with(cursor=cursor, column=column, parsed=match.group())
+        if parse:
+            return parser._with(cursor=cursor, column=column, parsed=match.group())
+        else:
+            return parser._with(cursor=cursor, column=column)
 
     def skip(parser):
         parsed = parser.parsed
@@ -76,11 +79,11 @@ class Parser:
             parser = parser.raw_match(COMMENT, 'comment')
         return parser._with(parsed=parsed)
 
-    def match(parser, pattern, text=''):
+    def match(parser, pattern, text='', parse=False):
         if isinstance(pattern, str):
             text = text or pattern
             pattern = re.compile(re.escape(pattern))
-        return parser.raw_match(pattern, text).skip()
+        return parser.raw_match(pattern, text, parse).skip()
 
     def newline(parser):
         parser = parser.match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0)
@@ -88,10 +91,10 @@ class Parser:
             parser = parser.newline()
         return parser
 
-    def choice(parser, *tokens):
+    def choice(parser, *tokens, parse=False):
         for token in tokens:
             try:
-                return parser.match(token)
+                return parser.match(token, parse=parse)
             except InvalidSyntax as e:
                 pass
         raise e
@@ -127,7 +130,7 @@ class Parser:
         parser, left = operand(parser)
         with OPTIONAL:
             while True:
-                parser, op = parser.choice(*operators)
+                parser, op = parser.choice(*operators, parse=True)
                 parser, right = operand(parser)
                 left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
@@ -135,7 +138,7 @@ class Parser:
     def rightrecurse(parser, operators, operand):
         parser, left = operand(parser)
         with OPTIONAL:
-            parser, op = parser.choice(*operators)
+            parser, op = parser.choice(*operators, parse=True)
             parser, right = parser.rightrecurse(operators, operand)
             left = BinaryOpNode(left, op, right)
         return parser._with(parsed=left)
@@ -177,7 +180,7 @@ class Parser:
             try:
                 parser, value = parser.match('=').assignment()
             except InvalidSyntax:
-                parser, op = parser.choice(*AUGMENTED_ASSIGNMENT)
+                parser, op = parser.choice(*AUGMENTED_ASSIGNMENT, parse=True)
                 op = op.rstrip('=')
                 parser, value = parser.assignment()
                 value = BinaryOpNode(target, op, value)
