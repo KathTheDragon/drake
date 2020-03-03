@@ -103,29 +103,30 @@ class Parser:
     def nodelist(parser, item):
         with OPTIONAL:
             parser = parser.newline()
-        items = []
-        parser, item = item(parser)
-        items.append(item)
+        parser, _item = item(parser)
         try:
-            parser, item = item(parser.newline())
-            items.append(item)
-            with OPTIONAL:
+            items = []
+            try:
                 while True:
-                    parser, item = item(parser.newline())
-                    items.append(item)
+                    parser, _item = item(parser.newline())
+                    items.append(_item)
+            except InvalidSyntax:
+                if not items:
+                    raise
         except InvalidSyntax:
+            items = []
             with OPTIONAL:
                 while True:
                     _parser = parser.match(',')
                     with OPTIONAL:
                         _parser = _parser.newline()
-                    parser, item = item(_parser)
-                    items.append(item)
+                    parser, _item = item(_parser)
+                    items.append(_item)
             with OPTIONAL:
                 parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
-        return parser._with(parsed=items)
+        return parser._with(parsed=[item]+items])
 
     def leftrecurse(parser, operators, operand):
         parser, left = operand(parser)
