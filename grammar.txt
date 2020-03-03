@@ -12,9 +12,11 @@ type       -> IDENTIFIER ("[" List[type] "]")?
 assignment -> ("(" List[target] ")" | target) "=" assignment  # const a, nonlocal b, c = (1, 2, 3) ?
             | expression
 target     -> ("nonlocal" | "const")? IDENTIFIER
-expression -> if | case | for | while | iter | object | mutable | return | yield | yieldfrom | break | continue
-            | lambda
-            | boolor
+expression -> if | case | for | while
+            | iter | object | exception | mutable
+            | return | yield | yieldfrom
+            | break | continue
+            | lambda | boolor
 if         -> "if" assignment "then" expression ("else" expression)
 case       -> "case" assignment "in" map ("else" expression)
 for        -> "for" vars "in" expression block
