@@ -62,4 +62,4 @@ block      -> "{" List[declaration] "}"
 list       -> "[" (assignment ".." expression? ("," expression)? | List[assignment]) "]"
 group      -> "(" expression ")"
 tuple      -> "(" List[assignment] ")"
-literal    -> IDENTIFIER | STRING | NUMBER
+literal    -> IDENTIFIER | STRING | NUMBER | "true" | "false" | "none"
