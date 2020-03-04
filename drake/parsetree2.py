@@ -163,10 +163,13 @@ class LookupNode(ParseNode):
     def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
+VArg = Union[ParseNode, UnaryOpNode]  # expr | '*' expr
+KwArg = Union['AssignmentNode', UnaryOpNode]  # name = expr | '**' expr
+
 @dataclass
 class CallNode(ParseNode):
     function: ParseNode
-    arguments: List[ParseNode]
+    arguments: List[Union[VArg, KwArg]]
 
     def __str__(self):
         return pprint('Call', self.function, *self.arguments)
@@ -188,9 +191,12 @@ class BinaryOpNode(ParseNode):
     def __str__(self):
         return pprint(f'Binary {self.operator}', self.left, self.right)
 
+VParam = Union['DeclarationNode', UnaryOpNode]  # type name | '*' type name
+KwParam = Union['AssignmentNode', UnaryOpNode]  # type name = expr | '**' type name
+
 @dataclass
 class LambdaNode(ParseNode):
-    params: List[Union[IdentifierNode, 'AssignmentNode']]
+    params: List[Union[VParam, KwParam]]
     returns: ParseNode
 
     def __str__(self):
