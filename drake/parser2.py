@@ -59,6 +59,9 @@ class Parser:
             parsed = parser.parsed
         return Parser(parser.source, cursor, linenum, column, parsed)
 
+    def withnode(parser, nodeclass, *args, **kwargs):
+        return parser._with(parsed=nodeclass(*args, **kwargs))
+
     # Basic matching methods
     def raw_match(parser, pattern, text, parse=False):
         match = pattern.match(parser.source, parser.cursor)
@@ -157,14 +160,14 @@ class Parser:
                 _parser, target = parser.target()
                 targets = [target]
             _parser, value = _parser.match('=').assignment()
-            return _parser._with(parsed=AssignmentNode(targets, value))
+            return _parser.withnode(AssignmentNode, targets, value)
         except InvalidSyntax:
             try:
                 _parser, target = parser.target()
                 _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True)
                 _parser, value = _parser.assignment()
                 value = BinaryOpNode(target, op.rstrip('='), value)
-                return _parser._with(parsed=AssignmentNode(targets, value))
+                return _parser.withnode(AssignmentNode, targets, value)
             except InvalidSyntax:
                 return parser.declaration()
 
@@ -172,7 +175,7 @@ class Parser:
         try:
             _parser, typehint = parser.typehint()
             _parser, name = _parser.identifier()
-            return _parser._with(parsed=DeclarationNode(typehint, name))
+            return _parser.withnode(DeclarationNode, typehint, name)
         except InvalidSyntax:
             return parser.keyword()
 
@@ -191,7 +194,7 @@ class Parser:
         with OPTIONAL:
             parser, mode = parser.choices('nonlocal', 'const', parse=True)
         parser, name = parser.identifier()
-        return parser._with(parsed=Target(mode, name))
+        return parser.withnode(Target, mode, name)
 
     def keyword(parser):
         items = (
@@ -224,7 +227,7 @@ class Parser:
         default = None
         with OPTIONAL:
             parser, default = parser.match('else').keyword()
-        return parser._with(parsed=IfNode(condition, then, default))
+        return parser.withnode(IfNode, condition, then, default)
 
     def case(parser):
         parser, value = parser.match('case').assignment()
@@ -232,13 +235,13 @@ class Parser:
         default = None
         with OPTIONAL:
             parser, default = parser.match('else').keyword()
-        return parser._with(parsed=CaseNode(value, cases, default))
+        return parser.withnode(CaseNode, value, cases, default)
 
     def for_(parser):
         parser, vars = parser.match('for').vars()
         parser, container = parser.match('in').keyword()
         parser, body = parser.block()
-        return parser._with(parsed=ForNode(vars, container, body))
+        return parser.withnode(ForNode, vars, container, body)
 
     def vars(parser):
         try:
@@ -249,46 +252,46 @@ class Parser:
     def while_(parser):
         parser, condition = parser.match('while').assignment()
         parser, body = parser.block()
-        return parser._with(parsed=WhileNode(condition, body))
+        return parser.withnode(WhileNode, condition, body)
 
     def iter(parser):
         parser, expression = parser.match('iter').keyword()
-        return parser._with(parsed=IterNode(expression))
+        return parser.withnode(IterNode, expression)
 
     def object_(parser):
         parser, definition = parser.match('object').block()
-        return parser._with(parsed=ObjectNode(definition))
+        return parser.withnode(ObjectNode, definition)
 
     def exception(parser):
         parser, definition = parser.match('exception').block()
-        return parser._with(parsed=ExceptionNode(definition))
+        return parser.withnode(ExceptionNode, definition)
 
     def mutable(parser):
         parser, expression = parser.match('mutable').keyword()
-        return parser._with(parsed=IterNode(expression))
+        return parser.withnode(IterNode, expression)
 
     def return_(parser):
         parser, expression = parser.match('return').keyword()
-        return parser._with(parsed=ReturnNode(expression))
+        return parser.withnode(ReturnNode, expression)
 
     def yield_(parser):
         parser, expression = parser.match('yield').assignment()
-        return parser._with(parsed=YieldNode(expression))
+        return parser.withnode(YieldNode, expression)
 
     def yieldfrom(parser):
         parser, expression = parser.match('yield').match('from').assignment()
-        return parser._with(parsed=YieldFromNode(expression))
+        return parser.withnode(YieldFromNode, expression)
 
     def break_(parser):
-        return parser.match('break')._with(parsed=BreakNode())
+        return parser.match('break').withnode(BreakNode)
 
     def continue_(parser):
-        return parser.match('continue')._with(parsed=ContinueNode())
+        return parser.match('continue').withnode(ContinueNode)
 
     def lambda_(parser):
         parser, params = parser.match('(').nodelist(Parser.param).match(')')
         parser, returns = parser.match('->').keyword()
-        return parser._with(parsed=LambdaNode(params, returns))
+        return parser.withnode(LambdaNode, params, returns)
 
     def param(parser):
         try:
@@ -304,7 +307,7 @@ class Parser:
         except InvalidSyntax:
             parser, name = parser.identifier()
             parser, expression = parser.match('=').keyword()
-            return parser._with(parsed=DeclarationNode(typehint, name))
+            return parser.withnode(DeclarationNode, typehint, name)
 
     def vparam(parser):
         parser, typehint = parser.typehint()
@@ -313,7 +316,7 @@ class Parser:
             return parser._with(parsed=UnaryOpNode('*', DeclarationNode(typehint, name)))
         except InvalidSyntax:
             parser, name = parser.identifier()
-            return parser._with(parsed=DeclarationNode(typehint, name))
+            return parser.withnode(DeclarationNode, typehint, name)
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)
@@ -356,7 +359,7 @@ class Parser:
         try:
             _parser, operator = parser.choices('not', '!', '-', parse=True)
             _parser, operand = _parser.unary()
-            return _parser._with(parsed=UnaryOpNode(operator, operand))
+            return _parser.withnode(UnaryOpNode, operator, operand)
         except InvalidSyntax:
             return parser.primary()
 
@@ -416,7 +419,7 @@ class Parser:
 
     def mapping(parser):
         parser, pairs = parser.match('{').nodelist(Parser.pair).match('}')
-        return parser._with(parsed=MappingNode(pairs))
+        return parser.withnode(MappingNode, pairs)
 
     def pair(parser):
         parser, key = parser.assignment()
@@ -425,7 +428,7 @@ class Parser:
 
     def block(parser):
         parser, exprs = parser.match('{').nodelist(Parser.assignment).match('}')
-        return parser._with(parsed=BlockNode(exprs))
+        return parser.withnode(BlockNode, exprs)
 
     def list(parser):
         try:
@@ -433,7 +436,7 @@ class Parser:
             return parser._with(parsed=ListNode([range]))
         except InvalidSyntax:
             parser, items = parser.match('[').nodelist(Parser.assignment).match(']')
-            return parser._with(parsed=ListNode(items))
+            return parser.withnode(ListNode, items)
 
     def range(parser):
         parser, start = parser.assignment().match('..')
@@ -443,15 +446,15 @@ class Parser:
             parser, end = parser.keyword()
         with OPTIONAL:
             parser, step = parser.match(',').keyword()
-        return parser._with(parsed=Range(start, end, step))
+        return parser.withnode(Range, start, end, step)
 
     def group(parser):
         parser, expr = parser.match('(').keyword().match(')')
-        return parser._with(parsed=GroupingNode(expr))
+        return parser.withnode(GroupingNode, expr)
 
     def tuple(parser):
         parser, items = parser.match('(').nodelist(Parser.assignment).match(')')
-        return parser._with(parsed=TupleNode(items))
+        return parser.withnode(TupleNode, items)
 
     def literal(parser):
         items = (
@@ -470,19 +473,19 @@ class Parser:
 
     def identifier(parser):
         parser, name = parser.match(IDENTIFIER, 'identifier', parse=True)
-        return parser._with(IdentifierNode(name))
+        return parser.withnode(IdentifierNode, name)
 
     def string(parser):
         parser, string = parser.match(STRING, 'string', parse=True)
-        return parser._with(StringNode(string))
+        return parser.withnode(StringNode, string)
 
     def number(parser):
         parser, number = parser.match(NUMBER, 'number', parse=True)
-        return parser._with(NumberNode(number))
+        return parser.withnode(NumberNode, number)
 
     def boolean(parser):
         parser, boolean = parser.choices('true', 'false', parse=True)
-        return parser._with(BooleanNode(boolean))
+        return parser.withnode(BooleanNode, boolean)
 
     def none(parser):
-        return parser.match('none')._with(NoneNode())
+        return parser.match('none').withnode(NoneNode)
