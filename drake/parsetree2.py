@@ -298,10 +298,13 @@ class Target(ParseNode):  # Just a wrapper to cooperate with pprint
     typehint: Optional[TypeNode] = None
 
     def __str__(self):
-        if mode:
-            return f'{mode} {name}'
-        else:
-            return name
+        fragments = []
+        if self.mode:
+            fragments.append(mode)
+        if self.typehint:
+            fragments.append(f'<{self.typehint}>')
+        fragments.append(self.name)
+        return ' '.join(fragments)
 
 @dataclass
 class AssignmentNode(ParseNode):
