@@ -48,7 +48,8 @@ add        -> Left[("+" | "-"), mult]   # sum(); sum(sum(*addends), neg(sum(*sub
 mult       -> Left[("*" | "/"), mod]    # product(); product(product(*multipicands), reciprocal(product(*divisors)))
 mod        -> Left["%", exp]            # mod()
 exp        -> Right["**", unary]        # power()
-unary      -> ("not" | "!" | "-")* primary  # inv(), bitinv(), neg()
+unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
+            | primary
 primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
 arg        -> varg | kwarg
 varg       -> "*"? keyword
