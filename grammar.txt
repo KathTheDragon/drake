@@ -57,7 +57,7 @@ varg       -> "*"? keyword
 atom       -> mapping | block | list | group | tuple | literal
 mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
-block      -> "{" List[declaration] "}"
+block      -> "{" List[assignment] "}"
 list       -> "[" (range | List[assignment]) "]"
 range      -> assignment ".." keyword? ("," keyword)?
 group      -> "(" keyword ")"
