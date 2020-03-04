@@ -49,7 +49,7 @@ def pprint(name, *args):
             argstrings.append(str(arg))
         elif isinstance(arg, list):
             argstrings.append(f'({", ".join(item.value for item in arg)})')
-        else:
+        elif arg:
             argstrings.append(arg)
     if isprimary(*args):
         return f'{name} ( {", ".join(argstrings)} )'
