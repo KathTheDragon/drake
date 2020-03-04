@@ -43,11 +43,11 @@ class Parser:
     cursor: int = 0
     linenum: int = 0
     column: int = 0
-    parsed: Any = None
+    parsed: tuple = ()
 
     def __iter__(parser):
         yield parser
-        yield parser.parsed
+        yield from parser.parsed
 
     def _with(parser, cursor=None, linenum=None, column=None, parsed=None):
         if cursor is None:
@@ -60,8 +60,23 @@ class Parser:
             parsed = parser.parsed
         return Parser(parser.source, cursor, linenum, column, parsed)
 
-    def withnode(parser, nodeclass, *args, **kwargs):
-        return parser._with(parsed=nodeclass(*args, **kwargs))
+    def clearparsed(parser):
+        return parser._with(parsed=())
+
+    def setparsed(parser, *parsed):
+        return parser._with(parsed=parsed)
+
+    def addparsed(parser, *parsed):
+        return parser._with(parsed=parser.parsed+parsed)
+
+    def popparsed(parserp):
+        return parser._with(parsed=parser.parsed[:-1]), parser.parsed[-1]
+
+    def withnode(parser, nodeclass, *args, fromparsed=None, **kwargs):
+        parsed = parser.parsed
+        if fromparsed is not None:
+            parsed, args = parsed[:-fromparsed], args+parsed[-fromparsed:]
+        return parser.setparsed(*parsed, nodeclass(*args, **kwargs))
 
     # Basic matching methods
     def raw_match(parser, pattern, text, parse=False):
@@ -70,10 +85,11 @@ class Parser:
             raise Expected(text, parser)
         cursor = match.end()
         column = parser.column + (cursor - parser.cursor)
+        parser = parser._with(cursor=cursor, column=column)
         if parse:
-            return parser._with(cursor=cursor, column=column, parsed=match.group())
+            return parser.addparsed(match.group())
         else:
-            return parser._with(cursor=cursor, column=column)
+            return parser
 
     def skip(parser):
         with OPTIONAL:
@@ -105,78 +121,76 @@ class Parser:
 
     # Generic matching methods
     def nodelist(parser, item):
+        outer, parser = parser, parser.clearparsed()
         with OPTIONAL:
             parser = parser.newline()
-        parser, _item = item(parser)
+        parser = item(parser)
         try:
-            items = []
             try:
                 while True:
-                    parser, _item = item(parser.newline())
-                    items.append(_item)
+                    parser = item(parser.newline())
             except InvalidSyntax:
-                if not items:
+                if len(parser.parsed) == 1:
                     raise
         except InvalidSyntax:
-            items = []
             with OPTIONAL:
                 while True:
                     _parser = parser.match(',')
                     with OPTIONAL:
                         _parser = _parser.newline()
-                    parser, _item = item(_parser)
-                    items.append(_item)
+                    parser = item(_parser)
             with OPTIONAL:
                 parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
-        return parser._with(parsed=[item]+items])
+        return outer.addparsed(parser.parsed)
 
     def leftrecurse(parser, operators, operand):
-        parser, left = operand(parser)
+        parser = operand(parser)
         with OPTIONAL:
             while True:
-                _parser, op = parser.choices(*operators, parse=True)
-                parser, right = operand(_parser)
-                left = BinaryOpNode(left, op, right)
-        return parser._with(parsed=left)
+                parser = operand(parser.choices(*operators, parse=True)) \
+                    .withnode(BinaryOpNode, fromparsed=3)
+        return parser
 
     def rightrecurse(parser, operators, operand):
-        parser, left = operand(parser)
+        parser = operand(parser)
         with OPTIONAL:
-            _parser, op = parser.choices(*operators, parse=True)
-            parser, right = _parser.rightrecurse(operators, operand)
-            left = BinaryOpNode(left, op, right)
-        return parser._with(parsed=left)
+            parser = parser.choices(*operators, parse=True) \
+                           .rightrecurse(operators, operand) \
+                           .withnode(BinaryOpNode, fromparsed=3)
+        return parser
 
     # Node matching methods
     def program(parser):
-        return BlockNode(parser.nodelist(Parser.assignment).raw_match(EOF, 'eof').parsed)
+        return parser.nodelist(Parser.assignment) \
+                     .raw_match(EOF, 'eof') \
+                     .withnode(BlockNode, fromparsed=1)
 
     def assignment(parser):
         try:
             try:
-                _parser, targets = parser.match('(').nodelist(Parser.target).match(')')
+                _parser = parser.match('(').nodelist(Parser.target).match(')')
             except InvalidSyntax:
-                _parser, target = parser.target()
-                targets = [target]
-            _parser, value = _parser.match('=').assignment()
-            return _parser.withnode(AssignmentNode, targets, value)
+                _parser, target = parser.target().popparsed()
+                _parser.addparsed([target])
+            _parser = _parser.match('=').assignment()
+            return _parser.withnode(AssignmentNode, fromparsed=2)
         except InvalidSyntax:
             try:
-                _parser, target = parser.target()
-                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True)
-                _parser, value = _parser.assignment()
+                # There must be a better way
+                _parser, target = parser.target().popparsed()
+                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).popparsed()
+                _parser, value = _parser.assignment().popparsed()
                 value = BinaryOpNode(target, op.rstrip('='), value)
-                return _parser.withnode(AssignmentNode, targets, value)
+                return _parser.withnode(AssignmentNode, [target], value)
             except InvalidSyntax:
                 return parser.declaration()
 
     def declaration(parser):
         try:
-            _parser, typehint = parser.typehint()
-            _parser, name = _parser.identifier()
-            return _parser.withnode(DeclarationNode, typehint, name)
+            return parser.typehint().identifier() \
+                         .withnode(DeclarationNode, fromparsed=2)
         except InvalidSyntax:
             return parser.keyword()
 
@@ -184,18 +198,18 @@ class Parser:
         return parser.match('<').type().match('>')
 
     def type(parser):
-        parser, type = parser.identifier()
+        parser = parser.identifier().withnode(TypeNode, fromparsed=1)
         with OPTIONAL:
-            parser, params = parser.match('[').nodelist(Parser.type).match(']')
-            type = TypeNode(type, params)
-        return parser._with(parsed=type)
+            parser = parser.match('[').nodelist(Parser.type).match(']') \
+                           .withnode(TypeNode, fromparsed=2)
+        return parser
 
     def target(parser):
         mode = ''
         with OPTIONAL:
-            parser, mode = parser.choices('nonlocal', 'const', parse=True)
-        parser, name = parser.identifier()
-        return parser.withnode(Target, mode, name)
+            parser, mode = parser.choices('nonlocal', 'const', parse=True).popparsed()
+        return parser.identifier() \
+                     .withnode(Target, fromparsed=1, mode=mode)
 
     def keyword(parser):
         items = (
@@ -223,26 +237,24 @@ class Parser:
         raise exception
 
     def if_(parser):
-        parser, condition = parser.match('if').assignment()
-        parser, then = parser.match('then').keyword()
-        default = None
-        with OPTIONAL:
-            parser, default = parser.match('else').keyword()
-        return parser.withnode(IfNode, condition, then, default)
+        parser = parser.match('if').assignment().match('then').keyword()
+        try:
+            parser = parser.match('else').keyword()
+        except InvalidSyntax:
+            parser = parser.addparsed(None)
+        return parser.withnode(IfNode, fromparsed=3)
 
     def case(parser):
-        parser, value = parser.match('case').assignment()
-        parser, cases = parser.match('in').mapping()
-        default = None
-        with OPTIONAL:
-            parser, default = parser.match('else').keyword()
-        return parser.withnode(CaseNode, value, cases, default)
+        parser = parser.match('case').assignment().match('in').mapping()
+        try:
+            parser = parser.match('else').keyword()
+        except InvalidSyntax:
+            parser = parser.addparsed(None)
+        return parser.withnode(CaseNode, fromparsed=3)
 
     def for_(parser):
-        parser, vars = parser.match('for').vars()
-        parser, container = parser.match('in').keyword()
-        parser, body = parser.block()
-        return parser.withnode(ForNode, vars, container, body)
+        return parser.match('for').vars().match('in').keyword().block() \
+                     .withnode(ForNode, fromparsed=3)
 
     def vars(parser):
         try:
@@ -251,48 +263,50 @@ class Parser:
             return parser.identifier()
 
     def while_(parser):
-        parser, condition = parser.match('while').assignment()
-        parser, body = parser.block()
-        return parser.withnode(WhileNode, condition, body)
+        return parser.match('while').assignment().block() \
+                     .withnode(WhileNode, fromparsed=2)
 
     def iter(parser):
-        parser, expression = parser.match('iter').keyword()
-        return parser.withnode(IterNode, expression)
+        return parser.match('iter').keyword() \
+                     .withnode(IterNode, fromparsed=1)
 
     def object_(parser):
-        parser, definition = parser.match('object').block()
-        return parser.withnode(ObjectNode, definition)
+        return parser.match('object').block() \
+                     .withnode(ObjectNode, fromparsed=1)
 
     def exception(parser):
-        parser, definition = parser.match('exception').block()
-        return parser.withnode(ExceptionNode, definition)
+        return parser.match('exception').block() \
+                     .withnode(ExceptionNode, fromparsed=1)
 
     def mutable(parser):
-        parser, expression = parser.match('mutable').keyword()
-        return parser.withnode(IterNode, expression)
+        return parser.match('mutable').keyword() \
+                     .withnode(IterNode, fromparsed=1)
 
     def return_(parser):
-        parser, expression = parser.match('return').keyword()
-        return parser.withnode(ReturnNode, expression)
+        return parser.match('return').keyword() \
+                     .withnode(ReturnNode, fromparsed=1)
 
     def yield_(parser):
-        parser, expression = parser.match('yield').assignment()
-        return parser.withnode(YieldNode, expression)
+        return parser.match('yield').assignment() \
+                     .withnode(YieldNode, fromparsed=1)
 
     def yieldfrom(parser):
-        parser, expression = parser.match('yield').match('from').assignment()
-        return parser.withnode(YieldFromNode, expression)
+        return parser.match('yield').match('from').assignment() \
+                     .withnode(YieldFromNode, fromparsed=1)
 
     def break_(parser):
-        return parser.match('break').withnode(BreakNode)
+        return parser.match('break') \
+                     .withnode(BreakNode)
 
     def continue_(parser):
-        return parser.match('continue').withnode(ContinueNode)
+        return parser.match('continue') \
+                     .withnode(ContinueNode)
 
     def lambda_(parser):
-        parser, params = parser.match('(').nodelist(Parser.param).match(')')
-        parser, returns = parser.match('->').keyword()
-        return parser.withnode(LambdaNode, params, returns)
+        parser, params = parser
+        parser, returns = parser
+        return parser.match('(').nodelist(Parser.param).match(')').match('->').keyword() \
+                     .withnode(LambdaNode, fromparsed=2)
 
     def param(parser):
         try:
@@ -301,23 +315,27 @@ class Parser:
             return parser.vparam()
 
     def kwparam(parser):
-        parser, typehint = parser.typehint()
+        parser = parser.typehint()
         try:
-            parser, name = parser.match('**').identifier()
-            return parser._with(parsed=UnaryOpNode('**', DeclarationNode(typehint, name)))
+            return parser.match('**').identifier() \
+                         .withnode(DeclarationNode, fromparsed=2) \
+                         .withnode(UnaryOpNode, '**', fromparsed=1)
         except InvalidSyntax:
-            parser, name = parser.identifier()
-            parser, expression = parser.match('=').keyword()
-            return parser.withnode(DeclarationNode, typehint, name)
+            parser, typehint = parser.popparsed()
+            return parser.identifier() \
+                         .withnode(Target, fromparsed=1, typehint=typehint)
+                         .match('=').keyword() \
+                         .withnode(AssignmentNode, fromparsed=2)
 
     def vparam(parser):
-        parser, typehint = parser.typehint()
+        parser = parser.typehint()
         try:
-            parser, name = parser.match('*').identifier()
-            return parser._with(parsed=UnaryOpNode('*', DeclarationNode(typehint, name)))
+            return parser.match('*').identifier() \
+                         .withnode(DeclarationNode, fromparsed=2) \
+                         .withnode(UnaryOpNode, '*', fromparsed=1)
         except InvalidSyntax:
-            parser, name = parser.identifier()
-            return parser.withnode(DeclarationNode, typehint, name)
+            return parser.identifier() \
+                         .withnode(DeclarationNode, fromparsed=2)
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)
@@ -358,27 +376,28 @@ class Parser:
 
     def unary(parser):
         try:
-            _parser, operator = parser.choices('not', '!', '-', parse=True)
-            _parser, operand = _parser.unary()
-            return _parser.withnode(UnaryOpNode, operator, operand)
+            return parser.choices('not', '!', '-', parse=True).unary() \
+                         .withnode(UnaryOpNode, fromparsed=2)
         except InvalidSyntax:
             return parser.primary()
 
     def primary(parser):
-        parser, obj = parser.atom()
+        parser = parser.atom()
         with OPTIONAL:
             while True:
                 try:
-                    parser, name = parser.match('.').identifier()
-                    obj = LookupNode(obj, name)
+                    parser = parser.match('.').identifier() \
+                                   .withnode(LookupNode, fromparsed=2)
                 except InvalidSyntax:
                     try:
-                        parser, args = parser.match('(').nodelist(Parser.arg).match(')')
+                        parser = parser.match('(').nodelist(Parser.arg).match(')') \
+                                       .withnode(CallNode, fromparsed=2)
                         obj = CallNode(obj, args)
                     except InvalidSyntax:
-                        parser, subscript = parser.list()
-                        obj = SubscriptNode(obj, subscript.items)
-        return parser._with(parsed=obj)
+                        # Might change SubscriptNode
+                        parser, subscript = parser.list().popparsed()
+                        parser = parser.withnode(SubscriptNode, fromparsed=1, subscript=subscript.items)
+        return parser
 
     def arg(parser):
         try:
@@ -388,17 +407,18 @@ class Parser:
 
     def kwarg(parser):
         try:
-            parser, expr = parser.match('**').keyword()
-            return parser._with(parsed=UnaryOpNode('**', expr))
+            return parser.match('**').keyword() \
+                         .withnode(UnaryOpNode, '**', fromparsed=1)
         except InvalidSyntax:
-            parser, name = parser.identifier()
-            parser, expr = parser.match('=').keyword()
-            return parser._with(parsed=AssignmentNode([Target(name)], expr))
+            return parser.identifier() \
+                         .withnode(Target, fromparsed=1) \
+                         .match('=').keyword() \
+                         .withnode(AssignmentNode, fromparsed=2)
 
     def varg(parser):
         try:
-            parser, expr = parser.match('*').keyword()
-            return parser._with(parsed=UnaryOpNode('*', expr))
+            return parser.match('*').keyword() \
+                         .withnode(UnaryOpNode, '*', fromparsed=1)
         except InvalidSyntax:
             return parser.keyword()
 
@@ -419,43 +439,45 @@ class Parser:
         raise exception
 
     def mapping(parser):
-        parser, pairs = parser.match('{').nodelist(Parser.pair).match('}')
-        return parser.withnode(MappingNode, pairs)
+        parser = parser
+        return parser.match('{').nodelist(Parser.pair).match('}') \
+                     .withnode(MappingNode, fromparsed=1)
 
     def pair(parser):
-        parser, key = parser.assignment()
-        parser, value = parser.match(':').assignment()
-        return parser._with(PairNode(key, value))
+        return parser.assignment().match(':').assignment() \
+                     .withnode(PairNode, fromparsed=2)
 
     def block(parser):
-        parser, exprs = parser.match('{').nodelist(Parser.assignment).match('}')
-        return parser.withnode(BlockNode, exprs)
+        return parser.match('{').nodelist(Parser.assignment).match('}') \
+                     .withnode(BlockNode, fromparsed=1)
 
     def list(parser):
         try:
-            parser, range = parser.match('[').range().match(']')
-            return parser._with(parsed=ListNode([range]))
+            return parser.match('[').range().match(']') \
+                         .withnode(ListNode, fromparsed=1)
         except InvalidSyntax:
-            parser, items = parser.match('[').nodelist(Parser.assignment).match(']')
-            return parser.withnode(ListNode, items)
+            return parser.match('[').nodelist(Parser.assignment).match(']') \
+                         .withnode(ListNode fromparsed=1)
 
     def range(parser):
-        parser, start = parser.assignment().match('..')
-        end = None
-        step = 1
-        with OPTIONAL:
-            parser, end = parser.keyword()
-        with OPTIONAL:
-            parser, step = parser.match(',').keyword()
-        return parser.withnode(Range, start, end, step)
+        parser = parser.assignment().match('..')
+        try:
+            parser = parser.keyword()
+        except InvalidSyntax:
+            parser = parser.addparsed(None)
+        try:
+            parser = parser.match(',').keyword()
+        except InvalidSyntax:
+            parser = parser.addparsed(1)
+        return parser.withnode(Range, fromparsed=3)
 
     def group(parser):
-        parser, expr = parser.match('(').keyword().match(')')
-        return parser.withnode(GroupingNode, expr)
+        return parser.match('(').keyword().match(')') \
+                     .withnode(GroupingNode, fromparsed=1)
 
     def tuple(parser):
-        parser, items = parser.match('(').nodelist(Parser.assignment).match(')')
-        return parser.withnode(TupleNode, items)
+        return parser.match('(').nodelist(Parser.assignment).match(')') \
+                     .withnode(TupleNode, fromparsed=1)
 
     def literal(parser):
         items = (
@@ -473,20 +495,20 @@ class Parser:
         raise exception
 
     def identifier(parser):
-        parser, name = parser.match(IDENTIFIER, 'identifier', parse=True)
-        return parser.withnode(IdentifierNode, name)
+        return parser.match(IDENTIFIER, 'identifier', parse=True) \
+                     .withnode(IdentifierNode, fromparsed=1)
 
     def string(parser):
-        parser, string = parser.match(STRING, 'string', parse=True)
-        return parser.withnode(StringNode, string)
+        return parser.match(STRING, 'string', parse=True) \
+                     .withnode(StringNode, string)
 
     def number(parser):
-        parser, number = parser.match(NUMBER, 'number', parse=True)
-        return parser.withnode(NumberNode, number)
+        return parser.match(NUMBER, 'number', parse=True) \
+                     .withnode(NumberNode, number)
 
     def boolean(parser):
-        parser, boolean = parser.choices('true', 'false', parse=True)
-        return parser.withnode(BooleanNode, boolean)
+        return parser.choices('true', 'false', parse=True) \
+                     .withnode(BooleanNode, boolean)
 
     def none(parser):
         return parser.match('none').withnode(NoneNode)
