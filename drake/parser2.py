@@ -174,13 +174,21 @@ class Parser:
             except InvalidSyntax:
                 _parser, target = parser.target()
                 targets = [target]
-            try:
-                _parser, value = _parser.match('=').assignment()
-            except InvalidSyntax:
-                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True)
-                op = op.rstrip('=')
-                _parser, value = _parser.assignment()
-                value = BinaryOpNode(target, op, value)
+            _parser, value = _parser.match('=').assignment()
             return _parser._with(parsed=AssignmentNode(targets, value))
         except InvalidSyntax:
-            return parser.expression()
+            try:
+                _parser, target = parser.target()
+                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True)
+                _parser, value = _parser.assignment()
+                value = BinaryOpNode(target, op.rstrip('='), value)
+                return _parser._with(parsed=AssignmentNode(targets, value))
+            except InvalidSyntax:
+                return parser.expression()
+
+    def target(parser):
+        mode = ''
+        with OPTIONAL:
+            parser, mode = parser.choices('nonlocal', 'const', parse=True)
+        parser, name = parser.identifier()
+        return parser._with(parsed=Target(mode, name))

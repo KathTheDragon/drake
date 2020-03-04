@@ -9,7 +9,8 @@ declaration-> typehint IDENTIFIER
             | assignment
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-assignment -> ("(" List[target] ")" | target) "=" assignment  # const a, nonlocal b, c = (1, 2, 3) ?
+assignment -> ("(" List[target] ")" | target) "=" assignment
+            | target AUG_ASSIGN expression  # or can this be assignment?
             | expression
 target     -> ("nonlocal" | "const")? IDENTIFIER
 expression -> if | case | for | while
