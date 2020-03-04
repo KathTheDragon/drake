@@ -32,11 +32,9 @@ yieldfrom  -> "yield" "from" assignment
 yield      -> "yield" assignment
 break      -> "break"
 continue   -> "continue"
-lambda     -> "(" params ")" "->" expression
-params     -> "\n"? vparam ("\n" vparam)* "\n" kwparam ("\n" kwparam)* "\n"?
-            | "\n"? vparam ("," "\n"? vparam)* "," "\n"? kwparam ("," "\n"? kwparam)* ","? "\n"?
-            | List[vparam]
-            | List[kwparam]
+lambda     -> "(" List[param] ")" "->" expression
+            | boolor
+param      -> vparam | kwparam
 vparam     -> typehint "*"? IDENTIFIER
 kwparam    -> typehint (IDENTIFIER "=" expression | "**" IDENTIFIER)
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
@@ -53,10 +51,7 @@ mod        -> Left["%", exp]            # mod()
 exp        -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-")* primary  # inv(), bitinv(), neg()
 primary    -> atom ("." IDENTIFIER | "(" arglist ")" | list)*
-arglist    -> "\n"? varg ("\n" varg)* "\n" kwarg ("\n" kwarg)* "\n"?
-            | "\n"? varg ("," "\n"? varg)* "," "\n"? kwarg ("," "\n"? kwarg)* ","? "\n"?
-            | List[varg]
-            | List[kwarg]
+arg        -> varg | kwarg
 varg       -> "*"? expression
 kwarg      -> IDENTIFIER "=" expression | "**" expression
 atom       -> mapping | block | list | group | tuple | literal
