@@ -115,6 +115,15 @@ class SequenceNode(ParseNode):
         return pprint(self.nodetype, *self.items)
 
 @dataclass
+class Range(ParseNode):  # Wrapper
+    start: ParseNode
+    end: Optional[ParseNode] = None
+    step: Optional[ParseNode] = None
+
+    def __str__(self):
+        return pprint('Range', self.start, self.end, self.step)
+
+@dataclass
 class ListNode(SequenceNode):
     pass
 
