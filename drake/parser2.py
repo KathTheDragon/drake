@@ -147,8 +147,7 @@ class Parser:
 
     # Node matching methods
     def program(parser):
-        parser, expressions = parser.nodelist(Parser.declaration).raw_match(EOF, 'eof')
-        return BlockNode(expressions)
+        return BlockNode(parser.nodelist(Parser.declaration).raw_match(EOF, 'eof').parsed)
 
     def declaration(parser):
         try:
@@ -159,8 +158,7 @@ class Parser:
             return parser.assignment()
 
     def typehint(parser):
-        parser, type = parser.match('<').type()
-        return parser.match('>')._with(parsed=type)
+        return parser.match('<').type().match('>')
 
     def type(parser):
         parser, type = parser.identifier()
