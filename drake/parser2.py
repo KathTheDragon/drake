@@ -192,3 +192,100 @@ class Parser:
             parser, mode = parser.choices('nonlocal', 'const', parse=True)
         parser, name = parser.identifier()
         return parser._with(parsed=Target(mode, name))
+
+    def expression(parser):
+        items = (
+            Parser.if_,
+            Parser.case,
+            Parser.for_,
+            Parser.while_,
+            Parser.iter,
+            Parser.object_,
+            Parser.exception,
+            Parser.mutable,
+            Parser.return_,
+            Parser.yield_,
+            Parser.yieldfrom,
+            Parser.break_,
+            Parser.continue_,
+            Parser.lambda_,
+            Parser.boolor
+        )
+        for item in items:
+            try:
+                return item(parser)
+            except InvalidSyntax as e:
+                exception = e
+        raise exception
+
+    def if_(parser):
+        parser, condition = parser.match('if').assignment()
+        parser, then = parser.match('then').expression()
+        default = None
+        with OPTIONAL:
+            parser, default = parser.match('else').expression()
+        return parser._with(parsed=IfNode(condition, then, default))
+
+    def case(parser):
+        parser, value = parser.match('case').assignment()
+        parser, cases = parser.match('in').mapping()
+        default = None
+        with OPTIONAL:
+            parser, default = parser.match('else').expression()
+        return parser._with(parsed=CaseNode(value, cases, default))
+
+    def for_(parser):
+        parser, vars = parser.match('for').vars()
+        parser, container = parser.match('in').expression()
+        parser, body = parser.block()
+        return parser._with(parsed=ForNode(vars, container, body))
+
+    def vars(parser):
+        try:
+            return parser.match('(').nodelist(Parser.identifier).match(')')
+        except InvalidSyntax:
+            return parser.identifier()
+
+    def while_(parser):
+        parser, condition = parser.match('while').assignment()
+        parser, body = parser.block()
+        return parser._with(parsed=WhileNode(condition, body))
+
+    def iter(parser):
+        parser, expression = parser.match('iter').expression()
+        return parser._with(parsed=IterNode(expression))
+
+    def object_(parser):
+        parser, definition = parser.match('object').block()
+        return parser._with(parsed=ObjectNode(definition))
+
+    def exception(parser):
+        parser, definition = parser.match('exception').block()
+        return parser._with(parsed=ExceptionNode(definition))
+
+    def mutable(parser):
+        parser, expression = parser.match('mutable').expression()
+        return parser._with(parsed=IterNode(expression))
+
+    def return_(parser):
+        parser, expression = parser.match('return').expression()
+        return parser._with(parsed=ReturnNode(expression))
+
+    def yield_(parser):
+        parser, expression = parser.match('yield').assignment()
+        return parser._with(parsed=YieldNode(expression))
+
+    def yieldfrom(parser):
+        parser, expression = parser.match('yield').match('from').assignment()
+        return parser._with(parsed=YieldFromNode(expression))
+
+    def break_(parser):
+        return parser.match('break')._with(parsed=BreakNode())
+
+    def continue_(parser):
+        return parser.match('continue')._with(parsed=ContinueNode())
+
+    def lambda_(parser):
+        parser, params = parser.match('(').params().match(')')
+        parser, returns = parser.match('->').expression()
+        return parser._with(parsed=LambdaNode(params, returns))
