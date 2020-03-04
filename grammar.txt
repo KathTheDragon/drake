@@ -28,8 +28,8 @@ object     -> "object" block
 exception  -> "exception" block
 mutable    -> "mutable" expression
 return     -> "return" expression
-yield      -> "yield" "from" assignment
-yieldfrom  -> "yield" assignment
+yieldfrom  -> "yield" "from" assignment
+yield      -> "yield" assignment
 break      -> "break"
 continue   -> "continue"
 lambda     -> "(" params ")" "->" expression
