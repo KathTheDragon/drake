@@ -46,7 +46,8 @@ class Parser:
     parsed: Any = None
 
     def __iter__(parser):
-        return parser, parser.parsed
+        yield parser
+        yield parser.parsed
 
     def _with(parser, cursor=None, linenum=None, column=None, parsed=None):
         if cursor is None:
