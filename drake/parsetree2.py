@@ -258,7 +258,7 @@ class IfNode(ParseNode):
 
 @dataclass
 class CaseNode(ParseNode):
-    var: IdentifierNode
+    value: ParseNode
     cases: MapNode
     default: Optional[ParseNode]
 
