@@ -150,7 +150,7 @@ class Parser:
         with OPTIONAL:
             while True:
                 parser = operand(parser.choices(*operators, parse=True)) \
-                    .withnode(BinaryOpNode, fromparsed=3)
+                        .withnode(BinaryOpNode, fromparsed=3)
         return parser
 
     def rightrecurse(parser, operators, operand):
