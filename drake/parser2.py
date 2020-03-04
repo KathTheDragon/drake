@@ -323,38 +323,38 @@ class Parser:
         return parser.rightrecurse('or', Parser.boolxor)
 
     def boolxor(parser):
-        return parser.recurse('xor', Parser.booland)
+        return parser.rightrecurse('xor', Parser.booland)
 
     def booland(parser):
-        return parser.recurse('and', Parser.comparison)
+        return parser.rightrecurse('and', Parser.comparison)
 
     def comparison(parser):
         # Need to work out what to do with 'is', 'is not', 'in', 'not in'
-        return parser.recurse(('<', '<=', '>', '>=', '==', '!='), Parser.bitor)
+        return parser.rightrecurse(('<', '<=', '>', '>=', '==', '!='), Parser.bitor)
 
     def bitor(parser):
-        return parser.recurse('|', Parser.bitxor)
+        return parser.leftrecurse('|', Parser.bitxor)
 
     def bitxor(parser):
-        return parser.recurse('^', Parser.bitand)
+        return parser.leftrecurse('^', Parser.bitand)
 
     def bitand(parser):
-        return parser.recurse('&', Parser.shift)
+        return parser.leftrecurse('&', Parser.shift)
 
     def shift(parser):
-        return parser.recurse(('<<', '>>'), Parser.addition)
+        return parser.leftrecurse(('<<', '>>'), Parser.addition)
 
     def addition(parser):
-        return parser.recurse(('+', '-'), Parser.product)
+        return parser.leftrecurse(('+', '-'), Parser.product)
 
     def product(parser):
-        return parser.recurse(('*', '/'), Parser.modulus)
+        return parser.leftrecurse(('*', '/'), Parser.modulus)
 
     def modulus(parser):
-        return parser.recurse('%', Parser.exponent)
+        return parser.leftrecurse('%', Parser.exponent)
 
     def exponent(parser):
-        return parser.recurse('**', Parser.unary)
+        return parser.rightrecurse('**', Parser.unary)
 
     def unary(parser):
         try:
