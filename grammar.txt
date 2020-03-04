@@ -34,8 +34,8 @@ break      -> "break"
 continue   -> "continue"
 lambda     -> "(" List[param] ")" "->" keyword
 param      -> vparam | kwparam
-vparam     -> typehint "*"? IDENTIFIER
 kwparam    -> typehint (IDENTIFIER "=" keyword | "**" IDENTIFIER)
+vparam     -> typehint "*"? IDENTIFIER
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", comparison]  # all() - return the first falsey argument, else the last
@@ -52,8 +52,8 @@ unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
 primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
 arg        -> varg | kwarg
+kwarg      -> "**" keyword | IDENTIFIER "=" keyword
 varg       -> "*"? keyword
-kwarg      -> IDENTIFIER "=" keyword | "**" keyword
 atom       -> mapping | block | list | group | tuple | literal
 mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
