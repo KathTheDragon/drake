@@ -172,18 +172,16 @@ class Parser:
             try:
                 _parser = parser.match('(').nodelist(Parser.target).match(')')
             except InvalidSyntax:
-                _parser, target = parser.target().popparsed()
-                _parser.addparsed([target])
-            _parser = _parser.match('=').assignment()
-            return _parser.withnode(AssignmentNode, fromparsed=2)
+                _parser = parser.target()
+            return _parser.match('=').assignment() \
+                          .withnode(AssignmentNode, fromparsed=2)
         except InvalidSyntax:
             try:
                 # There must be a better way
                 _parser, target = parser.target().popparsed()
-                _parser, op = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).popparsed()
-                _parser, value = _parser.assignment().popparsed()
-                value = BinaryOpNode(target, op.rstrip('='), value)
-                return _parser.withnode(AssignmentNode, [target], value)
+                _parser = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).assignment() \
+                                 .withnode(BinaryOpNode, target, fromparsed=2)
+                return _parser.withnode(AssignmentNode, target, fromparsed=1)
             except InvalidSyntax:
                 return parser.declaration()
 
