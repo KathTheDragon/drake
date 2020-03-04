@@ -10,7 +10,7 @@ NEWLINE = re.compile(r'\r\n?|\n')
 EOF = re.compile(r'$(?![\r\n])')
 IDENTIFIER = re.compile(r'[a-zA-Z_]\w*[!?]?')
 _STRING = r'(?:[^\\\n]|\\.)*?'
-STRING = re.compile(fr'\'{STRING}\'|\"{STRING}\"')
+STRING = re.compile(fr'\'{_STRING}\'|\"{_STRING}\"')
 NUMBER = re.compile(r'(?:0|[1-9]\d*)(?:\.\d*[1-9])?j?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
