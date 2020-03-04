@@ -326,7 +326,7 @@ class AssignmentNode(ParseNode):
 @dataclass
 class TypeNode(ParseNode):
     type: str
-    params: List['TypeNode']
+    params: List['TypeNode'] = field(default_factory=list)
 
     def __str__(self):
         type = self.type.value
