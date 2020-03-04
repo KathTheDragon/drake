@@ -293,9 +293,9 @@ class WhileNode(ParseNode):
 
 @dataclass
 class Target(ParseNode):  # Just a wrapper to cooperate with pprint
-    mode: str
-    typehint: TypeNode
     name: str
+    mode: str = ''
+    typehint: Optional[TypeNode] = None
 
     def __str__(self):
         if mode:
