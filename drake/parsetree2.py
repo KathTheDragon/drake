@@ -109,7 +109,7 @@ class GroupingNode(ParseNode):
 
 @dataclass
 class SequenceNode(ParseNode):
-    items: List[ParseNode]
+    items: Union[ParseNode, List[ParseNode]]
 
     def __str__(self):
         return pprint(self.nodetype, *self.items)
@@ -317,7 +317,7 @@ class Target(ParseNode):  # Just a wrapper to cooperate with pprint
 
 @dataclass
 class AssignmentNode(ParseNode):
-    targets: List[Target]
+    targets: Union[Target, List[Target]]
     expression: ParseNode
 
     def __str__(self):
