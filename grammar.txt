@@ -60,6 +60,6 @@ pair       -> assignment ":" assignment
 block      -> "{" List[assignment] "}"
 list       -> "[" (range | List[assignment]) "]"
 range      -> assignment ".." keyword? ("," keyword)?
-group      -> "(" keyword ")"
+group      -> "(" assignment ")"
 tuple      -> "(" List[assignment] ")"
 literal    -> IDENTIFIER | STRING | NUMBER | "true" | "false" | "none"
