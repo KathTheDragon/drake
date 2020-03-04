@@ -42,12 +42,12 @@ booland    -> Right["and", comparison]  # all() - return the first falsey argume
 comparison -> Right[comp, bitor]        # comp()
 bitor      -> Left["|", bitxor]         # bitor()
 bitxor     -> Left["^", bitand]         # bitxor()
-bitand     -> Left["&", bitshift]       # bitand()
-bitshift   -> Left[("<<" | ">>"), add]  # bitshift(); a >> b -> a << -b; a << b << ... -> bitshift(a, sum(b, ...))
-add        -> Left[("+" | "-"), mult]   # sum(); sum(sum(*addends), neg(sum(*subtrahends)))
-mult       -> Left[("*" | "/"), mod]    # product(); product(product(*multipicands), reciprocal(product(*divisors)))
-mod        -> Left["%", exp]            # mod()
-exp        -> Right["**", unary]        # power()
+bitand     -> Left["&", shift]          # bitand()
+shift      -> Left[("<<" | ">>"), add]  # shift(); a >> b -> a << -b; a << b << ... -> shift(a, sum(b, ...))
+addition   -> Left[("+" | "-"), mult]   # sum(); sum(sum(*addends), neg(sum(*subtrahends)))
+product    -> Left[("*" | "/"), mod]    # product(); product(product(*multipicands), reciprocal(product(*divisors)))
+modulus    -> Left["%", exp]            # mod()
+exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
 primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
