@@ -147,25 +147,7 @@ class Parser:
 
     # Node matching methods
     def program(parser):
-        return BlockNode(parser.nodelist(Parser.declaration).raw_match(EOF, 'eof').parsed)
-
-    def declaration(parser):
-        try:
-            _parser, typehint = parser.typehint()
-            _parser, name = _parser.identifier()
-            return _parser._with(parsed=DeclarationNode(typehint, name))
-        except InvalidSyntax:
-            return parser.assignment()
-
-    def typehint(parser):
-        return parser.match('<').type().match('>')
-
-    def type(parser):
-        parser, type = parser.identifier()
-        with OPTIONAL:
-            parser, params = parser.match('[').nodelist(Parser.type).match(']')
-            type = TypeNode(type, params)
-        return parser._with(parsed=type)
+        return BlockNode(parser.nodelist(Parser.assignment).raw_match(EOF, 'eof').parsed)
 
     def assignment(parser):
         try:
@@ -184,7 +166,25 @@ class Parser:
                 value = BinaryOpNode(target, op.rstrip('='), value)
                 return _parser._with(parsed=AssignmentNode(targets, value))
             except InvalidSyntax:
-                return parser.expression()
+                return parser.declaration()
+
+    def declaration(parser):
+        try:
+            _parser, typehint = parser.typehint()
+            _parser, name = _parser.identifier()
+            return _parser._with(parsed=DeclarationNode(typehint, name))
+        except InvalidSyntax:
+            return parser.keyword()
+
+    def typehint(parser):
+        return parser.match('<').type().match('>')
+
+    def type(parser):
+        parser, type = parser.identifier()
+        with OPTIONAL:
+            parser, params = parser.match('[').nodelist(Parser.type).match(']')
+            type = TypeNode(type, params)
+        return parser._with(parsed=type)
 
     def target(parser):
         mode = ''
@@ -193,7 +193,7 @@ class Parser:
         parser, name = parser.identifier()
         return parser._with(parsed=Target(mode, name))
 
-    def expression(parser):
+    def keyword(parser):
         items = (
             Parser.if_,
             Parser.case,
@@ -220,10 +220,10 @@ class Parser:
 
     def if_(parser):
         parser, condition = parser.match('if').assignment()
-        parser, then = parser.match('then').expression()
+        parser, then = parser.match('then').keyword()
         default = None
         with OPTIONAL:
-            parser, default = parser.match('else').expression()
+            parser, default = parser.match('else').keyword()
         return parser._with(parsed=IfNode(condition, then, default))
 
     def case(parser):
@@ -231,12 +231,12 @@ class Parser:
         parser, cases = parser.match('in').mapping()
         default = None
         with OPTIONAL:
-            parser, default = parser.match('else').expression()
+            parser, default = parser.match('else').keyword()
         return parser._with(parsed=CaseNode(value, cases, default))
 
     def for_(parser):
         parser, vars = parser.match('for').vars()
-        parser, container = parser.match('in').expression()
+        parser, container = parser.match('in').keyword()
         parser, body = parser.block()
         return parser._with(parsed=ForNode(vars, container, body))
 
@@ -252,7 +252,7 @@ class Parser:
         return parser._with(parsed=WhileNode(condition, body))
 
     def iter(parser):
-        parser, expression = parser.match('iter').expression()
+        parser, expression = parser.match('iter').keyword()
         return parser._with(parsed=IterNode(expression))
 
     def object_(parser):
@@ -264,11 +264,11 @@ class Parser:
         return parser._with(parsed=ExceptionNode(definition))
 
     def mutable(parser):
-        parser, expression = parser.match('mutable').expression()
+        parser, expression = parser.match('mutable').keyword()
         return parser._with(parsed=IterNode(expression))
 
     def return_(parser):
-        parser, expression = parser.match('return').expression()
+        parser, expression = parser.match('return').keyword()
         return parser._with(parsed=ReturnNode(expression))
 
     def yield_(parser):
@@ -286,6 +286,6 @@ class Parser:
         return parser.match('continue')._with(parsed=ContinueNode())
 
     def lambda_(parser):
-        parser, params = parser.match('(').params().match(')')
-        parser, returns = parser.match('->').expression()
+        parser, params = parser.match('(').nodelist(Parser.param).match(')')
+        parser, returns = parser.match('->').keyword()
         return parser._with(parsed=LambdaNode(params, returns))

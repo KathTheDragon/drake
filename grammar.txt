@@ -4,39 +4,39 @@ Left[op, operand]
 Right[op, operand]
            -> operand (op Right[op, operand])?
 
-program    -> List[declaration] "EOF"
+program    -> List[assignment] "EOF"
+assignment -> ("(" List[target] ")" | target) "=" assignment
+            | target AUG_ASSIGN assignment
+            | declaration
+target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
 declaration-> typehint IDENTIFIER
-            | assignment
+            | keyword
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-assignment -> ("(" List[target] ")" | target) "=" assignment
-            | target AUG_ASSIGN expression  # or can this be assignment?
-            | expression
-target     -> ("nonlocal" | "const")? IDENTIFIER
-expression -> if | case | for | while
+keyword    -> if | case | for | while
             | iter | object | exception | mutable
             | return | yield | yieldfrom
             | break | continue
-            | lambda | boolor
-if         -> "if" assignment "then" expression ("else" expression)
-case       -> "case" assignment "in" map ("else" expression)
-for        -> "for" vars "in" expression block
+            | lambda
+if         -> "if" assignment "then" keyword ("else" keyword)
+case       -> "case" assignment "in" map ("else" keyword)
+for        -> "for" vars "in" keyword block
 vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
 while      -> "while" assignment block
-iter       -> "iter" expression
+iter       -> "iter" keyword
 object     -> "object" block
 exception  -> "exception" block
-mutable    -> "mutable" expression
-return     -> "return" expression
+mutable    -> "mutable" keyword
+return     -> "return" keyword
 yieldfrom  -> "yield" "from" assignment
 yield      -> "yield" assignment
 break      -> "break"
 continue   -> "continue"
-lambda     -> "(" List[param] ")" "->" expression
+lambda     -> "(" List[param] ")" "->" keyword
             | boolor
 param      -> vparam | kwparam
 vparam     -> typehint "*"? IDENTIFIER
-kwparam    -> typehint (IDENTIFIER "=" expression | "**" IDENTIFIER)
+kwparam    -> typehint (IDENTIFIER "=" keyword | "**" IDENTIFIER)
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", comparison]  # all() - return the first falsey argument, else the last
@@ -50,15 +50,15 @@ mult       -> Left[("*" | "/"), mod]    # product(); product(product(*multipican
 mod        -> Left["%", exp]            # mod()
 exp        -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-")* primary  # inv(), bitinv(), neg()
-primary    -> atom ("." IDENTIFIER | "(" arglist ")" | list)*
+primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
 arg        -> varg | kwarg
-varg       -> "*"? expression
-kwarg      -> IDENTIFIER "=" expression | "**" expression
+varg       -> "*"? keyword
+kwarg      -> IDENTIFIER "=" keyword | "**" keyword
 atom       -> mapping | block | list | group | tuple | literal
 mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
 block      -> "{" List[declaration] "}"
-list       -> "[" (assignment ".." expression? ("," expression)? | List[assignment]) "]"
-group      -> "(" expression ")"
+list       -> "[" (assignment ".." keyword? ("," keyword)? | List[assignment]) "]"
+group      -> "(" keyword ")"
 tuple      -> "(" List[assignment] ")"
 literal    -> IDENTIFIER | STRING | NUMBER | "true" | "false" | "none"
