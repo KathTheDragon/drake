@@ -216,6 +216,7 @@ class Parser:
             Parser.for_,
             Parser.while_,
             Parser.iter,
+            Parser.do,
             Parser.object_,
             Parser.exception,
             Parser.mutable,
@@ -267,6 +268,10 @@ class Parser:
     def iter(parser):
         return parser.match('iter').keyword() \
                      .withnode(IterNode, fromparsed=1)
+
+    def do(parser):
+        return parser.match('do').block() \
+                     .withnode(DoNode, fromparsed=1)
 
     def object_(parser):
         return parser.match('object').block() \

@@ -222,6 +222,9 @@ class KeywordNode(ParseNode):
 class IterNode(KeywordNode):
     pass
 
+class DoNode(KeywordNode):
+    expression: BlockNode
+
 @dataclass
 class ObjectNode(ParseNode):
     definition: BlockNode

@@ -14,7 +14,7 @@ declaration-> typehint IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
 keyword    -> if | case | for | while
-            | iter | object | exception | mutable
+            | iter | do | object | exception | mutable
             | return | yield | yieldfrom
             | break | continue
             | lambda | boolor
@@ -24,6 +24,7 @@ for        -> "for" vars "in" keyword block
 vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
 while      -> "while" assignment block
 iter       -> "iter" keyword
+do         -> "do" block
 object     -> "object" block
 exception  -> "exception" block
 mutable    -> "mutable" keyword
