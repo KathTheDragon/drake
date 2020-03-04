@@ -105,7 +105,7 @@ class Parser:
         return parser.raw_match(pattern, text, parse).skip()
 
     def newline(parser):
-        parser = parser.match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0)
+        parser = parser.raw_match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0).skip()
         with OPTIONAL:
             parser = parser.newline()
         return parser
