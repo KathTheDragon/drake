@@ -94,7 +94,7 @@ class BooleanNode(LiteralNode):
     pass
 
 @dataclass
-class NoneNode(LiteralNode):
+class NoneNode(ParseNode):
     pass
 
 @dataclass
