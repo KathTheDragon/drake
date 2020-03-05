@@ -14,8 +14,8 @@ declaration-> typehint IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
             | iter | do | object | exception | mutable
-            | return | yield | yieldfrom
 keyword    -> if | case | try | for | while
+            | throw | return | yield | yieldfrom
             | break | continue
             | lambda | boolor
 if         -> "if" assignment "then" keyword ("else" keyword)
@@ -29,6 +29,7 @@ do         -> "do" block
 object     -> "object" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | mapping | list | tuple | STRING)
+throw      -> "throw" keyword
 return     -> "return" keyword
 yieldfrom  -> "yield" "from" assignment
 yield      -> "yield" assignment

@@ -228,6 +228,7 @@ class Parser:
             Parser.object_,
             Parser.exception,
             Parser.mutable,
+            Parser.throw,
             Parser.return_,
             Parser.yield_,
             Parser.yieldfrom,
@@ -330,6 +331,10 @@ class Parser:
             except InvalidSyntax as e:
                 exception = e
         raise exception
+
+    def throw(parser):
+        return parser.match('throw').keyword() \
+                     .withnode(ThrowNode, fromparsed=1)
 
     def return_(parser):
         return parser.match('return').keyword() \

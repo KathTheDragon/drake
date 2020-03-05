@@ -236,6 +236,10 @@ class MutableNode(KeywordNode):
     pass
 
 @dataclass
+class ThrowNode(KeywordNode):
+    pass
+
+@dataclass
 class ReturnNode(KeywordNode):
     pass
 
