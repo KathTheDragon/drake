@@ -4,35 +4,47 @@ from typing import List, Optional, Tuple, Union
 
 __all__ = [
     'ParseNode',
-    'TypeNode',
-    'DeclarationNode',
     'LiteralNode',
     'IdentifierNode',
-    'GroupingNode',
-    'ListNode',
-    'TupleNode',
+    'StringNode',
+    'NumberNode',
+    'BooleanNode',
+    'NoneNode',
     'PairNode',
     'MappingNode',
-    'UnaryOpNode',
-    'BinaryOpNode',
+    'BlockNode',
+    'Range',
+    'ListNode',
+    'TupleNode',
+    'GroupingNode',
     'SubscriptNode',
     'LookupNode',
     'CallNode',
+    'UnaryOpNode',
+    'BinaryOpNode',
+    'LambdaNode',
     'IterNode',
+    'DoNode',
+    'ObjectNode',
+    'EnumNode',
+    'ModuleNode',
+    'ExceptionNode',
+    'MutableNode',
+    'ThrowNode',
     'ReturnNode',
-    'BreakNode',
-    'ContinueNode',
     'YieldNode',
     'YieldFromNode',
-    'LambdaNode',
-    'AssignmentNode',
-    'BlockNode',
-    'ObjectNode',
-    'ExceptionNode',
-    'CaseNode',
+    'BreakNode',
+    'ContinueNode',
+    'PassNode',
     'IfNode',
+    'CaseNode',
+    'TryNode',
     'ForNode',
-    'WhileNode'
+    'WhileNode',
+    'TypeNode',
+    'DeclarationNode',
+    'AssignmentNode',
 ]
 
 ## Helper functions
@@ -40,7 +52,7 @@ def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
 def isprimary(*nodes):
-    return all(isinstance(node, (LiteralNode, IdentifierNode, list)) for node in nodes)
+    return all(isinstance(node, (LiteralNode, NoneNode, IdentifierNode, list)) for node in nodes)
 
 def pprint(name, *args):
     argstrings = []
@@ -61,7 +73,7 @@ def pprint(name, *args):
 @dataclass
 class ParseNode:
     def __str__(self):
-        raise NotImplementedError
+        return self.nodetype
 
     @property
     def nodetype(self):
@@ -147,14 +159,8 @@ class MappingNode(SequenceNode):
 class BlockNode(ParseNode):  # Not inheriting from SequenceNode, though it is a kind of sequence
     expressions: List[ParseNode]
 
-    def __iter__(self):
-        yield from self.expressions
-
-    def __len__(self):
-        return len(self.expressions)
-
     def __str__(self):
-        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
+        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self.expressions) + '\n}'
 
 @dataclass
 class SubscriptNode(ParseNode):
@@ -230,7 +236,22 @@ class ObjectNode(ParseNode):
     definition: BlockNode
 
     def __str__(self):
-        return pprint('Object', *self.definition)
+        return pprint(self.nodetype, self.definition)
+
+@dataclass
+class Enum(ParseNode):
+    flags: bool
+    items: List[Union[IdentifierNode, AssignmentNode]]
+
+    def __str__(self):
+        if self.flags:
+            return pprint('Enum flags', *self.items)
+        else:
+            return pprint('Enum', *self.items)
+
+@dataclass
+class ModuleNode(ObjectNode):
+    pass
 
 @dataclass
 class ExceptionNode(ObjectNode):
@@ -238,6 +259,10 @@ class ExceptionNode(ObjectNode):
 
 @dataclass
 class MutableNode(KeywordNode):
+    pass
+
+@dataclass
+class ThrowNode(KeywordNode):
     pass
 
 @dataclass
@@ -254,13 +279,15 @@ class YieldFromNode(KeywordNode):
 
 @dataclass
 class BreakNode(ParseNode):
-    def __str__(self):
-        return 'Break'
+    pass
 
 @dataclass
 class ContinueNode(ParseNode):
-    def __str__(self):
-        return 'Continue'
+    pass
+
+@dataclass
+class PassNode(ParseNode):
+    pass
 
 @dataclass
 class IfNode(ParseNode):
@@ -285,6 +312,24 @@ class CaseNode(ParseNode):
             return pprint('Case', self.var, self.cases)
         else:
             return pprint('Case', self.var, self.cases, self.default)
+
+@dataclass
+class CatchNode(ParseNode):
+    exception: IdentifierNode
+    name: Optional[IdentifierNode]
+    body: ParseNode  # Might change to BlockNode
+
+    def __str__(self):
+        return pprint('Catch', self.exception, self.container, self.body)
+
+@dataclass
+class TryNode(ParseNode):
+    body: ParseNode
+    catch: List[CatchNode]
+    finally_: Optional[ParseNode]
+
+    def __str__(self):
+        return pprint('Try', self.body, *self.catch, self.finally_)
 
 @dataclass
 class ForNode(ParseNode):

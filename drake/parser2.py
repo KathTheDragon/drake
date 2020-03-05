@@ -11,7 +11,10 @@ EOF = re.compile(r'$(?![\r\n])')
 IDENTIFIER = re.compile(r'[a-zA-Z_]\w*[!?]?')
 _STRING = r'(?:[^\\\n]|\\.)*?'
 STRING = re.compile(fr'\'{_STRING}\'|\"{_STRING}\"')
-NUMBER = re.compile(r'(?:0|[1-9]\d*)(?:\.\d*[1-9])?j?')
+BINARY = re.compile(r'0b(?:_?[01])+')
+OCTAL = re.compile(r'0o(?:_?[0-7])+')
+HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
+DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?j?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
 
@@ -35,6 +38,10 @@ def Expected(expected, parser):
 
 ## Context managers
 OPTIONAL = contextlib.suppress(InvalidSyntax)
+
+## Helper functions
+def List(*args):
+    return list(args)
 
 ## Classes
 @dataclass
@@ -107,8 +114,12 @@ class Parser:
     def choices(parser, *tokens, parse=False):
         exception = ValueError('items cannot be empty')
         for token in tokens:
+            if isinstance(token, tuple):
+                token, text = token
+            else:
+                text = ''
             try:
-                return parser.match(token, parse=parse)
+                return parser.match(token, text, parse=parse)
             except InvalidSyntax as e:
                 exception = e
         raise exception
@@ -139,8 +150,6 @@ class Parser:
                 parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
-        def List(*args):
-            return list(args)
         return parser.withnode(List, fromparsed=num)
 
     def leftrecurse(parser, operators, operand):
@@ -211,13 +220,17 @@ class Parser:
         items = (
             Parser.if_,
             Parser.case,
+            Parser.try_,
             Parser.for_,
             Parser.while_,
             Parser.iter,
             Parser.do,
             Parser.object_,
+            Parser.enum,
+            Parser.module,
             Parser.exception,
             Parser.mutable,
+            Parser.throw,
             Parser.return_,
             Parser.yield_,
             Parser.yieldfrom,
@@ -249,6 +262,32 @@ class Parser:
             parser = parser.addparsed(None)
         return parser.withnode(CaseNode, fromparsed=3)
 
+    def try_(parser):
+        parser = parser.match('try').assignment()
+        try:
+            parser = parser.addparsed([]).match('finally').assignment()
+        except InvalidSyntax:
+            num = 0
+            try:
+                while True:
+                    parser_ = parser.match('catch').identifier()
+                    try:
+                        parser_ = parser_.match('as').identifier()
+                    except InvalidSyntax:
+                        parser_ = parser_.addparsed(None)
+                    parser = parser_.assignment() \
+                                    .withnode(CatchNode, fromparsed=3)
+                    num += 1
+            except InvalidSyntax as e:
+                if not num:
+                    raise
+            parser = parser.withnode(List, fromparsed=num)
+            try:
+                parser = parser.match('finally').assignment()
+            except InvalidSyntax:
+                parser = parser.addparsed(None)
+        return parser.withnode(TryNode, fromparsed=3)
+
     def for_(parser):
         return parser.match('for').vars().match('in').keyword().block() \
                      .withnode(ForNode, fromparsed=3)
@@ -275,6 +314,27 @@ class Parser:
         return parser.match('object').block() \
                      .withnode(ObjectNode, fromparsed=1)
 
+    def enum(parser):
+        parser = parser.match('enum')
+        try:
+            parser = parser.match('flags').addparsed(True)
+        except InvalidSyntax:
+            parser = parser.addparsed(False)
+        return parser.match('{').nodelist(Parser.enumitem).match('}') \
+                     .withnode(EnumNode, fromparsed=2)
+
+    def enumitem(parser):
+        parser = parser.identifier()
+        with OPTIONAL:
+            parser = parser.withnode(TargetNode, fromparsed=1) \
+                           .match('=').number() \
+                           .withnode(AssignmentNode, fromparsed=2)
+        return parser
+
+    def module(parser):
+        return parser.match('module').block() \
+                     .withnode(ModuleNode, fromparsed=1)
+
     def exception(parser):
         return parser.match('exception').block() \
                      .withnode(ExceptionNode, fromparsed=1)
@@ -294,6 +354,10 @@ class Parser:
             except InvalidSyntax as e:
                 exception = e
         raise exception
+
+    def throw(parser):
+        return parser.match('throw').keyword() \
+                     .withnode(ThrowNode, fromparsed=1)
 
     def return_(parser):
         return parser.match('return').keyword() \
@@ -315,9 +379,11 @@ class Parser:
         return parser.match('continue') \
                      .withnode(ContinueNode)
 
+    def pass_(parser):
+        return parser.match('pass') \
+                     .withnode(PassNode)
+
     def lambda_(parser):
-        parser, params = parser
-        parser, returns = parser
         return parser.match('(').nodelist(Parser.param).match(')').match('->').keyword() \
                      .withnode(LambdaNode, fromparsed=2)
 
@@ -516,8 +582,13 @@ class Parser:
                      .withnode(StringNode, string)
 
     def number(parser):
-        return parser.match(NUMBER, 'number', parse=True) \
-                     .withnode(NumberNode, number)
+        return parser.choices(
+                        (BINARY, 'binary'),
+                        (OCTAL, 'octal'),
+                        (HEXADECIMAL, 'hexadecimal'),
+                        (DECIMAL, 'decimal'),
+                        parse=True
+                    ).withnode(NumberNode, number)
 
     def boolean(parser):
         return parser.choices('true', 'false', parse=True) \
