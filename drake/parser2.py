@@ -280,8 +280,20 @@ class Parser:
                      .withnode(ExceptionNode, fromparsed=1)
 
     def mutable(parser):
-        return parser.match('mutable').keyword() \
-                     .withnode(IterNode, fromparsed=1)
+        parser = parser.match('mutable')
+        items = (
+            Parser.object_,
+            Parser.mapping,
+            Parser.list,
+            Parser.tuple,
+            Parser.string
+        )
+        for item in items:
+            try:
+                return item(parser)
+            except InvalidSyntax as e:
+                exception = e
+        raise exception
 
     def return_(parser):
         return parser.match('return').keyword() \

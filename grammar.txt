@@ -27,7 +27,7 @@ iter       -> "iter" keyword
 do         -> "do" block
 object     -> "object" block
 exception  -> "exception" block
-mutable    -> "mutable" keyword
+mutable    -> "mutable" (object | mapping | list | tuple | STRING)
 return     -> "return" keyword
 yieldfrom  -> "yield" "from" assignment
 yield      -> "yield" assignment
