@@ -60,12 +60,6 @@ class Parser:
             parsed = parser.parsed
         return Parser(parser.source, cursor, linenum, column, parsed)
 
-    def clearparsed(parser):
-        return parser._with(parsed=())
-
-    def setparsed(parser, *parsed):
-        return parser._with(parsed=parsed)
-
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
 
@@ -121,16 +115,17 @@ class Parser:
 
     # Generic matching methods
     def nodelist(parser, item):
-        outer, parser = parser, parser.clearparsed()
         with OPTIONAL:
             parser = parser.newline()
         parser = item(parser)
+        num = 1
         try:
             try:
                 while True:
                     parser = item(parser.newline())
+                    num += 1
             except InvalidSyntax:
-                if len(parser.parsed) == 1:
+                if num == 1:
                     raise
         except InvalidSyntax:
             with OPTIONAL:
@@ -139,11 +134,14 @@ class Parser:
                     with OPTIONAL:
                         _parser = _parser.newline()
                     parser = item(_parser)
+                    num += 1
             with OPTIONAL:
                 parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
-        return outer.addparsed(parser.parsed)
+        def List(*args):
+            return list(args)
+        return parser.withnode(List, fromparsed=num)
 
     def leftrecurse(parser, operators, operand):
         parser = operand(parser)
