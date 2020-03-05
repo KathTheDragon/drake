@@ -5,7 +5,7 @@ from .parsetree2 import *
 
 ## Tokens
 WHITESPACE = re.compile(r'[^\S\r\n]*')
-COMMENT = re.compile('//.*$')
+COMMENT = re.compile('(?m)//.*$')
 NEWLINE = re.compile(r'\r\n?|\n')
 EOF = re.compile(r'$(?![\r\n])')
 IDENTIFIER = re.compile(r'[a-zA-Z_]\w*[!?]?')
