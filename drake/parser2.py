@@ -69,7 +69,7 @@ class Parser:
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
 
-    def popparsed(parserp):
+    def popparsed(parser):
         return parser._with(parsed=parser.parsed[:-1]), parser.parsed[-1]
 
     def withnode(parser, nodeclass, *args, fromparsed=None, **kwargs):
