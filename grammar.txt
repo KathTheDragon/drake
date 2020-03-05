@@ -16,7 +16,7 @@ type       -> IDENTIFIER ("[" List[type] "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | return | yield | yieldfrom
-            | break | continue
+            | break | continue | pass
             | lambda | boolor
 if         -> "if" assignment "then" keyword ("else" keyword)
 case       -> "case" assignment "in" map ("else" keyword)
@@ -38,6 +38,7 @@ yieldfrom  -> "yield" "from" assignment
 yield      -> "yield" assignment
 break      -> "break"
 continue   -> "continue"
+pass       -> "pass"
 lambda     -> "(" List[param] ")" "->" keyword
 param      -> vparam | kwparam
 kwparam    -> typehint (IDENTIFIER "=" keyword | "**" IDENTIFIER)

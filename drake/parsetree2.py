@@ -30,6 +30,7 @@ __all__ = [
     'ObjectNode',
     'ExceptionNode',
     'CaseNode',
+    'PassNode',
     'IfNode',
     'ForNode',
     'WhileNode'
@@ -271,6 +272,10 @@ class BreakNode(ParseNode):
 
 @dataclass
 class ContinueNode(ParseNode):
+    pass
+
+@dataclass
+class PassNode(ParseNode):
     pass
 
 @dataclass

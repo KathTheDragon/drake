@@ -379,6 +379,10 @@ class Parser:
         return parser.match('continue') \
                      .withnode(ContinueNode)
 
+    def pass_(parser):
+        return parser.match('pass') \
+                     .withnode(PassNode)
+
     def lambda_(parser):
         return parser.match('(').nodelist(Parser.param).match(')').match('->').keyword() \
                      .withnode(LambdaNode, fromparsed=2)
