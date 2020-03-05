@@ -228,6 +228,21 @@ class ObjectNode(ParseNode):
         return pprint(self.nodetype, self.definition)
 
 @dataclass
+class Enum(ParseNode):
+    flags: bool
+    items: List[Union[IdentifierNode, AssignmentNode]]
+
+    def __str__(self):
+        if self.flags:
+            return pprint('Enum flags', *self.items)
+        else:
+            return pprint('Enum', *self.items)
+
+@dataclass
+class ModuleNode(ObjectNode):
+    pass
+
+@dataclass
 class ExceptionNode(ObjectNode):
     pass
 

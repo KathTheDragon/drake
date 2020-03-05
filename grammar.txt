@@ -13,8 +13,8 @@ declaration-> typehint IDENTIFIER
             | keyword
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-            | iter | do | object | exception | mutable
 keyword    -> if | case | try | for | while
+            | iter | do | object | enum | module | exception | mutable
             | throw | return | yield | yieldfrom
             | break | continue
             | lambda | boolor
@@ -27,6 +27,9 @@ while      -> "while" assignment block
 iter       -> "iter" keyword
 do         -> "do" block
 object     -> "object" block
+enum       -> "enum" "flags"? "{" List[enumitem] "}"
+enumitem   -> IDENTIFIER ("=" NUMBER)?
+module     -> "module" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | mapping | list | tuple | STRING)
 throw      -> "throw" keyword

@@ -226,6 +226,8 @@ class Parser:
             Parser.iter,
             Parser.do,
             Parser.object_,
+            Parser.enum,
+            Parser.module,
             Parser.exception,
             Parser.mutable,
             Parser.throw,
@@ -311,6 +313,22 @@ class Parser:
     def object_(parser):
         return parser.match('object').block() \
                      .withnode(ObjectNode, fromparsed=1)
+
+    def enum(parser):
+        parser = parser.match('enum')
+        try:
+            parser = parser.match('flags').addparsed(True)
+        except InvalidSyntax:
+            parser = parser.addparsed(False)
+        return parser.match('{').nodelist(Parser.enumitem).match('}') \
+                     .withnode(EnumNode, fromparsed=2)
+
+    def enumitem(parser):
+        parser = parser.identifier()
+
+    def module(parser):
+        return parser.match('module').block() \
+                     .withnode(ModuleNode, fromparsed=1)
 
     def exception(parser):
         return parser.match('exception').block() \
