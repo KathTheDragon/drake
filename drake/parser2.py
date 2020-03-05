@@ -11,7 +11,10 @@ EOF = re.compile(r'$(?![\r\n])')
 IDENTIFIER = re.compile(r'[a-zA-Z_]\w*[!?]?')
 _STRING = r'(?:[^\\\n]|\\.)*?'
 STRING = re.compile(fr'\'{_STRING}\'|\"{_STRING}\"')
-NUMBER = re.compile(r'(?:0|[1-9]\d*)(?:\.\d*[1-9])?j?')
+BINARY = re.compile(r'0b(?:_?[01])+')
+OCTAL = re.compile(r'0o(?:_?[0-7])+')
+HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
+DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?j?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
 
@@ -520,8 +523,13 @@ class Parser:
                      .withnode(StringNode, string)
 
     def number(parser):
-        return parser.match(NUMBER, 'number', parse=True) \
-                     .withnode(NumberNode, number)
+        return parser.choices(
+                        (BINARY, 'binary'),
+                        (OCTAL, 'octal'),
+                        (HEXADECIMAL, 'hexadecimal'),
+                        (DECIMAL, 'decimal'),
+                        parse=True
+                    ).withnode(NumberNode, number)
 
     def boolean(parser):
         return parser.choices('true', 'false', parse=True) \

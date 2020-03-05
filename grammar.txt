@@ -63,4 +63,5 @@ list       -> "[" (range | List[assignment]) "]"
 range      -> assignment ".." keyword? ("," keyword)?
 group      -> "(" assignment ")"
 tuple      -> "(" List[assignment] ")"
-literal    -> IDENTIFIER | STRING | NUMBER | "true" | "false" | "none"
+literal    -> IDENTIFIER | STRING | number | "true" | "false" | "none"
+number     -> BINARY | OCTAL | HEXADECIMAL | DECIMAL
