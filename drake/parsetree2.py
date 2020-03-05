@@ -61,7 +61,7 @@ def pprint(name, *args):
 @dataclass
 class ParseNode:
     def __str__(self):
-        raise NotImplementedError
+        return self.nodetype
 
     @property
     def nodetype(self):
@@ -95,8 +95,7 @@ class BooleanNode(LiteralNode):
 
 @dataclass
 class NoneNode(ParseNode):
-    def __str__(self):
-        return 'None'
+    pass
 
 @dataclass
 class GroupingNode(ParseNode):
@@ -268,13 +267,11 @@ class YieldFromNode(KeywordNode):
 
 @dataclass
 class BreakNode(ParseNode):
-    def __str__(self):
-        return 'Break'
+    pass
 
 @dataclass
 class ContinueNode(ParseNode):
-    def __str__(self):
-        return 'Continue'
+    pass
 
 @dataclass
 class IfNode(ParseNode):
