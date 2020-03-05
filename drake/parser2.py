@@ -39,6 +39,10 @@ def Expected(expected, parser):
 ## Context managers
 OPTIONAL = contextlib.suppress(InvalidSyntax)
 
+## Helper functions
+def List(*args):
+    return list(args)
+
 ## Classes
 @dataclass
 class Parser:
@@ -146,8 +150,6 @@ class Parser:
                 parser = parser.match(',')
         with OPTIONAL:
             parser = parser.newline()
-        def List(*args):
-            return list(args)
         return parser.withnode(List, fromparsed=num)
 
     def leftrecurse(parser, operators, operand):
@@ -218,6 +220,7 @@ class Parser:
         items = (
             Parser.if_,
             Parser.case,
+            Parser.try_,
             Parser.for_,
             Parser.while_,
             Parser.iter,
@@ -255,6 +258,32 @@ class Parser:
         except InvalidSyntax:
             parser = parser.addparsed(None)
         return parser.withnode(CaseNode, fromparsed=3)
+
+    def try_(parser):
+        parser = parser.match('try').assignment()
+        try:
+            parser = parser.addparsed([]).match('finally').assignment()
+        except InvalidSyntax:
+            num = 0
+            try:
+                while True:
+                    parser_ = parser.match('catch').identifier()
+                    try:
+                        parser_ = parser_.match('as').identifier()
+                    except InvalidSyntax:
+                        parser_ = parser_.addparsed(None)
+                    parser = parser_.assignment() \
+                                    .withnode(CatchNode, fromparsed=3)
+                    num += 1
+            except InvalidSyntax as e:
+                if not num:
+                    raise
+            parser = parser.withnode(List, fromparsed=num)
+            try:
+                parser = parser.match('finally').assignment()
+            except InvalidSyntax:
+                parser = parser.addparsed(None)
+        return parser.withnode(TryNode, fromparsed=3)
 
     def for_(parser):
         return parser.match('for').vars().match('in').keyword().block() \

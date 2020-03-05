@@ -282,6 +282,24 @@ class CaseNode(ParseNode):
             return pprint('Case', self.var, self.cases, self.default)
 
 @dataclass
+class CatchNode(ParseNode):
+    exception: IdentifierNode
+    name: Optional[IdentifierNode]
+    body: ParseNode  # Might change to BlockNode
+
+    def __str__(self):
+        return pprint('Catch', self.exception, self.container, self.body)
+
+@dataclass
+class TryNode(ParseNode):
+    body: ParseNode
+    catch: List[CatchNode]
+    finally_: Optional[ParseNode]
+
+    def __str__(self):
+        return pprint('Try', self.body, *self.catch, self.finally_)
+
+@dataclass
 class ForNode(ParseNode):
     vars: List[ParseNode]
     container: ParseNode

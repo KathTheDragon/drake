@@ -13,13 +13,14 @@ declaration-> typehint IDENTIFIER
             | keyword
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
-keyword    -> if | case | for | while
             | iter | do | object | exception | mutable
             | return | yield | yieldfrom
+keyword    -> if | case | try | for | while
             | break | continue
             | lambda | boolor
 if         -> "if" assignment "then" keyword ("else" keyword)
 case       -> "case" assignment "in" map ("else" keyword)
+try        -> "try" assignment (("catch" IDENTIFIER ("as" IDENTIFIER)? assignment)+ ("finally" assignment)? | "finally" assignment)
 for        -> "for" vars "in" keyword block
 vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
 while      -> "while" assignment block
