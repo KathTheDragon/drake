@@ -33,7 +33,11 @@ class InvalidSyntax(Exception):
         return self.message
 
 def Expected(expected, parser):
-    error = f'expected {expected}, got {parser.source[parser.cursor]}'
+    source, cursor = parser.source, parser.cursor
+    if cursor < len(source):
+        error = f'expected {expected}, got {parser.source[parser.cursor]}'
+    else:
+        error = f'expected {expected}, got EOF'
     return InvalidSyntax(error, parser)
 
 ## Context managers
