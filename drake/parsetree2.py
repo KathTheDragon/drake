@@ -40,7 +40,7 @@ def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
 def isprimary(*nodes):
-    return all(isinstance(node, (LiteralNode, IdentifierNode, list)) for node in nodes)
+    return all(isinstance(node, (LiteralNode, NoneNode, IdentifierNode, list)) for node in nodes)
 
 def pprint(name, *args):
     argstrings = []
@@ -95,7 +95,8 @@ class BooleanNode(LiteralNode):
 
 @dataclass
 class NoneNode(ParseNode):
-    pass
+    def __str__(self):
+        return 'None'
 
 @dataclass
 class GroupingNode(ParseNode):
@@ -230,7 +231,7 @@ class ObjectNode(ParseNode):
     definition: BlockNode
 
     def __str__(self):
-        return pprint('Object', *self.definition)
+        return pprint(self.nodetype, *self.definition)
 
 @dataclass
 class ExceptionNode(ObjectNode):
