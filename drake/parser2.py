@@ -76,7 +76,7 @@ class Parser:
     def withnode(parser, nodeclass, *args, fromparsed=None, **kwargs):
         parsed = parser.parsed
         if fromparsed is not None:
-            parsed, args = parsed[:-fromparsed], args+parsed[-fromparsed:]
+            parser.parsed, args = parsed[:-fromparsed], args+parsed[-fromparsed:]
         return parser.addparsed(nodeclass(*args, **kwargs))
 
     # Basic matching methods
