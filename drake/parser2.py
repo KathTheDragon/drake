@@ -325,6 +325,11 @@ class Parser:
 
     def enumitem(parser):
         parser = parser.identifier()
+        with OPTIONAL:
+            parser = parser.withnode(TargetNode, fromparsed=1) \
+                           .match('=').number() \
+                           .withnode(AssignmentNode, fromparsed=2)
+        return parser
 
     def module(parser):
         return parser.match('module').block() \
