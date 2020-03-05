@@ -12,7 +12,7 @@ __all__ = [
     'ListNode',
     'TupleNode',
     'PairNode',
-    'MapNode',
+    'MappingNode',
     'UnaryOpNode',
     'BinaryOpNode',
     'SubscriptNode',
@@ -172,8 +172,8 @@ class LookupNode(ParseNode):
     def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
-VArg = Union[ParseNode, UnaryOpNode]  # expr | '*' expr
-KwArg = Union['AssignmentNode', UnaryOpNode]  # name = expr | '**' expr
+VArg = Union[ParseNode, 'UnaryOpNode']  # expr | '*' expr
+KwArg = Union['AssignmentNode', 'UnaryOpNode']  # name = expr | '**' expr
 
 @dataclass
 class CallNode(ParseNode):
@@ -277,7 +277,7 @@ class IfNode(ParseNode):
 @dataclass
 class CaseNode(ParseNode):
     value: ParseNode
-    cases: MapNode
+    cases: MappingNode
     default: Optional[ParseNode]
 
     def __str__(self):
@@ -307,7 +307,7 @@ class WhileNode(ParseNode):
 class Target(ParseNode):  # Just a wrapper to cooperate with pprint
     name: str
     mode: str = ''
-    typehint: Optional[TypeNode] = None
+    typehint: Optional['TypeNode'] = None
 
     def __str__(self):
         fragments = []

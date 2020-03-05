@@ -336,7 +336,7 @@ class Parser:
         except InvalidSyntax:
             parser, typehint = parser.popparsed()
             return parser.identifier() \
-                         .withnode(Target, fromparsed=1, typehint=typehint)
+                         .withnode(Target, fromparsed=1, typehint=typehint) \
                          .match('=').keyword() \
                          .withnode(AssignmentNode, fromparsed=2)
 
@@ -470,7 +470,7 @@ class Parser:
                          .withnode(ListNode, fromparsed=1)
         except InvalidSyntax:
             return parser.match('[').nodelist(Parser.assignment).match(']') \
-                         .withnode(ListNode fromparsed=1)
+                         .withnode(ListNode, fromparsed=1)
 
     def range(parser):
         parser = parser.assignment().match('..')
