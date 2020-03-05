@@ -107,8 +107,12 @@ class Parser:
     def choices(parser, *tokens, parse=False):
         exception = ValueError('items cannot be empty')
         for token in tokens:
+            if isinstance(token, tuple):
+                token, text = token
+            else:
+                text = ''
             try:
-                return parser.match(token, parse=parse)
+                return parser.match(token, text, parse=parse)
             except InvalidSyntax as e:
                 exception = e
         raise exception
