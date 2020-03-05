@@ -239,7 +239,7 @@ class ObjectNode(ParseNode):
         return pprint(self.nodetype, self.definition)
 
 @dataclass
-class Enum(ParseNode):
+class EnumNode(ParseNode):
     flags: bool
     items: List[Union[IdentifierNode, AssignmentNode]]
 
