@@ -149,7 +149,7 @@ class BlockNode(ParseNode):  # Not inheriting from SequenceNode, though it is a 
     expressions: List[ParseNode]
 
     def __str__(self):
-        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
+        return 'Block {\n' + '\n'.join(indent(str(node)) for node in self.expressions) + '\n}'
 
 @dataclass
 class SubscriptNode(ParseNode):
@@ -225,7 +225,7 @@ class ObjectNode(ParseNode):
     definition: BlockNode
 
     def __str__(self):
-        return pprint(self.nodetype, *self.definition)
+        return pprint(self.nodetype, self.definition)
 
 @dataclass
 class ExceptionNode(ObjectNode):
