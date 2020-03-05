@@ -76,7 +76,7 @@ class Parser:
         parsed = parser.parsed
         if fromparsed is not None:
             parsed, args = parsed[:-fromparsed], args+parsed[-fromparsed:]
-        return parser.setparsed(*parsed, nodeclass(*args, **kwargs))
+        return parser.addparsed(nodeclass(*args, **kwargs))
 
     # Basic matching methods
     def raw_match(parser, pattern, text, parse=False):
