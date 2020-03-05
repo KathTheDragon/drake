@@ -167,15 +167,13 @@ class Parser:
     def rightrecurse(parser, operators, operand):
         parser = operand(parser)
         with OPTIONAL:
-            parser = parser.choices(*operators, parse=True) \
-                           .rightrecurse(operators, operand) \
+            parser = parser.choices(*operators, parse=True).rightrecurse(operators, operand) \
                            .withnode(BinaryOpNode, fromparsed=3)
         return parser
 
     # Node matching methods
     def program(parser):
-        return parser.nodelist(Parser.assignment) \
-                     .raw_match(EOF, 'eof') \
+        return parser.nodelist(Parser.assignment).raw_match(EOF, 'eof') \
                      .withnode(BlockNode, fromparsed=1)
 
     def assignment(parser):
@@ -207,7 +205,8 @@ class Parser:
         return parser.match('<').type().match('>')
 
     def type(parser):
-        parser = parser.identifier().withnode(TypeNode, fromparsed=1)
+        parser = parser.identifier() \
+                       .withnode(TypeNode, fromparsed=1)
         with OPTIONAL:
             parser = parser.match('[').nodelist(Parser.type).match(']') \
                            .withnode(TypeNode, fromparsed=2)
@@ -599,4 +598,5 @@ class Parser:
                      .withnode(BooleanNode, boolean)
 
     def none(parser):
-        return parser.match('none').withnode(NoneNode)
+        return parser.match('none') \
+                     .withnode(NoneNode)
