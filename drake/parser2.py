@@ -21,7 +21,7 @@ class ParseFailed(Exception):
 
 class InvalidSyntax(Exception):
     def __init__(self, error, parser):
-        linenum, column = parser.linenum, parser.column
+        linenum, column = parser.linenum+1, parser.column+1
         self.message = f'{error} @ {linenum}:{column}'
         self.linenum = linenum
         self.column = column
