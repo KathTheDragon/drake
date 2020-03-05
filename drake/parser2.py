@@ -323,8 +323,6 @@ class Parser:
                      .withnode(ContinueNode)
 
     def lambda_(parser):
-        parser, params = parser
-        parser, returns = parser
         return parser.match('(').nodelist(Parser.param).match(')').match('->').keyword() \
                      .withnode(LambdaNode, fromparsed=2)
 
