@@ -241,7 +241,7 @@ class ObjectNode(ParseNode):
 @dataclass
 class EnumNode(ParseNode):
     flags: bool
-    items: List[Union[IdentifierNode, AssignmentNode]]
+    items: List[Union[IdentifierNode, 'AssignmentNode']]
 
     def __str__(self):
         if self.flags:
