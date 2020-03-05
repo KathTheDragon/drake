@@ -148,12 +148,6 @@ class MappingNode(SequenceNode):
 class BlockNode(ParseNode):  # Not inheriting from SequenceNode, though it is a kind of sequence
     expressions: List[ParseNode]
 
-    def __iter__(self):
-        yield from self.expressions
-
-    def __len__(self):
-        return len(self.expressions)
-
     def __str__(self):
         return 'Block {\n' + '\n'.join(indent(str(node)) for node in self) + '\n}'
 
