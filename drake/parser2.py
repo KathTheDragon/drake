@@ -30,6 +30,7 @@ RESERVED = [
     'exception',
     'false',
     'finally',
+    'flags'
     'for',
     'from',
     'if',
