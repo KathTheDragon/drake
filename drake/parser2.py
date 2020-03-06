@@ -1,6 +1,5 @@
 import contextlib, re
 from dataclasses import dataclass, field
-from typing import Any
 from .parsetree2 import *
 
 ## Tokens
