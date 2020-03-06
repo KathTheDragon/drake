@@ -236,11 +236,16 @@ class Parser:
 
     def target(parser):
         location = parser.location
-        mode = ''
-        with OPTIONAL:
-            parser, mode = parser.choices('nonlocal', 'const', parse=True).popparsed()
+        try:
+            parser = parser.choices('nonlocal', 'const', parse=True)
+        except ParseFailed:
+            parser = parser.addparsed('')
+        try:
+            parser = parser.typehint()
+        except ParseFailed:
+            parser = parser.addparsed(None)
         return parser.identifier() \
-                     .withnode(Target, location, fromparsed=1, mode=mode)
+                     .withnode(Target, location, fromparsed=3)
 
     def declaration(parser):
         try:
