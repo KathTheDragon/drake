@@ -14,7 +14,7 @@ STRING = re.compile(fr'\'{_STRING}\'|\"{_STRING}\"')
 BINARY = re.compile(r'0b(?:_?[01])+')
 OCTAL = re.compile(r'0o(?:_?[0-7])+')
 HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
-DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?j?')
+DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?[jJ]?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
 
