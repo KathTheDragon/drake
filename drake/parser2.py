@@ -17,6 +17,44 @@ HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
 DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?[jJ]?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
+KEYWORDS = [
+    'and',
+    'as',
+    'break',
+    'case',
+    'catch',
+    'const',
+    'continue',
+    'do',
+    'else',
+    'enum',
+    'exception',
+    'false',
+    'finally',
+    'for',
+    'from',
+    'if',
+    'in',
+    'is',
+    'iter',
+    'module',
+    'mutable',
+    'none',
+    'nonlocal',
+    'not',
+    'object',
+    'or',
+    'pass',
+    'return',
+    'self',
+    'then',
+    'throw',
+    'true',
+    'try',
+    'while',
+    'xor',
+    'yield',
+]
 
 ## Exceptions
 class ParseFailed(Exception):
@@ -602,11 +640,11 @@ class Parser:
 
     def literal(parser):
         items = (
-            Parser.identifier,
             Parser.string,
             Parser.number,
             Parser.boolean,
-            Parser.none
+            Parser.none,
+            Parser.identifier
         )
         for item in items:
             try:
@@ -614,10 +652,6 @@ class Parser:
             except ParseFailed as e:
                 exception = e
         raise exception
-
-    def identifier(parser):
-        return parser.match(IDENTIFIER, 'identifier', parse=True) \
-                     .withnode(IdentifierNode, parser.location, fromparsed=1)
 
     def string(parser):
         return parser.match(STRING, 'string', parse=True) \
@@ -639,3 +673,10 @@ class Parser:
     def none(parser):
         return parser.match('none') \
                      .withnode(NoneNode, parser.location)
+
+    def identifier(parser):
+        location = parser.location
+        parser, name = parser.match(IDENTIFIER, 'identifier', parse=True).popparsed()
+        if name in KEYWORDS:
+            raise ParseFailed()
+        return parser.withnode(IdentifierNode, location, name)
