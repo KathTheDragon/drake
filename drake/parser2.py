@@ -234,6 +234,14 @@ class Parser:
             except ParseFailed:
                 return parser.declaration()
 
+    def target(parser):
+        location = parser.location
+        mode = ''
+        with OPTIONAL:
+            parser, mode = parser.choices('nonlocal', 'const', parse=True).popparsed()
+        return parser.identifier() \
+                     .withnode(Target, location, fromparsed=1, mode=mode)
+
     def declaration(parser):
         try:
             return parser.typehint().identifier() \
@@ -252,14 +260,6 @@ class Parser:
             parser = parser.match('[').nodelist(Parser.type).match(']') \
                            .withnode(TypeNode, location, fromparsed=2)
         return parser
-
-    def target(parser):
-        location = parser.location
-        mode = ''
-        with OPTIONAL:
-            parser, mode = parser.choices('nonlocal', 'const', parse=True).popparsed()
-        return parser.identifier() \
-                     .withnode(Target, location, fromparsed=1, mode=mode)
 
     def keyword(parser):
         items = (
