@@ -60,6 +60,7 @@ KEYWORDS = [
 class ParseFailed(Exception):
     'Exception to signify a parse attempt failed and backtracking should occur'
 
+class InvalidSyntax(Exception):
     def __init__(self, error, parser):
         linenum, column = parser.linenum+1, parser.column+1
         self.message = f'{error} @ {linenum}:{column}'
@@ -69,16 +70,13 @@ class ParseFailed(Exception):
     def __str__(self):
         return self.message
 
-class InvalidSyntax(Exception):
-    pass
-
 def Expected(expected, parser):
     source, cursor = parser.source, parser.cursor
     if cursor < len(source):
         error = f'expected {expected}, got {parser.source[parser.cursor]}'
     else:
         error = f'expected {expected}, got EOF'
-    return ParseFailed(error, parser)
+    return InvalidSyntax(error, parser)
 
 ## Context managers
 OPTIONAL = contextlib.suppress(ParseFailed)
@@ -127,7 +125,7 @@ class Parser:
     def raw_match(parser, pattern, text, parse=False):
         match = pattern.match(parser.source, parser.cursor)
         if match is None:
-            raise Expected(text, parser)
+            raise ParseFailed()
         cursor = match.end()
         column = parser.column + (cursor - parser.cursor)
         parser = parser._with(cursor=cursor, column=column)
