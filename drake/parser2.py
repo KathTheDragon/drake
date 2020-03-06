@@ -16,7 +16,7 @@ HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
 DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?[jJ]?')
 
 AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
-KEYWORDS = [
+RESERVED = [
     'and',
     'as',
     'break',
@@ -674,6 +674,6 @@ class Parser:
     def identifier(parser):
         location = parser.location
         parser, name = parser.match(IDENTIFIER, 'identifier', parse=True).popparsed()
-        if name in KEYWORDS:
+        if name in RESERVED:
             raise ParseFailed()
         return parser.withnode(IdentifierNode, location, name)
