@@ -38,10 +38,10 @@ def Expected(expected, parser):
         error = f'expected {expected}, got {parser.source[parser.cursor]}'
     else:
         error = f'expected {expected}, got EOF'
-    return InvalidSyntax(error, parser)
+    return ParseFailed(error, parser)
 
 ## Context managers
-OPTIONAL = contextlib.suppress(InvalidSyntax)
+OPTIONAL = contextlib.suppress(ParseFailed)
 
 ## Helper functions
 def List(*args):
@@ -124,7 +124,7 @@ class Parser:
                 text = ''
             try:
                 return parser.match(token, text, parse=parse)
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 exception = e
         raise exception
 
@@ -139,10 +139,10 @@ class Parser:
                 while True:
                     parser = item(parser.newline())
                     num += 1
-            except InvalidSyntax:
+            except ParseFailed:
                 if num == 1:
                     raise
-        except InvalidSyntax:
+        except ParseFailed:
             with OPTIONAL:
                 while True:
                     _parser = parser.match(',')
@@ -180,25 +180,25 @@ class Parser:
         try:
             try:
                 _parser = parser.match('(').nodelist(Parser.target).match(')')
-            except InvalidSyntax:
+            except ParseFailed:
                 _parser = parser.target()
             return _parser.match('=').assignment() \
                           .withnode(AssignmentNode, fromparsed=2)
-        except InvalidSyntax:
+        except ParseFailed:
             try:
                 # There must be a better way
                 _parser, target = parser.target().popparsed()
                 _parser = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).assignment() \
                                  .withnode(BinaryOpNode, target, fromparsed=2)
                 return _parser.withnode(AssignmentNode, target, fromparsed=1)
-            except InvalidSyntax:
+            except ParseFailed:
                 return parser.declaration()
 
     def declaration(parser):
         try:
             return parser.typehint().identifier() \
                          .withnode(DeclarationNode, fromparsed=2)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.keyword()
 
     def typehint(parser):
@@ -245,7 +245,7 @@ class Parser:
         for item in items:
             try:
                 return item(parser)
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 exception = e
         raise exception
 
@@ -253,7 +253,7 @@ class Parser:
         parser = parser.match('if').assignment().match('then').keyword()
         try:
             parser = parser.match('else').keyword()
-        except InvalidSyntax:
+        except ParseFailed:
             parser = parser.addparsed(None)
         return parser.withnode(IfNode, fromparsed=3)
 
@@ -261,7 +261,7 @@ class Parser:
         parser = parser.match('case').assignment().match('in').mapping()
         try:
             parser = parser.match('else').keyword()
-        except InvalidSyntax:
+        except ParseFailed:
             parser = parser.addparsed(None)
         return parser.withnode(CaseNode, fromparsed=3)
 
@@ -269,25 +269,25 @@ class Parser:
         parser = parser.match('try').assignment()
         try:
             parser = parser.addparsed([]).match('finally').assignment()
-        except InvalidSyntax:
+        except ParseFailed:
             num = 0
             try:
                 while True:
                     parser_ = parser.match('catch').identifier()
                     try:
                         parser_ = parser_.match('as').identifier()
-                    except InvalidSyntax:
+                    except ParseFailed:
                         parser_ = parser_.addparsed(None)
                     parser = parser_.assignment() \
                                     .withnode(CatchNode, fromparsed=3)
                     num += 1
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 if not num:
                     raise
             parser = parser.withnode(List, fromparsed=num)
             try:
                 parser = parser.match('finally').assignment()
-            except InvalidSyntax:
+            except ParseFailed:
                 parser = parser.addparsed(None)
         return parser.withnode(TryNode, fromparsed=3)
 
@@ -298,7 +298,7 @@ class Parser:
     def vars(parser):
         try:
             return parser.match('(').nodelist(Parser.identifier).match(')')
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.identifier()
 
     def while_(parser):
@@ -321,7 +321,7 @@ class Parser:
         parser = parser.match('enum')
         try:
             parser = parser.match('flags').addparsed(True)
-        except InvalidSyntax:
+        except ParseFailed:
             parser = parser.addparsed(False)
         return parser.match('{').nodelist(Parser.enumitem).match('}') \
                      .withnode(EnumNode, fromparsed=2)
@@ -354,7 +354,7 @@ class Parser:
         for item in items:
             try:
                 return item(parser)
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 exception = e
         raise exception
 
@@ -393,7 +393,7 @@ class Parser:
     def param(parser):
         try:
             return parser.kwparam()
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.vparam()
 
     def kwparam(parser):
@@ -402,7 +402,7 @@ class Parser:
             return parser.match('**').identifier() \
                          .withnode(DeclarationNode, fromparsed=2) \
                          .withnode(UnaryOpNode, '**', fromparsed=1)
-        except InvalidSyntax:
+        except ParseFailed:
             parser, typehint = parser.popparsed()
             return parser.identifier() \
                          .withnode(Target, fromparsed=1, typehint=typehint) \
@@ -415,7 +415,7 @@ class Parser:
             return parser.match('*').identifier() \
                          .withnode(DeclarationNode, fromparsed=2) \
                          .withnode(UnaryOpNode, '*', fromparsed=1)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.identifier() \
                          .withnode(DeclarationNode, fromparsed=2)
 
@@ -434,7 +434,7 @@ class Parser:
         with OPTIONAL:
             try:
                 _parser = parser.match('not').match('in').addparsed('not in')
-            except InvalidSyntax:
+            except ParseFailed:
                 _parser = parser.match('in', parse=True)
             parser = _parser.inclusion() \
                             .withnode(BinaryOpNode, fromparsed=3)
@@ -445,7 +445,7 @@ class Parser:
         with OPTIONAL:
             try:
                 _parser = parser.match('is').match('not').addparsed('is not')
-            except InvalidSyntax:
+            except ParseFailed:
                 _parser = parser.match('is', parse=True)
             parser = _parser.identity() \
                             .withnode(BinaryOpNode, fromparsed=3)
@@ -482,7 +482,7 @@ class Parser:
         try:
             return parser.choices('not', '!', '-', parse=True).unary() \
                          .withnode(UnaryOpNode, fromparsed=2)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.primary()
 
     def primary(parser):
@@ -492,12 +492,12 @@ class Parser:
                 try:
                     parser = parser.match('.').identifier() \
                                    .withnode(LookupNode, fromparsed=2)
-                except InvalidSyntax:
+                except ParseFailed:
                     try:
                         parser = parser.match('(').nodelist(Parser.arg).match(')') \
                                        .withnode(CallNode, fromparsed=2)
                         obj = CallNode(obj, args)
-                    except InvalidSyntax:
+                    except ParseFailed:
                         # Might change SubscriptNode
                         parser, subscript = parser.list().popparsed()
                         parser = parser.withnode(SubscriptNode, fromparsed=1, subscript=subscript.items)
@@ -506,14 +506,14 @@ class Parser:
     def arg(parser):
         try:
             return parser.kwarg()
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.varg()
 
     def kwarg(parser):
         try:
             return parser.match('**').keyword() \
                          .withnode(UnaryOpNode, '**', fromparsed=1)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.identifier() \
                          .withnode(Target, fromparsed=1) \
                          .match('=').keyword() \
@@ -523,7 +523,7 @@ class Parser:
         try:
             return parser.match('*').keyword() \
                          .withnode(UnaryOpNode, '*', fromparsed=1)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.keyword()
 
     def atom(parser):
@@ -538,7 +538,7 @@ class Parser:
         for item in items:
             try:
                 return item(parser)
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 exception = e
         raise exception
 
@@ -559,7 +559,7 @@ class Parser:
         try:
             return parser.match('[').range().match(']') \
                          .withnode(ListNode, fromparsed=1)
-        except InvalidSyntax:
+        except ParseFailed:
             return parser.match('[').nodelist(Parser.assignment).match(']') \
                          .withnode(ListNode, fromparsed=1)
 
@@ -567,11 +567,11 @@ class Parser:
         parser = parser.assignment().match('..')
         try:
             parser = parser.keyword()
-        except InvalidSyntax:
+        except ParseFailed:
             parser = parser.addparsed(None)
         try:
             parser = parser.match(',').keyword()
-        except InvalidSyntax:
+        except ParseFailed:
             parser = parser.addparsed(1)
         return parser.withnode(Range, fromparsed=3)
 
@@ -594,7 +594,7 @@ class Parser:
         for item in items:
             try:
                 return item(parser)
-            except InvalidSyntax as e:
+            except ParseFailed as e:
                 exception = e
         raise exception
 
