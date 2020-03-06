@@ -22,7 +22,6 @@ AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
 class ParseFailed(Exception):
     'Exception to signify a parse attempt failed and backtracking should occur'
 
-class InvalidSyntax(Exception):
     def __init__(self, error, parser):
         linenum, column = parser.linenum+1, parser.column+1
         self.message = f'{error} @ {linenum}:{column}'
@@ -31,6 +30,9 @@ class InvalidSyntax(Exception):
 
     def __str__(self):
         return self.message
+
+class InvalidSyntax(Exception):
+    pass
 
 def Expected(expected, parser):
     source, cursor = parser.source, parser.cursor
