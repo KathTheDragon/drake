@@ -375,11 +375,11 @@ class Parser:
     def enumitem(parser):
         location = parser.location
         parser = parser.identifier()
-        with OPTIONAL:
-            parser = parser.withnode(TargetNode, location, fromparsed=1) \
-                           .match('=').number() \
-                           .withnode(AssignmentNode, location, fromparsed=2)
-        return parser
+        try:
+            parser = parser.match('=').number()
+        except ParseFailed:
+            parser = parser.addparsed(None)
+        return parser.withnode(PairNode, location, fromparsed=2)
 
     def module(parser):
         return parser.match('module').block() \
@@ -452,11 +452,10 @@ class Parser:
                          .withnode(DeclarationNode, location, fromparsed=2) \
                          .withnode(UnaryOpNode, location, '**', fromparsed=1)
         except ParseFailed:
-            parser, typehint = parser.popparsed()
             return parser.identifier() \
-                         .withnode(Target, location, fromparsed=1, typehint=typehint) \
+                         .withnode(DeclarationNode, location, fromparsed=2) \
                          .match('=').keyword() \
-                         .withnode(AssignmentNode, location, fromparsed=2)
+                         .withnode(PairNode, location, fromparsed=2)
 
     def vparam(parser):
         location = parser.location
@@ -567,10 +566,8 @@ class Parser:
             return parser.match('**').keyword() \
                          .withnode(UnaryOpNode, parser.location, '**', fromparsed=1)
         except ParseFailed:
-            return parser.identifier() \
-                         .withnode(Target, fromparsed=1) \
-                         .match('=').keyword() \
-                         .withnode(AssignmentNode, parser.location, fromparsed=2)
+            return parser.identifier().match('=').keyword() \
+                         .withnode(PairNode, parser.location, fromparsed=2)
 
     def varg(parser):
         try:
