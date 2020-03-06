@@ -355,7 +355,7 @@ class Parser:
         )
         for item in items:
             try:
-                return item(parser)
+                return item(parser).withnode(MutableNode, fromparsed=1)
             except ParseFailed as e:
                 exception = e
         raise exception
