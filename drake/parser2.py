@@ -545,7 +545,6 @@ class Parser:
         raise exception
 
     def mapping(parser):
-        parser = parser
         return parser.match('{').nodelist(Parser.pair).match('}') \
                      .withnode(MappingNode, fromparsed=1)
 
