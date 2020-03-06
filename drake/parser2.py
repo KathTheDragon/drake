@@ -426,10 +426,32 @@ class Parser:
         return parser.rightrecurse('xor', Parser.booland)
 
     def booland(parser):
-        return parser.rightrecurse('and', Parser.comparison)
+        return parser.rightrecurse('and', Parser.inclusion)
+
+    # Have to special-case these two because of the multi-word operators
+    def inclusion(parser):
+        parser = parser.identity()
+        with OPTIONAL:
+            try:
+                _parser = parser.match('not').match('in').addparsed('not in')
+            except InvalidSyntax:
+                _parser = parser.match('in', parse=True)
+            parser = _parser.inclusion() \
+                            .withnode(BinaryOpNode, fromparsed=3)
+        return parser
+
+    def identity(parser):
+        parser = parser.comparison()
+        with OPTIONAL:
+            try:
+                _parser = parser.match('is').match('not').addparsed('is not')
+            except InvalidSyntax:
+                _parser = parser.match('is', parse=True)
+            parser = _parser.identity() \
+                            .withnode(BinaryOpNode, fromparsed=3)
+        return parser
 
     def comparison(parser):
-        # Need to work out what to do with 'is', 'is not', 'in', 'not in'
         return parser.rightrecurse(('<', '<=', '>', '>=', '==', '!='), Parser.bitor)
 
     def bitor(parser):

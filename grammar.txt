@@ -45,7 +45,9 @@ kwparam    -> typehint (IDENTIFIER "=" keyword | "**" IDENTIFIER)
 vparam     -> typehint "*"? IDENTIFIER
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
-booland    -> Right["and", comparison]  # all() - return the first falsey argument, else the last
+booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
+inclusion  -> Right[("in" | "not" "in"), identity]
+identity   -> Right[("is" | "is" "not"), comparison]
 comparison -> Right[comp, bitor]        # comp()
 bitor      -> Left["|", bitxor]         # bitor()
 bitxor     -> Left["^", bitand]         # bitxor()
