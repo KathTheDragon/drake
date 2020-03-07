@@ -19,7 +19,7 @@ keyword    -> if | case | try | for | while
             | break | continue | pass
             | lambda | boolor
 if         -> "if" assignment "then" keyword ("else" keyword)
-case       -> "case" assignment "in" map ("else" keyword)
+case       -> "case" assignment "in" mapping ("else" keyword)
 try        -> "try" assignment (("catch" IDENTIFIER ("as" IDENTIFIER)? assignment)+ ("finally" assignment)? | "finally" assignment)
 for        -> "for" vars "in" keyword block
 vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
