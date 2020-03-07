@@ -61,21 +61,30 @@ class ParseFailed(Exception):
     'Exception to signify a parse attempt failed and backtracking should occur'
 
 class InvalidSyntax(Exception):
-    def __init__(self, error, parser):
-        linenum, column = parser.linenum+1, parser.column+1
-        self.message = f'{error} @ {linenum}:{column}'
-        self.linenum = linenum
-        self.column = column
+    def __init__(self, error, parser=None):
+        if parser:
+            linenum, column = parser.linenum+1, parser.column+1
+            self.message = f'{error} @ {linenum}:{column}'
+            self.linenum = linenum
+            self.column = column
+        else:
+            self.message = error
+            self.linenum = None
+            self.column = None
 
     def __str__(self):
         return self.message
 
-def Expected(expected, parser):
-    source, cursor = parser.source, parser.cursor
-    if cursor < len(source):
-        error = f'expected {expected}, got {parser.source[parser.cursor]}'
-    else:
-        error = f'expected {expected}, got EOF'
+def Expected(expected, got='', parser=None):
+    error = f'expected {expected}'
+    if got:
+        error += f', got {got}'
+    elif parser:
+        if cursor < len(source):
+            source, cursor = parser.source, parser.cursor
+            error += f', got {source[cursor]}'
+        else:
+            error += ', got EOF'
     return InvalidSyntax(error, parser)
 
 ## Context managers
