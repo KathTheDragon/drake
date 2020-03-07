@@ -71,7 +71,7 @@ def pprint(name, *args):
 ## Classes
 @dataclass
 class ParseNode:
-    location: Tuple[int, int]
+    location: Tuple[int, int] = field(init=False, compare=False)
 
     def __str__(self):
         return self.nodetype
