@@ -588,7 +588,8 @@ class Parser:
             Parser.list,
             Parser.group,
             Parser.tuple,
-            Parser.literal
+            Parser.literal,
+            Parser.identifier
         )
         for item in items:
             try:
@@ -643,8 +644,7 @@ class Parser:
             Parser.string,
             Parser.number,
             Parser.boolean,
-            Parser.none,
-            Parser.identifier
+            Parser.none
         )
         for item in items:
             try:
