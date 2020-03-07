@@ -107,6 +107,10 @@ class Parser:
     def location(parser):
         return parser.linenum, parser.column
 
+    def __getitem__(parser, item):
+        return parser.parsed[item]
+
+    #
     def _with(parser, cursor=None, linenum=None, column=None, parsed=None):
         if cursor is None:
             cursor = parser.cursor
