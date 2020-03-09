@@ -469,34 +469,21 @@ class Parser:
                      .withnode(LambdaNode, fromparsed=2, location=parser.location)
 
     def param(parser):
-        try:
-            return parser.kwparam()
-        except ParseFailed:
-            return parser.vparam()
-
-    def kwparam(parser):
         location = parser.location
         parser = parser.typehint()
         try:
-            return parser.match('**').identifier() \
-                         .withnode(DeclarationNode, fromparsed=2, location=location) \
-                         .withnode(UnaryOpNode, '**', fromparsed=1, location=location)
+            parser, op = parser.choices('*', '**', parse=True).popparsed()
         except ParseFailed:
-            return parser.identifier() \
-                         .withnode(DeclarationNode, fromparsed=2, location=location) \
-                         .match('=').keyword() \
-                         .withnode(PairNode, fromparsed=2, location=location)
-
-    def vparam(parser):
-        location = parser.location
-        parser = parser.typehint()
-        try:
-            return parser.match('*').identifier() \
-                         .withnode(DeclarationNode, fromparsed=2, location=location) \
-                         .withnode(UnaryOpNode, '*', fromparsed=1, location=location)
-        except ParseFailed:
-            return parser.identifier() \
-                         .withnode(DeclarationNode, fromparsed=2, location=location)
+            op = None
+        parser = parser.identifier() \
+                       .withnode(DeclarationNode, fromparsed=2, location=location)
+        if op:
+            return parser.withnode(UnaryOpNode, '*', fromparsed=1, location=location)
+        else:
+            with OPTIONAL:
+                parser = parser.match('=').keyword() \
+                               .withnode(PairNode, fromparsed=2, location=location)
+            return parser
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)
@@ -587,24 +574,14 @@ class Parser:
 
     def arg(parser):
         try:
-            return parser.kwarg()
+            return parser.choices('*', '**', parse=True).keyword() \
+                         .withnode(UnaryOpNode, fromparsed=2, location=parser.location)
         except ParseFailed:
-            return parser.varg()
-
-    def kwarg(parser):
-        try:
-            return parser.match('**').keyword() \
-                         .withnode(UnaryOpNode, '**', fromparsed=1, location=parser.location)
-        except ParseFailed:
-            return parser.identifier().match('=').keyword() \
-                         .withnode(PairNode, fromparsed=2, location=parser.location)
-
-    def varg(parser):
-        try:
-            return parser.match('*').keyword() \
-                         .withnode(UnaryOpNode, '*', fromparsed=1, location=parser.location)
-        except ParseFailed:
-            return parser.keyword()
+            try:
+                return parser.identifier().match('=').keyword() \
+                             .withnode(PairNode, fromparsed=2, location=parser.location)
+            except ParseFailed:
+                return parser.keyword()
 
     def atom(parser):
         items = (
