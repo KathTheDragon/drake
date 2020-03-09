@@ -136,7 +136,7 @@ class SequenceNode(ParseNode):
 class Range(ParseNode):  # Wrapper
     start: ParseNode
     end: Optional[ParseNode] = None
-    step: Optional[ParseNode] = 1
+    step: Optional[ParseNode] = None
 
     def __str__(self):
         return pprint('Range', self.start, self.end, self.step)

@@ -644,7 +644,7 @@ class Parser:
         try:
             parser = parser.match(',').keyword()
         except ParseFailed:
-            parser = parser.addparsed(1)
+            parser = parser.addparsed(None)
         return parser.withnode(Range, fromparsed=3, location=location)
 
     def grouping(parser):
