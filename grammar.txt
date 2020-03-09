@@ -63,13 +63,13 @@ primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
 arg        -> varg | kwarg
 kwarg      -> "**" keyword | IDENTIFIER "=" keyword
 varg       -> "*"? keyword
-atom       -> mapping | block | list | group | tuple | literal | IDENTIFIER
+atom       -> mapping | block | list | grouping | tuple | literal | IDENTIFIER
 mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
 block      -> "{" List[assignment] "}"
 list       -> "[" (range | List[assignment]) "]"
 range      -> assignment ".." keyword? ("," keyword)?
-group      -> "(" assignment ")"
+grouping   -> "(" assignment ")"
 tuple      -> "(" List[assignment] ")"
 literal    -> STRING | number | "true" | "false" | "none"
 number     -> BINARY | OCTAL | HEXADECIMAL | DECIMAL

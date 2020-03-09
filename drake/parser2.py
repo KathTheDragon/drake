@@ -602,7 +602,7 @@ class Parser:
             Parser.mapping,
             Parser.block,
             Parser.list,
-            Parser.group,
+            Parser.grouping,
             Parser.tuple,
             Parser.literal,
             Parser.identifier
@@ -647,7 +647,7 @@ class Parser:
             parser = parser.addparsed(1)
         return parser.withnode(Range, fromparsed=3, location=location)
 
-    def group(parser):
+    def grouping(parser):
         return parser.match('(').keyword().match(')') \
                      .withnode(GroupingNode, fromparsed=1, location=parser.location)
 
