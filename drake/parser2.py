@@ -57,23 +57,33 @@ RESERVED = [
 ]
 
 ## Exceptions
-class ParseFailed(Exception):
-    'Exception to signify a parse attempt failed and backtracking should occur'
+class ParserError(Exception):
+    'Base class for errors related to parsing'
 
-class InvalidSyntax(Exception):
-    def __init__(self, error, parser=None):
-        if parser:
-            linenum, column = parser.linenum+1, parser.column+1
+    def __init__(self, error, location=()):
+        if location:
+            linenum, column = location
+            linenum += 1
+            column += 1
             self.message = f'{error} @ {linenum}:{column}'
-            self.linenum = linenum
-            self.column = column
         else:
             self.message = error
-            self.linenum = None
-            self.column = None
+        self.linenum = linenum
+        self.column = column
 
     def __str__(self):
         return self.message
+
+class ParseFailed(ParserError):
+    'Exception to signify a parse attempt failed and backtracking should occur'
+
+    def __init__(self, pattern, location=()):
+        self.pattern = pattern
+        super().__init__(f'failure matching {pattern}', location)
+
+class InvalidSyntax(ParserError):
+    def __init__(self, error, location=()):
+        super().__init__(error, location)
 
 def Expected(expected, got='', parser=None):
     error = f'expected {expected}'
@@ -85,7 +95,10 @@ def Expected(expected, got='', parser=None):
             error += f', got {source[cursor]}'
         else:
             error += ', got EOF'
-    return InvalidSyntax(error, parser)
+    if parser:
+        return InvalidSyntax(error, parser)
+    else:
+        return InvalidSyntax
 
 ## Context managers
 OPTIONAL = contextlib.suppress(ParseFailed)
@@ -141,7 +154,7 @@ class Parser:
     def raw_match(parser, pattern, text, parse=False):
         match = pattern.match(parser.source, parser.cursor)
         if match is None:
-            raise ParseFailed()
+            raise ParseFailed(text, parser.location)
         cursor = match.end()
         column = parser.column + (cursor - parser.cursor)
         parser = parser._with(cursor=cursor, column=column)
