@@ -253,9 +253,9 @@ class Parser:
             try:
                 # There must be a better way
                 _parser, target = parser.target().popparsed()
-                _parser = _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).assignment() \
-                                 .withnode(BinaryOpNode, target, fromparsed=2, location=parser.location)
-                return _parser.withnode(AssignmentNode, target, fromparsed=1, location=parser.location)
+                return _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).assignment() \
+                              .withnode(BinaryOpNode, target, fromparsed=2, location=parser.location) \
+                              .withnode(AssignmentNode, target, fromparsed=1, location=parser.location)
             except ParseFailed:
                 return parser.declaration()
 
