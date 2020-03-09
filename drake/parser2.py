@@ -636,13 +636,13 @@ class Parser:
 
     def range(parser):
         location = parser.location
-        parser = parser.assignment().match('..')
+        parser = parser.primary().match('..')
         try:
-            parser = parser.keyword()
+            parser = parser.primary()
         except ParseFailed:
             parser = parser.addparsed(None)
         try:
-            parser = parser.match(',').keyword()
+            parser = parser.match(',').primary()
         except ParseFailed:
             parser = parser.addparsed(None)
         return parser.withnode(Range, fromparsed=3, location=location)

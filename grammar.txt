@@ -68,7 +68,7 @@ mapping    -> "{" List[pair] "}"
 pair       -> assignment ":" assignment
 block      -> "{" List[assignment] "}"
 list       -> "[" (range | List[assignment]) "]"
-range      -> assignment ".." keyword? ("," keyword)?
+range      -> primary ".." primary? ("," primary)?
 grouping   -> "(" assignment ")"
 tuple      -> "(" List[assignment] ")"
 literal    -> STRING | number | "true" | "false" | "none"
