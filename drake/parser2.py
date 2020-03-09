@@ -4,7 +4,7 @@ from .parsetree2 import *
 
 ## Tokens
 WHITESPACE = re.compile(r'[^\S\r\n]*')
-COMMENT = re.compile('(?m)//.*$')
+COMMENT = re.compile('(?m://.*$)?')
 NEWLINE = re.compile(r'\r\n?|\n')
 EOF = re.compile(r'$(?![\r\n])')
 IDENTIFIER = re.compile(r'[a-zA-Z_]\w*[!?]?')
@@ -164,11 +164,7 @@ class Parser:
             return parser
 
     def skip(parser):
-        with OPTIONAL:
-            parser = parser.raw_match(WHITESPACE, 'whitespace')
-        with OPTIONAL:
-            parser = parser.raw_match(COMMENT, 'comment')
-        return parser
+        return parser.raw_match(WHITESPACE, 'whitespace').raw_match(COMMENT, 'comment')
 
     def match(parser, pattern, text='', parse=False):
         if isinstance(pattern, str):
