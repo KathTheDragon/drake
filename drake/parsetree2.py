@@ -75,6 +75,9 @@ def pprint(name, *args):
 class ParseNode:
     location: Tuple[int, int] = field(init=False, compare=False)
 
+    def __post_init__(self):
+        self.location = (0,0)  # Set this here so it doesn't fuck with signatures
+
     def __str__(self):
         return self.nodetype
 
