@@ -393,7 +393,7 @@ class TypeNode(ParseNode):
 @dataclass
 class DeclarationNode(ParseNode):
     typehint: TypeNode
-    name: str
+    name: IdentifierNode
 
     def __str__(self):
         return f'<{self.typehint}> {self.name}'
