@@ -648,7 +648,7 @@ class Parser:
         return parser.withnode(Range, fromparsed=3, location=location)
 
     def grouping(parser):
-        return parser.match('(').keyword().match(')') \
+        return parser.match('(').assignment().match(')') \
                      .withnode(GroupingNode, fromparsed=1, location=parser.location)
 
     def tuple(parser):
