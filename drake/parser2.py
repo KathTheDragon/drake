@@ -168,7 +168,7 @@ class Parser:
 
     def match(parser, pattern, text='', parse=False):
         if isinstance(pattern, str):
-            text = text or pattern
+            text = text or repr(pattern)
             pattern = re.compile(re.escape(pattern))
         return parser.raw_match(pattern, text, parse).skip()
 
