@@ -5,6 +5,8 @@ from drake.drake import parser2 as parser
 from drake.drake.parser2 import Parser, ParseFailed
 from drake.drake.parsetree2 import *
 
+ASSIGNMENT = Parser('a=0').assignment()[-1]
+
 def test_Parser__with():
     p = Parser('test string', 3, 0, 3, ('test',))
     # Test that missing arguments have no effect
