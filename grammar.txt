@@ -1,11 +1,13 @@
 List[item] -> "\n"? item (("\n" item)+ | ("," "\n"? item)* ","?) "\n"?
+Delimited[item]
+           -> ("(" List[item] ")" | item)
 Left[op, operand]
            -> operand (op operand)*
 Right[op, operand]
            -> operand (op Right[op, operand])?
 
 program    -> List[assignment] "EOF"
-assignment -> ("(" List[target] ")" | target) "=" assignment
+assignment -> Delimited[target] "=" assignment
             | target AUG_ASSIGN assignment
             | declaration
 target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
@@ -21,8 +23,7 @@ keyword    -> if | case | try | for | while
 if         -> "if" assignment "then" keyword ("else" keyword)
 case       -> "case" assignment "in" mapping ("else" keyword)
 try        -> "try" assignment (("catch" IDENTIFIER ("as" IDENTIFIER)? assignment)+ ("finally" assignment)? | "finally" assignment)
-for        -> "for" vars "in" keyword block
-vars       -> "(" List[IDENTIFIERS] ")" | IDENTIFIER
+for        -> "for" Delimited[IDENTIFIER] "in" expression block
 while      -> "while" assignment block
 iter       -> "iter" keyword
 do         -> "do" block
@@ -39,7 +40,7 @@ yield      -> "yield" assignment
 break      -> "break"
 continue   -> "continue"
 pass       -> "pass"
-lambda     -> "(" List[param] ")" "->" keyword
+lambda     -> Delimited[param] "->" expression
 param      -> typehint (("*" | "**") IDENTIFIER | IDENTIFIER ("=" keyword)?)
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()

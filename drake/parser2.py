@@ -219,6 +219,12 @@ class Parser:
             parser = parser.newline()
         return parser.withnode(List, fromparsed=num)
 
+    def delimitedlist(parser, item):
+        try:
+            return parser.match('(').nodelist(item).match(')')
+        except ParseFailed:
+            return item(parser)
+
     def leftrecurse(parser, operators, operand):
         location = parser.location
         parser = operand(parser)
@@ -243,11 +249,7 @@ class Parser:
 
     def assignment(parser):
         try:
-            try:
-                _parser = parser.match('(').nodelist(Parser.target).match(')')
-            except ParseFailed:
-                _parser = parser.target()
-            return _parser.match('=').assignment() \
+            return parser.delimitedlist(Parser.target).match('=').expression() \
                           .withnode(AssignmentNode, fromparsed=2, location=parser.location)
         except ParseFailed:
             try:
@@ -367,14 +369,8 @@ class Parser:
         return parser.withnode(TryNode, fromparsed=3, location=location)
 
     def for_(parser):
-        return parser.match('for').vars().match('in').keyword().block() \
+        return parser.match('for').delimitedlist(Parser.identifier).match('in').keyword().block() \
                      .withnode(ForNode, fromparsed=3, location=parser.location)
-
-    def vars(parser):
-        try:
-            return parser.match('(').nodelist(Parser.identifier).match(')')
-        except ParseFailed:
-            return parser.identifier()
 
     def while_(parser):
         return parser.match('while').assignment().block() \
@@ -465,7 +461,7 @@ class Parser:
                      .withnode(PassNode, parser.location)
 
     def lambda_(parser):
-        return parser.match('(').nodelist(Parser.param).match(')').match('->').keyword() \
+        return parser.delimitedlist(Parser.param).match('->').keyword() \
                      .withnode(LambdaNode, fromparsed=2, location=parser.location)
 
     def param(parser):
