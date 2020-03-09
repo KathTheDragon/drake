@@ -244,22 +244,35 @@ class Parser:
 
     # Node matching methods
     def program(parser):
-        return parser.nodelist(Parser.assignment).raw_match(EOF, 'eof') \
+        return parser.nodelist(Parser.expression).raw_match(EOF, 'eof') \
                      .withnode(BlockNode, fromparsed=1, location=parser.location)
+
+    def expression(parser):
+        items = (
+            Parser.assignment,
+            Parser.keyword,
+            Parser.lambda_,
+            Parser.declaration,
+            Parser.boolor
+        )
+        for item in items:
+            try:
+                return item(parser)
+            except ParseFailed as e:
+                exception = e
+        raise exception
 
     def assignment(parser):
         try:
             return parser.delimitedlist(Parser.target).match('=').expression() \
                           .withnode(AssignmentNode, fromparsed=2, location=parser.location)
         except ParseFailed:
-            try:
-                # There must be a better way
-                _parser, target = parser.target().popparsed()
-                return _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).assignment() \
-                              .withnode(BinaryOpNode, target, fromparsed=2, location=parser.location) \
-                              .withnode(AssignmentNode, target, fromparsed=1, location=parser.location)
-            except ParseFailed:
-                return parser.declaration()
+            # There must be a better way
+            _parser, target = parser.target().popparsed()
+            return _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).expression() \
+                          .withnode(BinaryOpNode, target, fromparsed=2, location=parser.location) \
+                          .withnode(AssignmentNode, target, fromparsed=1, location=parser.location)
+
 
     def target(parser):
         location = parser.location
@@ -273,13 +286,6 @@ class Parser:
             parser = parser.addparsed(None)
         return parser.identifier() \
                      .withnode(Target, fromparsed=3, location=location)
-
-    def declaration(parser):
-        try:
-            return parser.typehint().identifier() \
-                         .withnode(DeclarationNode, fromparsed=2, location=parser.location)
-        except ParseFailed:
-            return parser.keyword()
 
     def typehint(parser):
         return parser.match('<').type().match('>')
@@ -312,9 +318,7 @@ class Parser:
             Parser.yield_,
             Parser.yieldfrom,
             Parser.break_,
-            Parser.continue_,
-            Parser.lambda_,
-            Parser.boolor
+            Parser.continue_
         )
         for item in items:
             try:
@@ -325,27 +329,27 @@ class Parser:
 
     def if_(parser):
         location = parser.location
-        parser = parser.match('if').assignment().match('then').keyword()
+        parser = parser.match('if').expression().match('then').expression()
         try:
-            parser = parser.match('else').keyword()
+            parser = parser.match('else').expression()
         except ParseFailed:
             parser = parser.addparsed(None)
         return parser.withnode(IfNode, fromparsed=3, location=location)
 
     def case(parser):
         location = parser.location
-        parser = parser.match('case').assignment().match('in').mapping()
+        parser = parser.match('case').expression().match('in').mapping()
         try:
-            parser = parser.match('else').keyword()
+            parser = parser.match('else').expression()
         except ParseFailed:
             parser = parser.addparsed(None)
         return parser.withnode(CaseNode, fromparsed=3, location=location)
 
     def try_(parser):
         location = parser.location
-        parser = parser.match('try').assignment()
+        parser = parser.match('try').expression()
         try:
-            parser = parser.addparsed([]).match('finally').assignment()
+            parser = parser.addparsed([]).match('finally').expression()
         except ParseFailed:
             num = 0
             try:
@@ -355,7 +359,7 @@ class Parser:
                         parser_ = parser_.match('as').identifier()
                     except ParseFailed:
                         parser_ = parser_.addparsed(None)
-                    parser = parser_.assignment() \
+                    parser = parser_.expression() \
                                     .withnode(CatchNode, fromparsed=3, location=parser.location)
                     num += 1
             except ParseFailed as e:
@@ -363,21 +367,21 @@ class Parser:
                     raise
             parser = parser.withnode(List, fromparsed=num)
             try:
-                parser = parser.match('finally').assignment()
+                parser = parser.match('finally').expression()
             except ParseFailed:
                 parser = parser.addparsed(None)
         return parser.withnode(TryNode, fromparsed=3, location=location)
 
     def for_(parser):
-        return parser.match('for').delimitedlist(Parser.identifier).match('in').keyword().block() \
+        return parser.match('for').delimitedlist(Parser.identifier).match('in').expression().block() \
                      .withnode(ForNode, fromparsed=3, location=parser.location)
 
     def while_(parser):
-        return parser.match('while').assignment().block() \
+        return parser.match('while').expression().block() \
                      .withnode(WhileNode, fromparsed=2, location=parser.location)
 
     def iter(parser):
-        return parser.match('iter').keyword() \
+        return parser.match('iter').expression() \
                      .withnode(IterNode, fromparsed=1, location=parser.location)
 
     def do(parser):
@@ -433,19 +437,19 @@ class Parser:
         raise exception
 
     def throw(parser):
-        return parser.match('throw').keyword() \
+        return parser.match('throw').expression() \
                      .withnode(ThrowNode, fromparsed=1, location=parser.location)
 
     def return_(parser):
-        return parser.match('return').keyword() \
+        return parser.match('return').expression() \
                      .withnode(ReturnNode, fromparsed=1, location=parser.location)
 
     def yield_(parser):
-        return parser.match('yield').assignment() \
+        return parser.match('yield').expression() \
                      .withnode(YieldNode, fromparsed=1, location=parser.location)
 
     def yieldfrom(parser):
-        return parser.match('yield').match('from').assignment() \
+        return parser.match('yield').match('from').expression() \
                      .withnode(YieldFromNode, fromparsed=1, location=parser.location)
 
     def break_(parser):
@@ -461,7 +465,7 @@ class Parser:
                      .withnode(PassNode, parser.location)
 
     def lambda_(parser):
-        return parser.delimitedlist(Parser.param).match('->').keyword() \
+        return parser.delimitedlist(Parser.param).match('->').expression() \
                      .withnode(LambdaNode, fromparsed=2, location=parser.location)
 
     def param(parser):
@@ -477,9 +481,13 @@ class Parser:
             return parser.withnode(UnaryOpNode, '*', fromparsed=1, location=location)
         else:
             with OPTIONAL:
-                parser = parser.match('=').keyword() \
+                parser = parser.match('=').expression() \
                                .withnode(PairNode, fromparsed=2, location=location)
             return parser
+
+    def declaration(parser):
+        return parser.typehint().identifier() \
+                     .withnode(DeclarationNode, fromparsed=2, location=parser.location))
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)
@@ -570,14 +578,14 @@ class Parser:
 
     def arg(parser):
         try:
-            return parser.choices('*', '**', parse=True).keyword() \
+            return parser.choices('*', '**', parse=True).expression() \
                          .withnode(UnaryOpNode, fromparsed=2, location=parser.location)
         except ParseFailed:
             try:
-                return parser.identifier().match('=').keyword() \
+                return parser.identifier().match('=').expression() \
                              .withnode(PairNode, fromparsed=2, location=parser.location)
             except ParseFailed:
-                return parser.keyword()
+                return parser.expression()
 
     def atom(parser):
         items = (
@@ -601,11 +609,11 @@ class Parser:
                      .withnode(MappingNode, fromparsed=1, location=parser.location)
 
     def pair(parser):
-        return parser.assignment().match(':').assignment() \
+        return parser.expression().match(':').expression() \
                      .withnode(PairNode, fromparsed=2, location=parser.location)
 
     def block(parser):
-        return parser.match('{').nodelist(Parser.assignment).match('}') \
+        return parser.match('{').nodelist(Parser.expression).match('}') \
                      .withnode(BlockNode, fromparsed=1, location=parser.location)
 
     def list(parser):
@@ -613,7 +621,7 @@ class Parser:
             return parser.match('[').range().match(']') \
                          .withnode(ListNode, fromparsed=1, location=parser.location)
         except ParseFailed:
-            return parser.match('[').nodelist(Parser.assignment).match(']') \
+            return parser.match('[').nodelist(Parser.expression).match(']') \
                          .withnode(ListNode, fromparsed=1, location=parser.location)
 
     def range(parser):
@@ -630,11 +638,11 @@ class Parser:
         return parser.withnode(Range, fromparsed=3, location=location)
 
     def grouping(parser):
-        return parser.match('(').assignment().match(')') \
+        return parser.match('(').expression().match(')') \
                      .withnode(GroupingNode, fromparsed=1, location=parser.location)
 
     def tuple(parser):
-        return parser.match('(').nodelist(Parser.assignment).match(')') \
+        return parser.match('(').nodelist(Parser.expression).match(')') \
                      .withnode(TupleNode, fromparsed=1, location=parser.location)
 
     def literal(parser):

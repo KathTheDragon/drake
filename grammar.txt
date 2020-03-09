@@ -6,26 +6,27 @@ Left[op, operand]
 Right[op, operand]
            -> operand (op Right[op, operand])?
 
-program    -> List[assignment] "EOF"
-assignment -> Delimited[target] "=" assignment
-            | target AUG_ASSIGN assignment
-            | declaration
-target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
-declaration-> typehint IDENTIFIER
+program    -> List[expression] "EOF"
+expression -> assignment
             | keyword
+            | lambda
+            | declaration
+            | boolor
+assignment -> Delimited[target] "=" expression
+            | target AUG_ASSIGN expression
+target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | return | yield | yieldfrom
             | break | continue | pass
-            | lambda | boolor
-if         -> "if" assignment "then" keyword ("else" keyword)
-case       -> "case" assignment "in" mapping ("else" keyword)
-try        -> "try" assignment (("catch" IDENTIFIER ("as" IDENTIFIER)? assignment)+ ("finally" assignment)? | "finally" assignment)
+if         -> "if" expression "then" expression ("else" expression)
+case       -> "case" expression "in" mapping ("else" expression)
+try        -> "try" expression (("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+ ("finally" expression)? | "finally" expression)
 for        -> "for" Delimited[IDENTIFIER] "in" expression block
-while      -> "while" assignment block
-iter       -> "iter" keyword
+while      -> "while" expression block
+iter       -> "iter" expression
 do         -> "do" block
 object     -> "object" block
 enum       -> "enum" "flags"? "{" List[enumitem] "}"
@@ -33,15 +34,16 @@ enumitem   -> IDENTIFIER ("=" NUMBER)?
 module     -> "module" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | mapping | list | tuple | STRING)
-throw      -> "throw" keyword
-return     -> "return" keyword
-yieldfrom  -> "yield" "from" assignment
-yield      -> "yield" assignment
+throw      -> "throw" expression
+return     -> "return" expression
+yieldfrom  -> "yield" "from" expression
+yield      -> "yield" expression
 break      -> "break"
 continue   -> "continue"
 pass       -> "pass"
 lambda     -> Delimited[param] "->" expression
-param      -> typehint (("*" | "**") IDENTIFIER | IDENTIFIER ("=" keyword)?)
+param      -> typehint (("*" | "**") IDENTIFIER | IDENTIFIER ("=" expression)?)
+declaration-> typehint IDENTIFIER
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
@@ -59,14 +61,14 @@ exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
 primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
-arg        -> ("*" | "**") primary | IDENTIFIER "=" keyword | keyword
+arg        -> ("*" | "**") primary | IDENTIFIER "=" expression | expression
 atom       -> mapping | block | list | grouping | tuple | literal | IDENTIFIER
 mapping    -> "{" List[pair] "}"
-pair       -> assignment ":" assignment
-block      -> "{" List[assignment] "}"
-list       -> "[" (range | List[assignment]) "]"
+pair       -> expression ":" expression
+block      -> "{" List[expression] "}"
+list       -> "[" (range | List[expression]) "]"
 range      -> primary ".." primary? ("," primary)?
-grouping   -> "(" assignment ")"
-tuple      -> "(" List[assignment] ")"
+grouping   -> "(" expression ")"
+tuple      -> "(" List[expression] ")"
 literal    -> STRING | number | "true" | "false" | "none"
 number     -> BINARY | OCTAL | HEXADECIMAL | DECIMAL
