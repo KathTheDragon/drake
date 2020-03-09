@@ -38,11 +38,13 @@ __all__ = [
     'PassNode',
     'IfNode',
     'CaseNode',
+    'CatchNode',
     'TryNode',
     'ForNode',
     'WhileNode',
     'TypeNode',
     'DeclarationNode',
+    'Target',
     'AssignmentNode',
 ]
 
