@@ -487,7 +487,7 @@ class Parser:
 
     def declaration(parser):
         return parser.typehint().identifier() \
-                     .withnode(DeclarationNode, fromparsed=2, location=parser.location))
+                     .withnode(DeclarationNode, fromparsed=2, location=parser.location)
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)
@@ -684,5 +684,5 @@ class Parser:
         location = parser.location
         parser, name = parser.match(IDENTIFIER, 'identifier', parse=True).popparsed()
         if name in RESERVED:
-            raise ParseFailed()
+            raise ParseFailed('identifier', location)
         return parser.withnode(IdentifierNode, name, location=location)
