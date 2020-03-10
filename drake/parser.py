@@ -381,8 +381,19 @@ class Parser:
                      .withnode(WhileNode, fromparsed=2, location=parser.location)
 
     def iter(parser):
-        return parser.match('iter').expression() \
-                     .withnode(IterNode, fromparsed=1, location=parser.location)
+        location = parser.location
+        parser = parser.match('iter')
+        items = (
+            Parser.for_,
+            Parser.while_,
+            Parser.list
+        )
+        for item in items:
+            try:
+                return item(parser).withnode(IterNode, fromparsed=1, location=location)
+            except ParseFailed as e:
+                exception = e
+        raise exception
 
     def do(parser):
         return parser.match('do').block() \
