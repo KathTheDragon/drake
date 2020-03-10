@@ -15,7 +15,6 @@ __all__ = [
     'Range',
     'ListNode',
     'TupleNode',
-    'GroupingNode',
     'SubscriptNode',
     'LookupNode',
     'CallNode',
@@ -114,16 +113,6 @@ class BooleanNode(LiteralNode):
 @dataclass
 class NoneNode(ParseNode):
     pass
-
-@dataclass
-class GroupingNode(ParseNode):
-    expr: ParseNode
-
-    def __str__(self):
-        if isprimary(self.expr):
-            return f'({self.expr})'
-        else:
-            return f'(\n{self.expr}\n)'
 
 @dataclass
 class SequenceNode(ParseNode):
