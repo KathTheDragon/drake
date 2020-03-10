@@ -497,8 +497,12 @@ class Parser:
             return parser
 
     def declaration(parser):
+        try:
+            parser = parser.match('const').addparsed(True)
+        except ParseFailed:
+            parser = parser.addparsed(False)
         return parser.typehint().identifier() \
-                     .withnode(DeclarationNode, fromparsed=2, location=parser.location)
+                     .withnode(DeclarationNode, fromparsed=3, location=parser.location)
 
     def boolor(parser):
         return parser.rightrecurse('or', Parser.boolxor)

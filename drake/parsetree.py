@@ -381,8 +381,12 @@ class TypeNode(ParseNode):
 
 @dataclass
 class DeclarationNode(ParseNode):
+    const: bool
     typehint: TypeNode
     name: IdentifierNode
 
     def __str__(self):
-        return f'<{self.typehint}> {self.name}'
+        if self.const:
+            return f'const <{self.typehint}> {self.name}'
+        else:
+            return f'<{self.typehint}> {self.name}'
