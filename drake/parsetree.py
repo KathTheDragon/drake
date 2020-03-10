@@ -3,7 +3,6 @@ from typing import List, Optional, Tuple, Union
 
 __all__ = [
     'ParseNode',
-    'LiteralNode',
     'IdentifierNode',
     'StringNode',
     'NumberNode',
