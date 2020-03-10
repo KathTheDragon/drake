@@ -1,9 +1,9 @@
 import pytest
 import re
 import sys
-from drake.drake import parser2 as parser
-from drake.drake.parser2 import Parser, ParseFailed
-from drake.drake.parsetree2 import *
+from drake.drake import parser
+from drake.drake.parser import Parser, ParseFailed
+from drake.drake.parsetree import *
 
 ASSIGNMENT = Parser('a=0').assignment()[-1]
 
