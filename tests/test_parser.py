@@ -116,6 +116,79 @@ def test_Parser_choices():
     with pytest.raises(ParseFailed):
         Parser('c').choices('a', 'b')
 
+def test_Parser_atom():
+    # Test mapping
+    assert Parser('{0:0}').atom() == Parser('{0:0}').mapping()
+    # Test block
+    assert Parser('{0}').atom() == Parser('{0}').block()
+    # Test list
+    assert Parser('[0]').atom() == Parser('[0]').list()
+    # Test grouping
+    assert Parser('(0)').atom() == Parser('(0)').grouping()
+    # Test tuple
+    assert Parser('(0,)').atom() == Parser('(0,)').tuple()
+    # Test literal
+    assert Parser('0').atom() == Parser('0').literal()
+    # Test identifier
+    assert Parser('t').atom() == Parser('t').identifier()
+
+def test_Parser_mapping():
+    p = Parser('{0:0, 0:0}').mapping()
+    assert p.cursor == 10
+    assert p[-1] == MappingNode([Parser('0:0').pair()[-1]]*2)
+
+def test_Parser_pair():
+    p = Parser('a=0:a=0').pair()
+    assert p.cursor == 7
+    assert p[-1] == PairNode(ASSIGNMENT, ASSIGNMENT)
+
+def test_Parser_block():
+    p = Parser('{a=0,a=0}').block()
+    assert p.cursor == 9
+    assert p[-1] == BlockNode([ASSIGNMENT]*2)
+
+def test_Parser_list():
+    # range
+    p = Parser('[0..]').list()
+    assert p.cursor == 5
+    assert p[-1] == ListNode(Parser('0..').range()[-1])
+    # list
+    p = Parser('[a=0,a=0]').list()
+    assert p.cursor == 9
+    assert p[-1] == ListNode([ASSIGNMENT]*2)
+
+def test_Parser_range():
+    # start, end, step
+    p = Parser('none..none, none').range()
+    assert p.cursor == 16
+    assert p[-1] == Range(NoneNode(), NoneNode(), NoneNode())
+    # start, end
+    p = Parser('none..none').range()
+    assert p.cursor == 10
+    assert p[-1] == Range(NoneNode(), NoneNode())
+    # start, step
+    p = Parser('none.., none').range()
+    assert p.cursor == 12
+    assert p[-1] == Range(NoneNode(), step=NoneNode())
+    # start
+    p = Parser('none..').range()
+    assert p.cursor == 6
+    assert p[-1] == Range(NoneNode())
+
+def test_Parser_grouping():
+    p = Parser('(a=0)').grouping()
+    assert p.cursor == 5
+    assert p[-1] == GroupingNode(ASSIGNMENT)
+
+def test_Parser_tuple():
+    p = Parser('(a=0, a=0)').tuple()
+    assert p.cursor == 10
+    assert p[-1] == TupleNode([ASSIGNMENT]*2)
+    # Test that a syntactic grouping is also valid - this is dealt with by attempting to parse a grouping *first*
+    p = Parser('(a=0)').tuple()
+    assert p.cursor == 5
+    assert p[-1] == TupleNode([ASSIGNMENT])
+
 def test_Parser_literal():
     # Test string
     assert Parser("'test'").literal()[-1] == StringNode("'test'")
