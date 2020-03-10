@@ -12,7 +12,7 @@ __all__ = [
     'PairNode',
     'MappingNode',
     'BlockNode',
-    'Range',
+    'RangeNode',
     'ListNode',
     'TupleNode',
     'SubscriptNode',
@@ -43,7 +43,7 @@ __all__ = [
     'WhileNode',
     'TypeNode',
     'DeclarationNode',
-    'Target',
+    'TargetNode',
     'AssignmentNode',
 ]
 
@@ -122,7 +122,7 @@ class SequenceNode(ParseNode):
         return pprint(self.nodetype, *self.items)
 
 @dataclass
-class Range(ParseNode):  # Wrapper
+class RangeNode(ParseNode):
     start: ParseNode
     end: Optional[ParseNode] = None
     step: Optional[ParseNode] = None
@@ -345,7 +345,7 @@ class WhileNode(ParseNode):
         return pprint('While', self.condition, self.body)
 
 @dataclass
-class Target(ParseNode):  # Just a wrapper to cooperate with pprint
+class TargetNode(ParseNode):
     mode: str
     typehint: Optional['TypeNode']
     name: str

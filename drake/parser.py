@@ -285,7 +285,7 @@ class Parser:
         except ParseFailed:
             parser = parser.addparsed(None)
         return parser.identifier() \
-                     .withnode(Target, fromparsed=3, location=location)
+                     .withnode(TargetNode, fromparsed=3, location=location)
 
     def typehint(parser):
         return parser.match('<').type().match('>')
@@ -650,7 +650,7 @@ class Parser:
             parser = parser.match(',').primary()
         except ParseFailed:
             parser = parser.addparsed(None)
-        return parser.withnode(Range, fromparsed=3, location=location)
+        return parser.withnode(RangeNode, fromparsed=3, location=location)
 
     def grouping(parser):
         return parser.match('(').expression().match(')')
