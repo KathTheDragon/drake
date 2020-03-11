@@ -159,10 +159,10 @@ class BlockNode(ParseNode):  # Not inheriting from SequenceNode, though it is a 
 @dataclass
 class SubscriptNode(ParseNode):
     container: ParseNode
-    subscript: List[ParseNode]
+    subscript: Union[RangeNode, ListNode]
 
     def __str__(self):
-        return pprint('Subscript', self.container, *self.subscript)
+        return pprint('Subscript', self.container, self.subscript)
 
 @dataclass
 class LookupNode(ParseNode):

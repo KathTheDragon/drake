@@ -586,9 +586,11 @@ class Parser:
                                        .withnode(CallNode, fromparsed=2, location=location)
                         obj = CallNode(obj, args)
                     except ParseFailed:
-                        # Might change SubscriptNode
-                        parser, subscript = parser.list().popparsed()
-                        parser = parser.withnode(SubscriptNode, fromparsed=1, subscript=subscript.items, location=location)
+                        try:
+                            _parser = parser.range()
+                        except ParseFailed:
+                            _parser = parser.list()
+                        parser = _parser.withnode(SubscriptNode, fromparsed=2, location=location)
         return parser
 
     def arg(parser):
