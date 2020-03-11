@@ -74,11 +74,15 @@ class Scope:
         elif type is None:
             type = value.type
         try:
-            binding = self.getname(name)
+            index, scope = self.index(name)
+            binding = self.get(index, scope)
             binding.rebind(value, type)
+            return index, scope
         except NameNotFound:
+            index = len(self.bindings)
             binding = Binding(name, type, value, const)
             self.bindings.append(binding)
+            return index, 0
 
     def child(self, *bindings):
         return Scope(bindings, parent=self)
