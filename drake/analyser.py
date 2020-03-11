@@ -42,19 +42,44 @@ def analyse(node, scope, values):
     return globals()[node.__class__.__name__.lower()](node, scope, values)
 
 def identifiernode(node, scope, values):
-    pass
+    index, _scope = scope.index(node.name)
+    type = scope.get(index, _scope).type
+    return IdentifierNode(type, index, _scope)
 
 def stringnode(node, scope, values):
-    pass
+    value = normalise_string(node.value)
+    if value in values:
+        index = values.index(value)
+    else:
+        index = len(values)
+        values.append(node.value)
+    return ValueNode(Type('String'), index)
 
 def numbernode(node, scope, values):
-    pass
+    value = normalise_number(node.value)
+    if value in values:
+        index = values.index(value)
+    else:
+        index = len(values)
+        values.append(value)
+    return ValueNode(Type('Number'), index)
 
 def booleannode(node, scope, values):
-    pass
+    value = (node.value == 'true')
+    if value in values:
+        index = values.index(value)
+    else:
+        index = len(values)
+        values.append(value)
+    return ValueNode(Type('Boolean'), index)
 
 def nonenode(node, scope, values):
-    pass
+    if None in values:
+        index = values.index(None)
+    else:
+        index = len(values)
+        values.append(None)
+    return ValueNode(Type('None'), index)
 
 def mappingnode(node, scope, values):
     pass
