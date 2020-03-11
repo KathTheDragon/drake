@@ -223,7 +223,7 @@ class Parser:
         try:
             return parser.match('(').nodelist(item).match(')')
         except ParseFailed:
-            return item(parser)
+            return item(parser).withnode(List, fromparsed=1)
 
     def leftrecurse(parser, operators, operand):
         location = parser.location

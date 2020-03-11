@@ -115,7 +115,7 @@ class NoneNode(ParseNode):
 
 @dataclass
 class SequenceNode(ParseNode):
-    items: Union[ParseNode, List[ParseNode]]
+    items: List[ParseNode]
 
     def __str__(self):
         return pprint(self.nodetype, *self.items)
@@ -173,7 +173,7 @@ class LookupNode(ParseNode):
         return pprint('Lookup', self.obj, self.attribute)
 
 VArg = Union[ParseNode, 'UnaryOpNode']  # expr | '*' expr
-KwArg = Union['AssignmentNode', 'UnaryOpNode']  # name = expr | '**' expr
+KwArg = Union[PairNode, 'UnaryOpNode']  # name = expr | '**' expr
 
 @dataclass
 class CallNode(ParseNode):
@@ -201,7 +201,7 @@ class BinaryOpNode(ParseNode):
         return pprint(f'Binary {self.operator}', self.left, self.right)
 
 VParam = Union['DeclarationNode', UnaryOpNode]  # type name | '*' type name
-KwParam = Union['AssignmentNode', UnaryOpNode]  # type name = expr | '**' type name
+KwParam = Union[PairNode, UnaryOpNode]  # type name = expr | '**' type name
 
 @dataclass
 class LambdaNode(ParseNode):
@@ -236,7 +236,7 @@ class ObjectNode(ParseNode):
 @dataclass
 class EnumNode(ParseNode):
     flags: bool
-    items: List[Union[IdentifierNode, 'AssignmentNode']]
+    items: List[PairNode]
 
     def __str__(self):
         if self.flags:
