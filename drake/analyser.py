@@ -51,9 +51,6 @@ def listnode(node, scope, values):
 def tuplenode(node, scope, values):
     pass
 
-def groupingnode(node, scope, values):
-    pass
-
 def subscriptnode(node, scope, values):
     pass
 
