@@ -1,5 +1,11 @@
 from dataclasses import dataclass, field
 
+## Exceptions
+@dataclass
+class TypeMismatch(Exception):
+    expected: 'Type'
+    actual: 'Type'
+
 ## Classes
 @dataclass
 class Type:
@@ -12,8 +18,3 @@ class Type:
         else:
             return Type(self.name, (item,))
 
-## Exceptions
-@dataclass
-class TypeMismatch(Exception):
-    expected: Type
-    actual: Type
