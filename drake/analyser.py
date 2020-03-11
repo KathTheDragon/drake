@@ -33,9 +33,6 @@ def booleannode(node, scope, values):
 def nonenode(node, scope, values):
     pass
 
-def pairnode(node, scope, values):
-    pass
-
 def mappingnode(node, scope, values):
     pass
 
