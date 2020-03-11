@@ -6,13 +6,36 @@
 # Optional features:
 # - Compile-time computation: one possible optimisation to the compiled bytecode would be to perform some of the computations statically during this phase - e.g, numeric arithmetic
 # - Another optimisation could be to alter the program structure to eliminate unnecessary elements of the bytecode
+import re
 from dataclasses import dataclass
 from typing import List, Optional
 from .ast import *
 from .scopes import *
 from .types import *
 
-## Exceptions
+## Normalisation
+def normalise_string(string):
+    return string[1:-1]  # Also needs escape processing
+
+def normalise_number(number):
+    number = number.replace('_', '')
+    if number.startswith('0b') or number.startswith('0o') or number.startswith('0x'):
+        return str(int(number)), '', '', ''
+    else:
+        match = re.match(rf'(?P<integer>[0-9]+)(?:\.(?P<fractional>[0-9]+))?(?:[eE](?P<exponent>[+-]?[0-9]+))?(?P<imagunit>[jJ])?')
+        integer, fractional, exponent, imagunit = match.groups(default='')
+        integer = integer.lstrip('0') or '0'
+        fractional = fractional.rstrip('0')
+        if exponent.startswith('+'):
+            exponent = exponent.lstrip('+0')
+        elif exponent.startswith('-'):
+            exponent = exponent.lstrip('-0')
+            if exponent:
+                exponent = '-' + exponent
+        else:
+            exponent = exponent.lstrip('0')
+        imagunit = imagunit.lower()
+        return integer, fractional, exponent, imagunit
 
 ## Functions
 def analyse(node, scope, values):
