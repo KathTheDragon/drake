@@ -12,7 +12,7 @@ from typing import List, Optional
 from . import types
 from .ast import *
 from .scopes import *
-from .types import *
+from .types import typecheck
 
 ## Normalisation
 def normalise_string(string):
@@ -54,7 +54,7 @@ def stringnode(node, scope, values):
     else:
         index = len(values)
         values.append(node.value)
-    return ValueNode(Type('String'), index)
+    return ValueNode(types.String, index)
 
 def numbernode(node, scope, values):
     value = normalise_number(node.value)
@@ -63,7 +63,7 @@ def numbernode(node, scope, values):
     else:
         index = len(values)
         values.append(value)
-    return ValueNode(Type('Number'), index)
+    return ValueNode(types.Number, index)
 
 def booleannode(node, scope, values):
     value = (node.value == 'true')
@@ -72,7 +72,7 @@ def booleannode(node, scope, values):
     else:
         index = len(values)
         values.append(value)
-    return ValueNode(Type('Boolean'), index)
+    return ValueNode(types.Boolean, index)
 
 def nonenode(node, scope, values):
     if None in values:
@@ -80,7 +80,7 @@ def nonenode(node, scope, values):
     else:
         index = len(values)
         values.append(None)
-    return ValueNode(Type('None'), index)
+    return ValueNode(types.None_, index)
 
 def range(node, scope, values):
     start = analyse(node.start, scope, values)
@@ -95,7 +95,7 @@ def range(node, scope, values):
         typecheck(types.Number, step.type)
     else:
         step = None
-    return RangeNode(Type('List')[start.type], start, end, step)
+    return RangeNode(types.List[type], start, end, step)
 
 def listnode(node, scope, values):
     pass
