@@ -47,6 +47,8 @@ def normalise_number(number):
 def analyse(node, scope, values):
     if isinstance(node, list):
         return [analyse(item, scope, values) for item in node]
+    elif node is None:
+        return passnode(node, scope, values)
     else:
         return globals()[node.__class__.__name__.lower()](node, scope, values)
 
