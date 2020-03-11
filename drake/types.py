@@ -18,3 +18,47 @@ class Type:
         else:
             return Type(self.name, (item,))
 
+## Types
+Type_ = Type('Type')
+None_ = Type('None')
+Boolean = Type('Boolean')
+Number = Type('Number')
+String = Type('String')
+MutableString = Type('MutableString')
+List = Type('List')
+MutableList = Type('MutableList')
+Tuple = Type('Tuple')
+MutableTuple = Type('MutableTuple')
+Mapping = Type('Mapping')
+MutableMapping = Type('MutableMapping')
+Block = Type('Block')
+Lambda = Type('Lambda')
+Function = Type('Function')
+Iterator = Type('Iterator')
+Module = Type('Module')
+
+strings = (String, MutableString)
+lists = (List, MutableList)
+tuples = (Tuple, MutableTuple)
+mappings = (Mapping, MutableMapping)
+subscriptable = strings + lists + tuples + mappings
+mutable = (
+    MutableString,
+    MutableList,
+    MutableTuple,
+    MutableMapping
+)
+exceptions = (
+
+)
+builtin = (
+    Type_,
+    None_,
+    Boolean,
+    Number,
+    Block,
+    Lambda,
+    Function,
+    Iterator,
+    Module,
+) + subscriptable + exceptions
