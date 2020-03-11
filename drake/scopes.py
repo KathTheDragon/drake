@@ -8,7 +8,7 @@ class NameNotFound(Exception):
     name: str
 
 @dataclass
-class NameNotBound(Exception):
+class NameNotAssigned(Exception):
     name: str
 
 @dataclass
