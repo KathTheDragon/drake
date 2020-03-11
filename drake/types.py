@@ -12,14 +12,14 @@ class TypeMismatch(Exception):
 @dataclass
 class Type:
     name: str
-    params: tuple = field(init=False, default=(), compare=False)
+    params: tuple = field(default=(), compare=False)
     namespace: Scope = field(default_factory=Scope, compare=False)
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
-            return Type(self.name, item)
+            return Type(self.name, item, self.namespace)
         else:
-            return Type(self.name, (item,))
+            return Type(self.name, (item,), self.namespace)
 
 ## Functions
 def typecheck(expected, actual):
