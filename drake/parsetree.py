@@ -328,7 +328,7 @@ class TryNode(ParseNode):
 
 @dataclass
 class ForNode(ParseNode):
-    vars: List[ParseNode]
+    vars: List[IdentifierNode]
     container: ParseNode
     body: BlockNode
 
