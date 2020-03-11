@@ -52,6 +52,7 @@ lists = (List, MutableList)
 tuples = (Tuple, MutableTuple)
 mappings = (Mapping, MutableMapping)
 subscriptable = strings + lists + tuples + mappings
+iterable = strings + lists + mappings + (Iterator,)
 mutable = (
     MutableString,
     MutableList,
