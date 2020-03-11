@@ -178,7 +178,7 @@ class CaseNode(ASTNode):
 @dataclass
 class TryNode(ASTNode):
     body: ASTNode
-    catch: Tuple[List[int], ASTNode]
+    catch: List[Tuple[IdentifierNode, ASTNode]]
     finally_: Optional[ASTNode]
 
 @dataclass

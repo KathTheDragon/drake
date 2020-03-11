@@ -354,7 +354,7 @@ class Parser:
             num = 0
             try:
                 while True:
-                    parser_ = parser.match('catch').delimited(Parser.identifier)
+                    parser_ = parser.match('catch').identifier()
                     try:
                         parser_ = parser_.match('as').identifier()
                     except ParseFailed:

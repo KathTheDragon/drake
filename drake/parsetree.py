@@ -310,7 +310,7 @@ class CaseNode(ParseNode):
 
 @dataclass
 class CatchNode(ParseNode):
-    exception: Union[IdentifierNode, List[IdentifierNode]]
+    exception: IdentifierNode
     name: Optional[IdentifierNode]
     body: ParseNode  # Might change to BlockNode
 
