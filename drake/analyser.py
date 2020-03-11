@@ -18,128 +18,128 @@ from .types import *
 def analyse(node, scope, values):
     return globals()[node.__class__.__name__.lower()](node, scope, values)
 
-def identifiernode(node, scope):
+def identifiernode(node, scope, values):
     pass
 
-def stringnode():
+def stringnode(node, scope, values):
     pass
 
-def numbernode():
+def numbernode(node, scope, values):
     pass
 
-def booleannode():
+def booleannode(node, scope, values):
     pass
 
-def nonenode():
+def nonenode(node, scope, values):
     pass
 
-def pairnode():
+def pairnode(node, scope, values):
     pass
 
-def mappingnode():
+def mappingnode(node, scope, values):
     pass
 
-def blocknode():
+def blocknode(node, scope, values):
     pass
 
-def range():
+def range(node, scope, values):
     pass
 
-def listnode():
+def listnode(node, scope, values):
     pass
 
-def tuplenode():
+def tuplenode(node, scope, values):
     pass
 
-def groupingnode():
+def groupingnode(node, scope, values):
     pass
 
-def subscriptnode():
+def subscriptnode(node, scope, values):
     pass
 
-def lookupnode():
+def lookupnode(node, scope, values):
     pass
 
-def callnode():
+def callnode(node, scope, values):
     pass
 
-def unaryopnode():
+def unaryopnode(node, scope, values):
     pass
 
-def binaryopnode():
+def binaryopnode(node, scope, values):
     pass
 
-def lambdanode():
+def lambdanode(node, scope, values):
     pass
 
-def iternode():
+def iternode(node, scope, values):
     pass
 
-def donode():
+def donode(node, scope, values):
     pass
 
-def objectnode():
+def objectnode(node, scope, values):
     pass
 
-def enumnode():
+def enumnode(node, scope, values):
     pass
 
-def modulenode():
+def modulenode(node, scope, values):
     pass
 
-def exceptionnode():
+def exceptionnode(node, scope, values):
     pass
 
-def mutablenode():
+def mutablenode(node, scope, values):
     pass
 
-def thrownode():
+def thrownode(node, scope, values):
     pass
 
-def returnnode():
+def returnnode(node, scope, values):
     pass
 
-def yieldnode():
+def yieldnode(node, scope, values):
     pass
 
-def yieldfromnode():
+def yieldfromnode(node, scope, values):
     pass
 
-def breaknode():
+def breaknode(node, scope, values):
     pass
 
-def continuenode():
+def continuenode(node, scope, values):
     pass
 
-def passnode():
+def passnode(node, scope, values):
     pass
 
-def ifnode():
+def ifnode(node, scope, values):
     pass
 
-def casenode():
+def casenode(node, scope, values):
     pass
 
-def catchnode():
+def catchnode(node, scope, values):
     pass
 
-def trynode():
+def trynode(node, scope, values):
     pass
 
-def fornode():
+def fornode(node, scope, values):
     pass
 
-def whilenode():
+def whilenode(node, scope, values):
     pass
 
-def typenode():
+def typenode(node, scope, values):
     pass
 
-def declarationnode():
+def declarationnode(node, scope, values):
     pass
 
-def targetnode():
+def targetnode(node, scope, values):
     pass
 
-def assignmentnode():
+def assignmentnode(node, scope, values):
     pass
