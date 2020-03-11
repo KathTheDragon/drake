@@ -81,12 +81,6 @@ def nonenode(node, scope, values):
         values.append(None)
     return ValueNode(Type('None'), index)
 
-def mappingnode(node, scope, values):
-    pass
-
-def blocknode(node, scope, values):
-    pass
-
 def range(node, scope, values):
     start = analyse(node.start, scope, values)
     if node.end is not None:
@@ -107,6 +101,12 @@ def listnode(node, scope, values):
     pass
 
 def tuplenode(node, scope, values):
+    pass
+
+def mappingnode(node, scope, values):
+    pass
+
+def blocknode(node, scope, values):
     pass
 
 def subscriptnode(node, scope, values):
