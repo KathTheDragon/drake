@@ -196,10 +196,18 @@ def lambdanode(node, scope, values):
     pass
 
 def iternode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    if expression.type in types.strings:
+        yieldtype = expression.type
+    elif expression.type in types.mappings:
+        yieldtype = types.Tuple[*expression.type.params]
+    elif expression.type in types.iterable:
+        yieldtype, = expression.type.params
+    return IterNode(types.Iterator[yieldtype], expression)
 
 def donode(node, scope, values):
-    pass
+    block = analyse(node.block, scope, values)
+    return DoNode(*block.type.params, block)
 
 def objectnode(node, scope, values):
     pass
@@ -217,46 +225,128 @@ def mutablenode(node, scope, values):
     pass
 
 def thrownode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    return ThrowNode(expression.type, expression)
 
 def returnnode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    return ReturnNode(expression.type, expression)
 
 def yieldnode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    return YieldNode(expression.type, expression)
 
 def yieldfromnode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    itertype = expression.type
+    if itertype in types.strings:
+        type = itertype
+    elif itertype in types.mappings:
+        type = types.Tuple[*itertype.params]
+    elif itertype in types.iterable:
+        type, = itertype.params
+    else:
+        raise types.TypeMismatch(types.iterable, itertype)
+    return YieldFromNode(type, expression)
 
 def breaknode(node, scope, values):
-    pass
+    return BreakNode(types.None_)
 
 def continuenode(node, scope, values):
-    pass
+    return ContinueNode(types.None_)
 
 def passnode(node, scope, values):
-    pass
+    return PassNode(types.None_)
 
 def ifnode(node, scope, values):
-    pass
+    scope = scope.child()
+    condition = analyse(node.condition, scope, values)
+    then = analyse(node.then, scope, values)
+    default = analyse(node.default, scope, values)
+    # Typecheck condition: requires a builtin function (boolean? Boolean.new? truth?)
+    if not isinstance(default, PassNode):
+        typecheck(then.type, default.type)
+    return IfNode(then.type, condition, then, default)
 
 def casenode(node, scope, values):
-    pass
+    scope = scope.child()
+    value = analyse(node.value, scope, values)
+    cases = mappingnode(node.cases, scope, values)
+    default = analyse(node.default, scope, values)
+    valuetype, returntype = cases.type.params
+    typecheck(valuetype, value.type)
+    if not isinstance(default, PassNode):
+        typecheck(returntype, default.type)
+    return CaseNode(returntype, value, cases.items, default)
 
 def catchnode(node, scope, values):
-    pass
+    exception = identifiernode(node.exception, scope, values)
+    scope = scope.child()
+    if node.name is not None:
+        name = node.name.name
+        type, = exception.type.params
+        scope.bind(name, type, True)
+    body = analyse(node.body, scope, values)
+    return (exception, body)
 
 def trynode(node, scope, values):
-    pass
+    body = analyse(node.body, scope, values)
+    catches = analyse(node.catches, scope, values)
+    finally_ = analyse(node.finally_, scope, values)
+    type = body.type
+    for _, catchbody in catches:
+        typecheck(type, catchbody.type)
+    typecheck(types.None_, finally_.type)
+    return TryNode(type, body, catches, finally_)
 
 def fornode(node, scope, values):
-    pass
+    container = analyse(node.container, scope, values)
+    if container.type not in types.iterable:  # Needs to be aware about custom iterable types
+        raise types.TypeMismatch(types.iterable, container.type)
+    scope = scope.child()
+    vars = node.vars
+    if container.type in types.strings:
+        if len(vars) == 1:
+            scope.bind(vars[0].name, container.type, True)
+        else:
+            raise ValueError
+    elif container.type in types.mappings:
+        vartypes = container.type.params
+        if len(vars) == 1:
+            scope.bind(vars[0].name, types.Tuple[*vartypes], True)
+        elif len(vars) == len(vartypes):
+            for var, type in zip(vars, vartypes):
+                scope.bind(var.name, type, True)
+        else:
+            raise ValueError
+    elif container.type in types.iterable:
+        vartype, = container.type.params
+        if len(vars) == 1:
+            scope.bind(vars[0].name, vartype, True)
+        elif vartype in types.tuples:
+            if len(vars) == len(vartype.params):
+                for var, type in zip(vars, vartype.params):
+                    scope.bind(var.name, type, True)
+            else:
+                raise ValueError
+        else:
+            raise TypeMismatch(types.tuples, vartype)
+    body = blocknode(node.body, scope, values)
+    return ForNode(*body.type.params, container, body)
 
 def whilenode(node, scope, values):
-    pass
+    scope = scope.child()
+    condition = analyse(node.condition, scope, values)
+    body = blocknode(node.body, scope, values)
+    # Typecheck condition: see ifnode
+    return ForNode(*body.type.params, condition, body)
 
 def typenode(node, scope, values):
-    pass
+    type = scope.getname(node.type)
+    params = [typenode(param, scope, values) for param in node.params]
+    if type != types.Type_:
+        raise types.TypeMismatch(types.Type_, type)
+    return type[*params]
 
 def declarationnode(node, scope, values):
     pass
