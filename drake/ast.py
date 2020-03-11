@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from .scopes import Scope
 from .types import Type
 
@@ -79,7 +79,7 @@ class BlockNode(ASTNode):
 @dataclass
 class SubscriptNode(ASTNode):
     container: ASTNode
-    subscript: List[ASTNode]
+    subscript: Union[RangeNode, ListNode]
 
 @dataclass
 class LookupNode(ASTNode):
