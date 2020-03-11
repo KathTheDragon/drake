@@ -320,7 +320,7 @@ class CatchNode(ParseNode):
 @dataclass
 class TryNode(ParseNode):
     body: ParseNode
-    catch: List[CatchNode]
+    catches: List[CatchNode]
     finally_: Optional[ParseNode]
 
     def __str__(self):
