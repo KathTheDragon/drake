@@ -14,6 +14,11 @@ from .ast import *
 from .scopes import *
 from .types import typecheck
 
+## Exceptions
+@dataclass
+class AttributeNotFound(Exception):
+    attribute: str
+
 ## Normalisation
 def normalise_string(string):
     return string[1:-1]  # Also needs escape processing
@@ -167,7 +172,14 @@ def subscriptnode(node, scope, values):
         raise types.TypeMismatch(types.subscriptable, contype)  # Temporary
 
 def lookupnode(node, scope, values):
-    pass
+    obj = analyse(node.obj, scope, values)
+    attribute = node.attribute.name
+    namespace = obj.type.namespace
+    index, _scope = namespace.index(attribute)
+    if _scope != 0:
+        raise AttributeNotFound(attribute)
+    type = namespace.get(index, 0).type
+    return LookupNode(type, obj, index)
 
 def callnode(node, scope, values):
     pass
