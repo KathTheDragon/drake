@@ -40,7 +40,10 @@ def normalise_number(number):
 
 ## Functions
 def analyse(node, scope, values):
-    return globals()[node.__class__.__name__.lower()](node, scope, values)
+    if isinstance(node, list):
+        return [analyse(item, scope, values) for item in node]
+    else:
+        return globals()[node.__class__.__name__.lower()](node, scope, values)
 
 def identifiernode(node, scope, values):
     index, _scope = scope.index(node.name)
