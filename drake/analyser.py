@@ -102,19 +102,69 @@ def range(node, scope, values):
     return RangeNode(types.List[type], start, end, step)
 
 def listnode(node, scope, values):
-    pass
+    items = analyse(node.items, scope.child(), values)
+    type = items[0].type
+    for item in items:
+        typecheck(type, item.type)
+    return ListNode(types.List[type], items)
 
 def tuplenode(node, scope, values):
-    pass
+    items = analyse(node.items, scope.child(), values)
+    types = [item.type for item in items]
+    return TupleNode(types.Tuple[*types], items)
+
+def pairnode(node, scope, values):
+    return analyse(node.key, scope, values), analyse(node.value, scope, values)
 
 def mappingnode(node, scope, values):
-    pass
+    items = analyse(node.items, scope.child(), values)
+    keytype = items[0][0].type
+    valuetype = items[0][1].type
+    for item in items:
+        key, value = item
+        typecheck(keytype, key.type)
+        typecheck(valuetype, value.type)
+    return MappingNode(types.Mapping[keytype, valuetype], items)
 
 def blocknode(node, scope, values):
-    pass
+    scope = scope.child()
+    type = None
+    expressions = analyse(node.expressions, scope, values)
+    for expression in expressions:
+        if isinstance(expression, (ReturnNode, YieldNode, YieldFromNode)):
+            if type is None:
+                type = expression.type
+            else:
+                typecheck(type, expression.type)
+    if type is None:
+        type = types.None_
+    return BlockNode(types.Block[type], expressions, scope)
 
 def subscriptnode(node, scope, values):
-    pass
+    container = analyse(node.container, scope, values)
+    subscript = analyse(node.subscript, scope, values)
+    contype = container.type
+    subtype, = subscript.type.params
+    if contype in types.subscriptable:
+        if contype in types.mappings:
+            keytype, valuetype = contype.params
+            typecheck(keytype, subtype)
+            if isinstance(subscript, RangeNode) or len(subscript.items) > 1:
+                type = types.List[valuetype]
+            else:
+                type = valuetype
+        else:
+            typecheck(types.Number, subtype)
+            if contype in types.strings:
+                type = contype
+            elif isinstance(subscript, RangeNode) or len(subscript.items) > 1:
+                type = contype
+            else:
+                type = contype.params
+    elif contype.name in types.builtin:
+        raise types.TypeMismatch(types.subscriptable, contype)
+    else:
+        raise types.TypeMismatch(types.subscriptable, contype)  # Temporary
 
 def lookupnode(node, scope, values):
     pass
