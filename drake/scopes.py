@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from .types import Type
+from .types import Type, TypeMismatch
 
 ## Exceptions
 @dataclass
@@ -14,11 +14,6 @@ class NameNotBound(Exception):
 @dataclass
 class CannotRebindConstant(Exception):
     name: str
-
-@dataclass
-class TypeMismatch(Exception):
-    bindingtype: Type
-    valuetype: Type
 
 ## Classes
 @dataclass
