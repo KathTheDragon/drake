@@ -15,8 +15,8 @@ from .types import *
 ## Exceptions
 
 ## Functions
-def analyse(node, scope):
-    return globals()[node.__class__.__name__.lower()](node, scope)
+def analyse(node, scope, values):
+    return globals()[node.__class__.__name__.lower()](node, scope, values)
 
 def identifiernode(node, scope):
     pass
