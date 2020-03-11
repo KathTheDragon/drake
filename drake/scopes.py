@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from .types import Type, typecheck
 
 ## Exceptions
 @dataclass
@@ -19,18 +18,17 @@ class CannotRebindConstant(Exception):
 @dataclass
 class Binding:
     name: str
-    type: Type
-    value: Optional[ASTNode] = None
+    type: 'Type'
+    isassigned: bool = False
     const: bool = False
 
-    def rebind(self, value, type):
+    def rebind(self, type, assignment=True):
+        from .types import typecheck
         typecheck(self.type, type)
-        elif value is None:
-            pass
-        elif self.value is not None and self.const:
+        if self.isassigned and assignment and self.const:
             raise CannotRebindConstant(self.name)
         else:
-            self.value = value
+            self.assigned = assignment
 
 @dataclass
 class Scope:
@@ -68,19 +66,15 @@ class Scope:
     def getname(self, name):
         return self.get(*self.index(name))
 
-    def bind(self, name, value=None, type=None, const=False):
-        if value is None and type is None:
-            raise ValueError('at least one of value or type must be given')
-        elif type is None:
-            type = value.type
+    def bind(self, name, type, assignment=True, const=False):
         try:
             index, scope = self.index(name)
             binding = self.get(index, scope)
-            binding.rebind(value, type)
+            binding.rebind(type, assignment)
             return index, scope
         except NameNotFound:
             index = len(self.bindings)
-            binding = Binding(name, type, value, const)
+            binding = Binding(name, type, assignment, const)
             self.bindings.append(binding)
             return index, 0
 

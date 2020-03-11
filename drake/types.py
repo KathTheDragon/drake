@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from itertools import zip_longest
+from scopes import Scope, Binding
 
 ## Exceptions
 @dataclass
@@ -11,7 +12,8 @@ class TypeMismatch(Exception):
 @dataclass
 class Type:
     name: str
-    params: tuple = field(default=(), compare=False)
+    params: tuple = field(init=False, default=(), compare=False)
+    namespace: Scope = field(default_factory=Scope, compare=False)
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
