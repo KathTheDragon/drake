@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from .types import Type, TypeMismatch
+from .types import Type, typecheck
 
 ## Exceptions
 @dataclass
@@ -24,8 +24,7 @@ class Binding:
     const: bool = False
 
     def rebind(self, value, type):
-        if self.type != type:
-            raise TypeMismatch(self.type, type)
+        typecheck(self.type, type)
         elif value is None:
             pass
         elif self.value is not None and self.const:

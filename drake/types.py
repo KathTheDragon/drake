@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from itertools import zip_longest
 
 ## Exceptions
 @dataclass
@@ -10,13 +11,20 @@ class TypeMismatch(Exception):
 @dataclass
 class Type:
     name: str
-    params: tuple = ()
+    params: tuple = field(default=(), compare=False)
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
             return Type(self.name, item)
         else:
             return Type(self.name, (item,))
+
+## Functions
+def typecheck(expected, actual):
+    if expected.name != actual.name:
+        raise TypeMismatch(expected, actual)
+    for expparam, actparam in zip_longest(expected.params, actual.params):
+        typecheck(expparam, actparam)
 
 ## Types
 Type_ = Type('Type')

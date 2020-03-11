@@ -9,6 +9,7 @@
 import re
 from dataclasses import dataclass
 from typing import List, Optional
+from . import types
 from .ast import *
 from .scopes import *
 from .types import *
@@ -83,16 +84,15 @@ def nonenode(node, scope, values):
 
 def range(node, scope, values):
     start = analyse(node.start, scope, values)
+    type = start.type
     if node.end is not None:
         end = analyse(node.end, scope, values)
-        if start.type != end.type:
-            raise TypeMismatch(start.type, end.type)
+        typecheck(type, end.type)
     else:
         end = None
     if node.step is not None:
         step = analyse(node.step, scope, values)
-        if step.type != Type('Number'):
-            raise TypeMismatch(Type('Number'), step.type)
+        typecheck(types.Number, step.type)
     else:
         step = None
     return RangeNode(Type('List')[start.type], start, end, step)
