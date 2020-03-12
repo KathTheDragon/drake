@@ -57,9 +57,7 @@ def unpack(vars, type):
 
 ## Analyser Functions
 def analyse(node, scope, values):
-    if isinstance(node, list):
-        return [analyse(item, scope, values) for item in node]
-    elif node is None:
+    if node is None:
         return passnode()
     else:
         return globals()[node.__class__.__name__.lower()](node, scope, values)
@@ -121,14 +119,16 @@ def range(node, scope, values):
     return RangeNode(types.List[type], start, end, step)
 
 def listnode(node, scope, values):
-    items = analyse(node.items, scope.child(), values)
+    scope = scope.child()
+    items = [analyse(item, scope, values) for item in node.items]
     type = items[0].type
     for item in items:
         typecheck(type, item.type)
     return ListNode(types.List[type], items)
 
 def tuplenode(node, scope, values):
-    items = analyse(node.items, scope.child(), values)
+    scope = scope.child()
+    items = [analyse(item, scope, values) for item in node.items]
     types = [item.type for item in items]
     return TupleNode(types.Tuple[*types], items)
 
@@ -136,7 +136,8 @@ def pairnode(node, scope, values):
     return analyse(node.key, scope, values), analyse(node.value, scope, values)
 
 def mappingnode(node, scope, values):
-    items = analyse(node.items, scope.child(), values)
+    scope = scope.child()
+    items = [analyse(item, scope, values) for item in node.items]
     keytype = items[0][0].type
     valuetype = items[0][1].type
     for item in items:
@@ -148,7 +149,7 @@ def mappingnode(node, scope, values):
 def blocknode(node, scope, values):
     scope = scope.child()
     type = None
-    expressions = analyse(node.expressions, scope, values)
+    expressions = [analyse(expression, scope, values) for expression in node.expressions]
     for expression in expressions:
         if isinstance(expression, (ReturnNode, YieldNode, YieldFromNode)):
             if type is None:
@@ -303,7 +304,7 @@ def catchnode(node, scope, values):
 
 def trynode(node, scope, values):
     body = analyse(node.body, scope, values)
-    catches = analyse(node.catches, scope, values)
+    catches = [catchnode(catch, scope, values) for catch in node.catches]
     finally_ = analyse(node.finally_, scope, values)
     type = body.type
     for _, catchbody in catches:
