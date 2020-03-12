@@ -193,5 +193,5 @@ class WhileNode(ASTNode):
 
 @dataclass
 class AssignmentNode(ASTNode):
-    targets: List[IdentiferNode]
+    targets: Union[IdentifierNode, List[IdentiferNode]]
     expression: ASTNode

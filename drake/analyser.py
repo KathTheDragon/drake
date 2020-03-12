@@ -347,10 +347,36 @@ def typenode(node, scope, values):
     return type[*params]
 
 def declarationnode(node, scope, values):
-    pass
+    type = typenode(node.typehint, scope, values)
+    name = node.name.name
+    scope.bind(name, type, False, const=node.const)
+    return passnode()
 
 def targetnode(node, scope, values):
-    pass
+    if node.type is None:
+        type = None
+    else:
+        type = typenode(node.type, scope, values)
+    return (node.name, type, node.mode != 'nonlocal', node.mode == 'const')
 
 def assignmentnode(node, scope, values):
-    pass
+    expression = analyse(node.expression, scope, values)
+    if not isinstance(node.targets, list):
+        name, type, local, const = targetnode(node.targets, scope, values)
+        if type is None:
+            type = expression.type
+        else:
+            typecheck(type, expression.type)
+        index, _scope = scope.bind(name, type, True, local, const)
+        targets = IdentifierNode(type, index, _scope)
+    else:
+        targets = []
+        for target, targettype in unpack(node.targets, expression.type):
+            name, type, local, const = targetnode(target, scope, values)
+            if type is None:
+                type = targettype
+            else:
+                typecheck(type, targettype)
+            index, _scope = scope.bind(name, type, True, local, const)
+            targets.append(IdentifierNode(type, index, _scope))
+    return AssignmentNode(expression.type, targets, expression)
