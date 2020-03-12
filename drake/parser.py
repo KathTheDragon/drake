@@ -219,11 +219,14 @@ class Parser:
             parser = parser.newline()
         return parser.withnode(List, fromparsed=num)
 
-    def delimitedlist(parser, item):
+    def delimitedlist(parser, item, forcelist=False):
         try:
             return parser.match('(').nodelist(item).match(')')
         except ParseFailed:
-            return item(parser).withnode(List, fromparsed=1)
+            if forcelist:
+                return item(parser).withnode(List, fromparsed=1)
+            else:
+                return item(parser)
 
     def leftrecurse(parser, operators, operand):
         location = parser.location
@@ -476,7 +479,7 @@ class Parser:
                      .withnode(PassNode, parser.location)
 
     def lambda_(parser):
-        return parser.delimitedlist(Parser.param).match('->').expression() \
+        return parser.delimitedlist(Parser.param, True).match('->').expression() \
                      .withnode(LambdaNode, fromparsed=2, location=parser.location)
 
     def param(parser):

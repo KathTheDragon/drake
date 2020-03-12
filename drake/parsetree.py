@@ -328,7 +328,7 @@ class TryNode(ParseNode):
 
 @dataclass
 class ForNode(ParseNode):
-    vars: List[IdentifierNode]
+    vars: Union[IdentifierNode, List[IdentifierNode]]
     container: ParseNode
     body: BlockNode
 
@@ -360,7 +360,7 @@ class TargetNode(ParseNode):
 
 @dataclass
 class AssignmentNode(ParseNode):
-    targets: Union[Target, List[Target]]
+    targets: Union[TargetNode, List[TargetNode]]
     expression: ParseNode
 
     def __str__(self):
