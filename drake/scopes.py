@@ -5,6 +5,7 @@ from typing import List, Optional
 @dataclass
 class NameNotFound(Exception):
     name: str
+    local: Optional[bool] = None
 
 @dataclass
 class NameNotAssigned(Exception):
@@ -42,18 +43,22 @@ class Scope:
         binding = self.bindings[item]
         return binding
 
-    def index(self, name):
-        for index, binding in enumerate(self.bindings):
-            if binding.name == name:
-                return index, 0
-        else:
+    def index(self, name, local=None):
+        if local != False:
+            for index, binding in enumerate(self.bindings):
+                if binding.name == name:
+                    return index, 0
+        if local != True:
             if self.parent:
-                index, scope = self.parent.index(name)
-                if scope >= 0:
+                try:
+                    index, scope = self.parent.index(name)
+                except NameNotFound as e:
+                    e.local = local
+                    raise e
+                if scope != -1:
                     scope += 1
                 return index, scope
-            else:
-                raise NameNotFound(name)
+        raise NameNotFound(name, local)
 
     def get(self, index, scope):
         if scope == -1:
@@ -63,16 +68,18 @@ class Scope:
         else:
             return self.parent.get(index, scope-1)
 
-    def getname(self, name):
-        return self.get(*self.index(name))
+    def getname(self, name, local=None):
+        return self.get(*self.index(name, local))
 
-    def bind(self, name, type, assignment=True, const=False):
+    def bind(self, name, type, assignment=True, local=True, const=False):
         try:
-            index, scope = self.index(name)
+            index, scope = self.index(name, local)
             binding = self.get(index, scope)
             binding.rebind(type, assignment)
             return index, scope
         except NameNotFound:
+            if local == False:
+                raise
             index = len(self.bindings)
             binding = Binding(name, type, assignment, const)
             self.bindings.append(binding)
