@@ -43,7 +43,19 @@ def normalise_number(number):
         imagunit = imagunit.lower()
         return integer, fractional, exponent, imagunit
 
-## Functions
+## Helper Functions
+def unpack(vars, type):
+    if not vars:
+        raise ValueError('vars cannot be empty')
+    if type in types.tuples:
+        if len(vars) == len(type.params):
+            return zip(vars, type.params)
+        else:
+            raise ValueError('incorrect number of values to unpack')
+    else:
+        raise types.TypeMismatch(types.tuples, type)
+
+## Analyser Functions
 def analyse(node, scope, values):
     if isinstance(node, list):
         return [analyse(item, scope, values) for item in node]
@@ -301,36 +313,21 @@ def trynode(node, scope, values):
 
 def fornode(node, scope, values):
     container = analyse(node.container, scope, values)
-    if container.type not in types.iterable:  # Needs to be aware about custom iterable types
+    if container.type in types.strings:
+        type = container.type
+    elif container.type in types.mappings:
+        type = types.Tuple[*container.type.params]
+    elif container.type in types.iterable:  # Needs to be aware about custom iterable types
+        type, = container.type.params
+    else:
         raise types.TypeMismatch(types.iterable, container.type)
     scope = scope.child()
     vars = node.vars
-    if container.type in types.strings:
-        if len(vars) == 1:
-            scope.bind(vars[0].name, container.type, True)
-        else:
-            raise ValueError
-    elif container.type in types.mappings:
-        vartypes = container.type.params
-        if len(vars) == 1:
-            scope.bind(vars[0].name, types.Tuple[*vartypes], True)
-        elif len(vars) == len(vartypes):
-            for var, type in zip(vars, vartypes):
-                scope.bind(var.name, type, True)
-        else:
-            raise ValueError
-    elif container.type in types.iterable:
-        vartype, = container.type.params
-        if len(vars) == 1:
-            scope.bind(vars[0].name, vartype, True)
-        elif vartype in types.tuples:
-            if len(vars) == len(vartype.params):
-                for var, type in zip(vars, vartype.params):
-                    scope.bind(var.name, type, True)
-            else:
-                raise ValueError
-        else:
-            raise TypeMismatch(types.tuples, vartype)
+    if not isinstance(vars, list):
+        scope.bind(vars.name, type, True)
+    else:
+        for var, vartype in unpack(vars, type):
+            scope.bind(var.name, vartype, True)
     body = blocknode(node.body, scope, values)
     return ForNode(*body.type.params, container, body)
 
