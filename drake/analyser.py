@@ -220,6 +220,15 @@ def iternode(node, scope, values):
         raise types.TypeMismatch(types.iterable, expression.type)
     return IterNode(types.Iterator[yieldtype], expression)
 
+def mutablenode(node, scope, values):
+    expression = analyse(node.expression, scope, values)
+    if isinstance(expression, ObjectNode):
+        type = expression.type
+        type = types.Type(type.name, type.params, True, type.namespace)
+    else:
+        type = types.make_mutable(expression.type)
+    return MutableNode(type, expression)
+
 def donode(node, scope, values):
     block = analyse(node.block, scope, values)
     return DoNode(*block.type.params, block)
@@ -234,9 +243,6 @@ def modulenode(node, scope, values):
     pass
 
 def exceptionnode(node, scope, values):
-    pass
-
-def mutablenode(node, scope, values):
     pass
 
 def thrownode(node, scope, values):
