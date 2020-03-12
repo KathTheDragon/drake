@@ -23,13 +23,16 @@ class Binding:
     isassigned: bool = False
     const: bool = False
 
-    def rebind(self, type, assignment=True):
+    def rebind(self, type, assignment=True, const=False):
         from .types import typecheck
         typecheck(self.type, type)
         if self.isassigned and assignment and self.const:
             raise CannotRebindConstant(self.name)
+        elif self.const and not const:
+            raise CannotRebindConstant(self.name)
         else:
             self.assigned = assignment
+            self.const = const
 
 @dataclass
 class Scope:
@@ -75,7 +78,7 @@ class Scope:
         try:
             index, scope = self.index(name, local)
             binding = self.get(index, scope)
-            binding.rebind(type, assignment)
+            binding.rebind(type, assignment, const)
             return index, scope
         except NameNotFound:
             if local == False:
