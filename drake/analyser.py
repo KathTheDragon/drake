@@ -9,9 +9,8 @@
 import re
 from dataclasses import dataclass
 from typing import List, Optional
-from . import types
+from . import types, scopes
 from .ast import *
-from .scopes import *
 from .types import typecheck
 
 ## Exceptions
