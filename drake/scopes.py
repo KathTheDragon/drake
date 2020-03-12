@@ -33,7 +33,7 @@ class Binding:
 
 @dataclass
 class Scope:
-    def __init__(self, *bindings, parent=None):
+    def __init__(self, *bindings, parent=_MISSING):
         self.bindings = list(bindings)
         if parent is _MISSING:
             parent = builtins
