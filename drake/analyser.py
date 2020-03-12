@@ -216,6 +216,8 @@ def iternode(node, scope, values):
         yieldtype = types.Tuple[*expression.type.params]
     elif expression.type in types.iterable:
         yieldtype, = expression.type.params
+    else:
+        raise types.TypeMismatch(types.iterable, expression.type)
     return IterNode(types.Iterator[yieldtype], expression)
 
 def donode(node, scope, values):
