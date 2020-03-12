@@ -13,13 +13,14 @@ class TypeMismatch(Exception):
 class Type:
     name: str
     params: tuple = field(default=(), compare=False)
+    mutable: bool = field(default=False, compare=False)
     namespace: Scope = field(default_factory=Scope, compare=False)
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
-            return Type(self.name, item, self.namespace)
+            return Type(self.name, item, self.mutable, self.namespace)
         else:
-            return Type(self.name, (item,), self.namespace)
+            return Type(self.name, (item,), self.mutable, self.namespace)
 
 ## Functions
 def typecheck(expected, actual):
