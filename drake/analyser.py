@@ -60,7 +60,7 @@ def analyse(node, scope, values):
     if isinstance(node, list):
         return [analyse(item, scope, values) for item in node]
     elif node is None:
-        return passnode(node, scope, values)
+        return passnode()
     else:
         return globals()[node.__class__.__name__.lower()](node, scope, values)
 
@@ -261,13 +261,13 @@ def yieldfromnode(node, scope, values):
         raise types.TypeMismatch(types.iterable, itertype)
     return YieldFromNode(type, expression)
 
-def breaknode(node, scope, values):
+def breaknode(node=None, scope=None, values=None):
     return BreakNode(types.None_)
 
-def continuenode(node, scope, values):
+def continuenode(node=None, scope=None, values=None):
     return ContinueNode(types.None_)
 
-def passnode(node, scope, values):
+def passnode(node=None, scope=None, values=None):
     return PassNode(types.None_)
 
 def ifnode(node, scope, values):
