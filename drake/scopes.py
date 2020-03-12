@@ -20,13 +20,13 @@ class CannotRebindConstant(Exception):
 class Binding:
     name: str
     type: 'Type'
-    isassigned: bool = False
+    assigned: bool = False
     const: bool = False
 
     def rebind(self, type, assignment=True, const=False):
         from .types import typecheck
         typecheck(self.type, type)
-        if self.isassigned and assignment and self.const:
+        if self.assigned and assignment and self.const:
             raise CannotRebindConstant(self.name)
         elif self.const and not const:
             raise CannotRebindConstant(self.name)
