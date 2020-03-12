@@ -22,13 +22,6 @@ class Type:
         else:
             return Type(self.name, (item,), self.mutable, self.namespace)
 
-## Functions
-def typecheck(expected, actual):
-    if expected.name != actual.name:
-        raise TypeMismatch(expected, actual)
-    for expparam, actparam in zip_longest(expected.params, actual.params):
-        typecheck(expparam, actparam)
-
 ## Types
 Type_ = Type('Type')
 None_ = Type('None')
@@ -74,3 +67,28 @@ builtin = (
     Iterator,
     Module,
 ) + subscriptable + exceptions
+
+## Functions
+def typecheck(expected, actual):
+    if expected.name != actual.name:
+        raise TypeMismatch(expected, actual)
+    for expparam, actparam in zip_longest(expected.params, actual.params):
+        typecheck(expparam, actparam)
+
+def is_subscriptable(type):
+    return type in subscriptable  # Needs to be made aware of custom types
+
+def is_iterable(type):
+    return type in iterable  # Needs to be made aware of custom types
+
+def make_mutable(type):
+    mutabletype = {
+        String: MutableString,
+        List: MutableList,
+        Tuple: MutableTuple,
+        Mapping: MutableMapping
+    }.get(type, None)
+    if mutabletype is None:
+        raise TypeMismatch((String, List, Tuple, Mapping), type)
+    else:
+        return mutabletuple
