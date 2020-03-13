@@ -230,7 +230,7 @@ def mutablenode(node, scope, values):
     return MutableNode(type, expression)
 
 def donode(node, scope, values):
-    block = analyse(node.block, scope, values)
+    block = blocknode(node.block, scope, values)
     return DoNode(*block.type.params, block)
 
 def objectnode(node, scope, values):
