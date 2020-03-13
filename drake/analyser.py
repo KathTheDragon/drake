@@ -222,8 +222,9 @@ def iternode(node, scope, values):
 def mutablenode(node, scope, values):
     expression = analyse(node.expression, scope, values)
     if isinstance(expression, ObjectNode):
-        type = expression.type
-        type = types.Type(type.name, type.params, True, type.namespace)
+        objecttype, = expression.type.params
+        objecttype = types.Type(type.name, type.params, True, type.namespace)
+        type = types.Type_[objecttype]
     else:
         type = types.make_mutable(expression.type)
     return MutableNode(type, expression)
