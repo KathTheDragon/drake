@@ -248,7 +248,8 @@ class Parser:
     # Node matching methods
     def program(parser):
         return parser.nodelist(Parser.expression).raw_match(EOF, 'eof') \
-                     .withnode(BlockNode, fromparsed=1, location=parser.location)
+                     .withnode(BlockNode, fromparsed=1, location=parser.location) \
+                     .withnode(ModuleNode, fromparsed=1, location=parser.location)
 
     def expression(parser):
         items = (
