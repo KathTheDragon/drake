@@ -127,17 +127,14 @@ class EnumNode(ASTNode):
 @dataclass
 class ObjectNode(ASTNode):
     definition: BlockNode
-    namespace: Scope
 
 @dataclass
 class ExceptionNode(ASTNode):
     definition: BlockNode
-    namespace: Scope
 
 @dataclass
 class ModuleNode(ASTNode):
     definition: BlockNode
-    namespace: Scope
 
 @dataclass
 class ThrowNode(ASTNode):
