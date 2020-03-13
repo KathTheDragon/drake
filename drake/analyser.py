@@ -9,7 +9,7 @@
 import re
 from dataclasses import dataclass
 from typing import List, Optional
-from . import types, scopes
+from . import types, scopes, parsetree
 from .ast import *
 from .types import typecheck
 
@@ -17,6 +17,10 @@ from .types import typecheck
 @dataclass
 class AttributeNotFound(Exception):
     attribute: str
+
+@dataclass
+class InvalidSyntax(Exception):
+    message: str
 
 ## Normalisation
 def normalise_string(string):
@@ -234,16 +238,46 @@ def donode(node, scope, values):
     return DoNode(*block.type.params, block)
 
 def objectnode(node, scope, values):
-    pass
+    objectid = ':'.join(node.location)
+    definition = blocknode(node.definition, scope, values)
+    namespace = definition.locals
+    typecheck(types.None_, definition.type)
+    objecttype = Type(objectid, namespace=namespace)
+    type = types.Type_[objecttype]
+    return ObjectNode(type, definition)
 
 def enumnode(node, scope, values):
-    pass
+    scope = scope.child()
+    enumid = ':'.join(node.location)
+    itemdict = {}
+    implicit = node.items[0].value is None
+    for i, item in enumerate(node.items):
+        if implicit == item.value is not None:
+            raise InvalidSyntax('cannot mix implicit and explicit enum members')
+        else:
+            name = item.key.name
+            scope.bind(name, types.Number, const=True)
+            value = numbernode(item.value or parsetree.NumberNode(str(i)))
+            itemdict[name] = value
+    type = types.Type(enumid, namespace=scope)
+    return EnumNode(type, list(itemdict.values()))
 
 def modulenode(node, scope, values):
-    pass
+    moduleid = ':'.join(node.location)
+    definition = blocknode(node.definition, scope, values)
+    namespace = definition.locals
+    typecheck(types.None_, definition.type)
+    type = Type(moduleid, namespace=namespace)
+    return ModuleNode(type, definition)
 
 def exceptionnode(node, scope, values):
-    pass
+    exceptionid = ':'.join(node.location)
+    definition = blocknode(node.definition, scope, values)
+    namespace = definition.locals
+    typecheck(types.None_, definition.type)
+    exceptiontype = Type(exceptionid, namespace=namespace)
+    type = types.Type_[exceptiontype]
+    return ExceptionNode(type, definition)
 
 def thrownode(node, scope, values):
     expression = analyse(node.expression, scope, values)
