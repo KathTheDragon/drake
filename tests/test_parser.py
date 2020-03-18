@@ -24,13 +24,6 @@ def test_Parser_addparsed():
     # Test that .parsed gets extended
     assert p.addparsed('a', 'b', 'c').parsed == ('test', 'a', 'b', 'c')
 
-def test_Parser_popparsed():
-    p = Parser('test string', parsed=('test', 'a'))
-    # Test that the last item in .parsed is removed and returned
-    p, item = p.popparsed()
-    assert p.parsed == ('test',)
-    assert item == 'a'
-
 def test_Parser_withnode():
     p = Parser('test string', parsed=('test', 'a'))
     class TestClass:
@@ -38,10 +31,11 @@ def test_Parser_withnode():
             self.args = args
             self.kwargs = kwargs
     # Test that the args are applied in order, before arguments taken from .parsed
-    p, item = p.withnode(TestClass, 1, 2, fromparsed=2, test=3).popparsed()
+    p = p.withnode(TestClass, 1, 2, fromparsed=2, test=3)
+    item = p[-1]
     assert item.args == (1, 2, 'test', 'a')
     assert item.kwargs == {'test': 3}
-    assert p.parsed == ()
+    assert p.parsed == (item,)
 
 def test_Parser_raw_match():
     p = Parser('test string')

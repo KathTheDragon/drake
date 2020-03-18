@@ -138,9 +138,6 @@ class Parser:
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
 
-    def popparsed(parser):
-        return parser._with(parsed=parser.parsed[:-1]), parser.parsed[-1]
-
     def withnode(parser, nodeclass, *args, fromparsed=None, location=(), **kwargs):
         parsed = parser.parsed
         if fromparsed is not None:
@@ -272,10 +269,11 @@ class Parser:
                           .withnode(AssignmentNode, fromparsed=2, location=parser.location)
         except ParseFailed:
             # There must be a better way
-            _parser, target = parser.target().popparsed()
+            _parser = parser.target()
+            identifier = IdentifierNode(_parser[-1].name)
             return _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).expression() \
-                          .withnode(BinaryOpNode, target, fromparsed=2, location=parser.location) \
-                          .withnode(AssignmentNode, target, fromparsed=1, location=parser.location)
+                          .withnode(BinaryOpNode, identifier, fromparsed=2, location=parser.location) \
+                          .withnode(AssignmentNode, fromparsed=2, location=parser.location)
 
 
     def target(parser):
@@ -487,13 +485,18 @@ class Parser:
         location = parser.location
         parser = parser.typehint()
         try:
-            parser, op = parser.choices('*', '**', parse=True).popparsed()
+            parser = parser.match('**')
+            op = '**'
         except ParseFailed:
-            op = None
+            try:
+                parser = parser.match('*')
+                op = '*'
+            except ParseFailed:
+                op = None
         parser = parser.identifier() \
                        .withnode(DeclarationNode, fromparsed=2, location=location)
         if op:
-            return parser.withnode(UnaryOpNode, '*', fromparsed=1, location=location)
+            return parser.withnode(UnaryOpNode, op, fromparsed=1, location=location)
         else:
             with OPTIONAL:
                 parser = parser.match('=').expression() \
@@ -702,7 +705,7 @@ class Parser:
 
     def identifier(parser):
         location = parser.location
-        parser, name = parser.match(IDENTIFIER, 'identifier', parse=True).popparsed()
-        if name in RESERVED:
+        parser = parser.match(IDENTIFIER, 'identifier', parse=True)
+        if parser[-1] in RESERVED:
             raise ParseFailed('identifier', location)
-        return parser.withnode(IdentifierNode, name, location=location)
+        return parser.withnode(IdentifierNode, fromparsed=1, location=location)
