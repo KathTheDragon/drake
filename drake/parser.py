@@ -139,13 +139,13 @@ class Parser:
         return parser._with(parsed=parser.parsed+parsed)
 
     def withnode(parser, nodeclass, args=None, location=()):
-        parsed = parser.parsed
-        if args is not None:
-            parser.parsed, args = parsed[:-args], args+parsed[-args:]
-        node = nodeclass(*args, **kwargs)
+        if args is None:
+            parsed, node = parser[:-args], nodeclass(*parser[-args:])
+        else:
+            parsed, node = parser[:], nodeclass()
         if location:
             node.location = location
-        return parser.addparsed(node)
+        return parser._with(parsed=parsed+(node,))
 
     # Basic matching methods
     def raw_match(parser, pattern, text, parse=False):
