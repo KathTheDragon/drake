@@ -40,14 +40,12 @@ class TestParserInternal:
     def test_withnode(self):
         p = Parser('test string', parsed=('test', 'a'))
         class TestClass:
-            def __init__(self, *args, **kwargs):
+            def __init__(self, *args):
                 self.args = args
-                self.kwargs = kwargs
-        # Test that the args are applied in order, before arguments taken from .parsed
-        p = p.withnode(TestClass, 1, 2, fromparsed=2, test=3)
+        # Test that the args are removed from .parsed in order
+        p = p.withnode(TestClass, fromparsed=2)
         item = p[-1]
-        assert item.args == (1, 2, 'test', 'a')
-        assert item.kwargs == {'test': 3}
+        assert item.args == ('test', 'a')
         assert p.parsed == (item,)
 
 class TestParserBasicMatching:

@@ -138,7 +138,7 @@ class Parser:
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
 
-    def withnode(parser, nodeclass, *args, fromparsed=None, location=(), **kwargs):
+    def withnode(parser, nodeclass, fromparsed=None, location=()):
         parsed = parser.parsed
         if fromparsed is not None:
             parser.parsed, args = parsed[:-fromparsed], args+parsed[-fromparsed:]
@@ -271,8 +271,8 @@ class Parser:
             # There must be a better way
             _parser = parser.target()
             identifier = IdentifierNode(_parser[-1].name)
-            return _parser.choices(*AUGMENTED_ASSIGNMENT, parse=True).expression() \
-                          .withnode(BinaryOpNode, identifier, fromparsed=2, location=parser.location) \
+            return _parser.addparsed(identifier).choices(*AUGMENTED_ASSIGNMENT, parse=True).expression() \
+                          .withnode(BinaryOpNode, fromparsed=3, location=parser.location) \
                           .withnode(AssignmentNode, fromparsed=2, location=parser.location)
 
 
@@ -496,7 +496,8 @@ class Parser:
         parser = parser.identifier() \
                        .withnode(DeclarationNode, fromparsed=2, location=location)
         if op:
-            return parser.withnode(UnaryOpNode, op, fromparsed=1, location=location)
+            return parser.addparsed(op) \
+                         .withnode(UnaryOpNode, fromparsed=2, location=location)
         else:
             with OPTIONAL:
                 parser = parser.match('=').expression() \
