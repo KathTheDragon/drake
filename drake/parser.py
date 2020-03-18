@@ -63,10 +63,9 @@ class ParserError(Exception):
     def __init__(self, error, location=()):
         if location:
             linenum, column = location
-            linenum += 1
-            column += 1
             self.message = f'{error} @ {linenum}:{column}'
         else:
+            linenum, column = None, None
             self.message = error
         self.linenum = linenum
         self.column = column
@@ -112,28 +111,27 @@ def List(*args):
 class Parser:
     source: str
     cursor: int = 0
-    linenum: int = 0
-    column: int = 0
     parsed: tuple = ()
 
     @property
     def location(parser):
-        return parser.linenum, parser.column
+        linenum = 1
+        end = 0
+        for newline in NEWLINE.finditer(parser.source, 0, parser.cursor):
+            linenum += 1
+            end = newline.end()
+        return linenum, (parser.cursor-end)+1
 
     def __getitem__(parser, item):
         return parser.parsed[item]
 
     #
-    def _with(parser, cursor=None, linenum=None, column=None, parsed=None):
+    def _with(parser, cursor=None, parsed=None):
         if cursor is None:
             cursor = parser.cursor
-        if linenum is None:
-            linenum = parser.linenum
-        if column is None:
-            column = parser.column
         if parsed is None:
             parsed = parser.parsed
-        return Parser(parser.source, cursor, linenum, column, parsed)
+        return Parser(parser.source, cursor, parsed)
 
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
@@ -152,9 +150,7 @@ class Parser:
         match = pattern.match(parser.source, parser.cursor)
         if match is None:
             raise ParseFailed(text, parser.location)
-        cursor = match.end()
-        column = parser.column + (cursor - parser.cursor)
-        parser = parser._with(cursor=cursor, column=column)
+        parser = parser._with(cursor=match.end())
         if parse:
             return parser.addparsed(match.group())
         else:
@@ -170,7 +166,7 @@ class Parser:
         return parser.raw_match(pattern, text, parse).skip()
 
     def newline(parser):
-        parser = parser.raw_match(NEWLINE, 'newline')._with(linenum=parser.linenum+1, column=0).skip()
+        parser = parser.raw_match(NEWLINE, 'newline').skip()
         with OPTIONAL:
             parser = parser.newline()
         return parser

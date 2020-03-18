@@ -10,7 +10,7 @@ ASSIGNMENT = Parser('a=0').assignment()[-1]
 
 class TestParserAttributes:
     def test_location(self):
-        p = Parser('', linenum=4, column=7)
+        p = Parser('\n\n\n01234567', cursor=9)
         assert p.location == (4, 7)
 
     def test_getitem(self):
@@ -25,11 +25,9 @@ class TestParserInternal:
         # Test that missing arguments have no effect
         assert p._with() == p
         # Test that supplying arguments overwrites existing attributes, except .source
-        p = p._with(cursor=5, linenum=2, column=0, parsed=())
+        p = p._with(cursor=5, parsed=())
         assert p.source == 'test string'
         assert p.cursor == 5
-        assert p.linenum == 2
-        assert p.column == 0
         assert p.parsed == ()
 
     def test_addparsed(self):
@@ -59,8 +57,8 @@ class TestParserBasicMatching:
         # Test that parse=True does add the match to .parsed
         p = p.raw_match(parser.IDENTIFIER, 'identifier', parse=True)
         assert p.parsed == ('test',)
-        # Test that the cursor and column have been advanced correctly
-        assert p.cursor == p.column == 4
+        # Test that the cursor has been advanced correctly
+        assert p.cursor == 4
 
     def test_skip(self):
         assert Parser('   // comment').skip().cursor == 13
@@ -85,21 +83,21 @@ class TestParserBasicMatching:
         # Test that \n, \r\n, and \r are all treated as newlines
         p = Parser('\n').newline()
         assert p.cursor == 1
-        assert p.location == (1, 0)
+        assert p.location == (2, 1)
         p = Parser('\r').newline()
         assert p.cursor == 1
-        assert p.location == (1, 0)
+        assert p.location == (2, 1)
         p = Parser('\r\n').newline()
         assert p.cursor == 2
-        assert p.location == (1, 0)
+        assert p.location == (2, 1)
         # Test that following whitespace is skipped
         p = Parser('\n   ').newline()
         assert p.cursor == 4
-        assert p.location == (1, 3)
+        assert p.location == (2, 4)
         # Test that following blank lines are skipped
         p = Parser('\n \n a').newline()
         assert p.cursor == 4
-        assert p.location == (2, 1)
+        assert p.location == (3, 2)
 
     def test_choices(self):
         # Test no positional arguments raises Value Error
