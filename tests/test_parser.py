@@ -8,6 +8,17 @@ from drake.parsetree import *
 
 ASSIGNMENT = Parser('a=0').assignment()[-1]
 
+class TestParserAttributes:
+    def test_location(self):
+        p = Parser('', linenum=4, column=7)
+        assert p.location == (4, 7)
+
+    def test_getitem(self):
+        p = Parser('', parsed=('a', 'b', 'c', 'd'))
+        assert p[0] == 'a'
+        assert p[3] == p[-1] == 'd'
+        assert p[1:3] == ('b', 'c')
+
 def test_Parser__with():
     p = Parser('test string', 3, 0, 3, ('test',))
     # Test that missing arguments have no effect
