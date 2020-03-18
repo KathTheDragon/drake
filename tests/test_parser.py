@@ -85,25 +85,21 @@ def test_Parser_newline():
     # Test that \n, \r\n, and \r are all treated as newlines
     p = Parser('\n').newline()
     assert p.cursor == 1
-    assert p.linenum == 1
-    assert p.column == 0
+    assert p.location == (1, 0)
     p = Parser('\r').newline()
     assert p.cursor == 1
-    assert p.linenum == 1
-    assert p.column == 0
+    assert p.location == (1, 0)
     p = Parser('\r\n').newline()
     assert p.cursor == 2
-    assert p.linenum == 1
-    assert p.column == 0
+    assert p.location == (1, 0)
     # Test that following whitespace is skipped
     p = Parser('\n   ').newline()
     assert p.cursor == 4
-    assert p.column == 3
+    assert p.location == (1, 3)
     # Test that following blank lines are skipped
     p = Parser('\n \n a').newline()
     assert p.cursor == 4
-    assert p.linenum == 2
-    assert p.column == 1
+    assert p.location == (2, 1)
 
 def test_Parser_choices():
     # Test no positional arguments raises Value Error
