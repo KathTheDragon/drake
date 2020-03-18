@@ -21,7 +21,7 @@ class TestParserAttributes:
 
 class TestParserInternal:
     def test__with(self):
-        p = Parser('test string', 3, 0, 3, ('test',))
+        p = Parser('test string', 3, ('test',))
         # Test that missing arguments have no effect
         assert p._with() == p
         # Test that supplying arguments overwrites existing attributes, except .source
