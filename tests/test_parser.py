@@ -116,6 +116,60 @@ class TestParserBasicMatching:
         with pytest.raises(ParseFailed):
             Parser('c').choices('a', 'b')
 
+class TestParserGenericMatching:
+    def test_nodelist(self):
+        # Test single item
+        assert Parser('none').nodelist(Parser.none)[-1] == [NoneNode()]
+        assert Parser('none,').nodelist(Parser.none)[-1] == [NoneNode()]
+        # Test multiple items
+        assert Parser('none\nnone').nodelist(Parser.none)[-1] == [NoneNode()]*2
+        assert Parser('none,none').nodelist(Parser.none)[-1] == [NoneNode()]*2
+        assert Parser('none,none,').nodelist(Parser.none)[-1] == [NoneNode()]*2
+        assert Parser('none,\nnone').nodelist(Parser.none)[-1] == [NoneNode()]*2
+        assert Parser('none,\nnone,').nodelist(Parser.none)[-1] == [NoneNode()]*2
+        # Test optional leading and trailing newlines
+        assert Parser('\nnone\n').nodelist(Parser.none)[-1] == [NoneNode()]
+
+    def test_delimitedlist(self):
+        # Test delimited multiple items
+        p = Parser('(none, none, none)').delimitedlist(Parser.none)
+        assert p[-1] == [NoneNode()]*3
+        # Test delimited single item
+        p = Parser('(none)').delimitedlist(Parser.none)
+        assert p[-1] == [NoneNode()]
+        # Test non-delimited item forced to list
+        p = Parser('none').delimitedlist(Parser.none, True)
+        assert p[-1] == [NoneNode()]
+        # Test non-delimited item
+        p = Parser('none').delimitedlist(Parser.none)
+        assert p[-1] == NoneNode()
+
+    def test_leftrecurse(self):
+        # Test no operations
+        p = Parser('none').leftrecurse(('+',), Parser.none)
+        assert p[-1] == NoneNode()
+        # Test any given operator can be matched
+        p = Parser('none + none').leftrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(NoneNode(), '+', NoneNode())
+        p = Parser('none - none').leftrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(NoneNode(), '-', NoneNode())
+        # Test multiple operations
+        p = Parser('none + none - none').leftrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(BinaryOpNode(NoneNode(), '+', NoneNode()), '-', NoneNode())
+
+    def test_rightrecurse(self):
+        # Test no operations
+        p = Parser('none').rightrecurse(('+',), Parser.none)
+        assert p[-1] == NoneNode()
+        # Test any given operator can be matched
+        p = Parser('none + none').rightrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(NoneNode(), '+', NoneNode())
+        p = Parser('none - none').rightrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(NoneNode(), '-', NoneNode())
+        # Test multiple operations
+        p = Parser('none + none - none').rightrecurse(('+', '-'), Parser.none)
+        assert p[-1] == BinaryOpNode(NoneNode(), '+', BinaryOpNode(NoneNode(), '-', NoneNode()))
+
 class TestParserNodeMatching:
     def test_atom(self):
         # Test mapping
