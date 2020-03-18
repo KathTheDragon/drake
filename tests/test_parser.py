@@ -171,6 +171,41 @@ class TestParserGenericMatching:
         assert p[-1] == BinaryOpNode(NoneNode(), '+', BinaryOpNode(NoneNode(), '-', NoneNode()))
 
 class TestParserNodeMatching:
+    def test_throw(self):
+        p = Parser('throw a=0').throw()
+        assert p.cursor == 9
+        assert p[-1] == ThrowNode(ASSIGNMENT)
+
+    def test_return(self):
+        p = Parser('return a=0').return_()
+        assert p.cursor == 10
+        assert p[-1] == ReturnNode(ASSIGNMENT)
+
+    def test_yield(self):
+        p = Parser('yield a=0').yield_()
+        assert p.cursor == 9
+        assert p[-1] == YieldNode(ASSIGNMENT)
+
+    def test_yieldfrom(self):
+        p = Parser('yield from a=0').yieldfrom()
+        assert p.cursor == 14
+        assert p[-1] == YieldFromNode(ASSIGNMENT)
+
+    def test_break(self):
+        p = Parser('break').break_()
+        assert p.cursor == 5
+        assert p[-1] == BreakNode()
+
+    def test_continue(self):
+        p = Parser('continue').continue_()
+        assert p.cursor == 8
+        assert p[-1] == ContinueNode()
+
+    def test_pass(self):
+        p = Parser('pass').pass_()
+        assert p.cursor == 4
+        assert p[-1] == PassNode()
+
     def test_atom(self):
         # Test mapping
         assert Parser('{0:0}').atom() == Parser('{0:0}').mapping()
