@@ -1,9 +1,10 @@
 import pytest
 import re
-import sys
-from drake.drake import parser
-from drake.drake.parser import Parser, ParseFailed
-from drake.drake.parsetree import *
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from drake import parser
+from drake.parser import Parser, ParseFailed
+from drake.parsetree import *
 
 ASSIGNMENT = Parser('a=0').assignment()[-1]
 
