@@ -43,7 +43,7 @@ class TestParserInternal:
             def __init__(self, *args):
                 self.args = args
         # Test that the args are removed from .parsed in order
-        p = p.withnode(TestClass, fromparsed=2)
+        p = p.withnode(TestClass, args=2)
         item = p[-1]
         assert item.args == ('test', 'a')
         assert p.parsed == (item,)
