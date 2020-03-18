@@ -155,24 +155,24 @@ def test_Parser_range():
     # start, end, step
     p = Parser('none..none, none').range()
     assert p.cursor == 16
-    assert p[-1] == Range(NoneNode(), NoneNode(), NoneNode())
+    assert p[-1] == RangeNode(NoneNode(), NoneNode(), NoneNode())
     # start, end
     p = Parser('none..none').range()
     assert p.cursor == 10
-    assert p[-1] == Range(NoneNode(), NoneNode())
+    assert p[-1] == RangeNode(NoneNode(), NoneNode())
     # start, step
     p = Parser('none.., none').range()
     assert p.cursor == 12
-    assert p[-1] == Range(NoneNode(), step=NoneNode())
+    assert p[-1] == RangeNode(NoneNode(), step=NoneNode())
     # start
     p = Parser('none..').range()
     assert p.cursor == 6
-    assert p[-1] == Range(NoneNode())
+    assert p[-1] == RangeNode(NoneNode())
 
 def test_Parser_grouping():
     p = Parser('(a=0)').grouping()
     assert p.cursor == 5
-    assert p[-1] == GroupingNode(ASSIGNMENT)
+    assert p[-1] == ASSIGNMENT
 
 def test_Parser_tuple():
     p = Parser('(a=0, a=0)').tuple()
