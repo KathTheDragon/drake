@@ -467,15 +467,15 @@ class Parser:
 
     def break_(parser):
         return parser.match('break') \
-                     .withnode(BreakNode, parser.location)
+                     .withnode(BreakNode, location=parser.location)
 
     def continue_(parser):
         return parser.match('continue') \
-                     .withnode(ContinueNode, parser.location)
+                     .withnode(ContinueNode, location=parser.location)
 
     def pass_(parser):
         return parser.match('pass') \
-                     .withnode(PassNode, parser.location)
+                     .withnode(PassNode, location=parser.location)
 
     def lambda_(parser):
         return parser.delimitedlist(Parser.param, True).match('->').expression() \
