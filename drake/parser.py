@@ -136,8 +136,8 @@ class Parser:
     def addparsed(parser, *parsed):
         return parser._with(parsed=parser.parsed+parsed)
 
-    def withnode(parser, nodeclass, args=None, location=()):
-        if args is not None:
+    def withnode(parser, nodeclass, args=0, location=()):
+        if args > 0:
             parsed, node = parser[:-args], nodeclass(*parser[-args:])
         else:
             parsed, node = parser[:], nodeclass()
