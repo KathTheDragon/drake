@@ -20,7 +20,7 @@ class TestParserAttributes:
         assert p[1:3] == ('b', 'c')
 
 class TestParserInternal:
-    def test_Parser__with(self):
+    def test__with(self):
         p = Parser('test string', 3, 0, 3, ('test',))
         # Test that missing arguments have no effect
         assert p._with() == p
@@ -32,12 +32,12 @@ class TestParserInternal:
         assert p.column == 0
         assert p.parsed == ()
 
-    def test_Parser_addparsed(self):
+    def test_addparsed(self):
         p = Parser('test string', parsed=('test',))
         # Test that .parsed gets extended
         assert p.addparsed('a', 'b', 'c').parsed == ('test', 'a', 'b', 'c')
 
-    def test_Parser_withnode(self):
+    def test_withnode(self):
         p = Parser('test string', parsed=('test', 'a'))
         class TestClass:
             def __init__(self, *args, **kwargs):
@@ -51,7 +51,7 @@ class TestParserInternal:
         assert p.parsed == (item,)
 
 class TestParserBasicMatching:
-    def test_Parser_raw_match(self):
+    def test_raw_match(self):
         p = Parser('test string')
         # Test that an invalid match raises ParseFailed
         with pytest.raises(ParseFailed):
@@ -64,11 +64,11 @@ class TestParserBasicMatching:
         # Test that the cursor and column have been advanced correctly
         assert p.cursor == p.column == 4
 
-    def test_Parser_skip(self):
+    def test_skip(self):
         assert Parser('   // comment').skip().cursor == 13
         assert Parser('   test   // comment').skip().cursor == 3
 
-    def test_Parser_match(self):
+    def test_match(self):
         p = Parser('test string')
         # Test that match accepts strings or patterns
         p1 = p.match('test')
@@ -83,7 +83,7 @@ class TestParserBasicMatching:
         # Test that parse=True does add the match to .parsed
         assert p.match(parser.IDENTIFIER, 'identifier', parse=True).parsed == ('test',)
 
-    def test_Parser_newline(self):
+    def test_newline(self):
         # Test that \n, \r\n, and \r are all treated as newlines
         p = Parser('\n').newline()
         assert p.cursor == 1
@@ -103,7 +103,7 @@ class TestParserBasicMatching:
         assert p.cursor == 4
         assert p.location == (2, 1)
 
-    def test_Parser_choices(self):
+    def test_choices(self):
         # Test no positional arguments raises Value Error
         with pytest.raises(ValueError):
             Parser('').choices()
@@ -121,7 +121,7 @@ class TestParserBasicMatching:
             Parser('c').choices('a', 'b')
 
 class TestParserNodeMatching:
-    def test_Parser_atom(self):
+    def test_atom(self):
         # Test mapping
         assert Parser('{0:0}').atom() == Parser('{0:0}').mapping()
         # Test block
@@ -137,22 +137,22 @@ class TestParserNodeMatching:
         # Test identifier
         assert Parser('t').atom() == Parser('t').identifier()
 
-    def test_Parser_mapping(self):
+    def test_mapping(self):
         p = Parser('{0:0, 0:0}').mapping()
         assert p.cursor == 10
         assert p[-1] == MappingNode([Parser('0:0').pair()[-1]]*2)
 
-    def test_Parser_pair(self):
+    def test_pair(self):
         p = Parser('a=0:a=0').pair()
         assert p.cursor == 7
         assert p[-1] == PairNode(ASSIGNMENT, ASSIGNMENT)
 
-    def test_Parser_block(self):
+    def test_block(self):
         p = Parser('{a=0,a=0}').block()
         assert p.cursor == 9
         assert p[-1] == BlockNode([ASSIGNMENT]*2)
 
-    def test_Parser_list(self):
+    def test_list(self):
         # range
         p = Parser('[0..]').list()
         assert p.cursor == 5
@@ -162,7 +162,7 @@ class TestParserNodeMatching:
         assert p.cursor == 9
         assert p[-1] == ListNode([ASSIGNMENT]*2)
 
-    def test_Parser_range(self):
+    def test_range(self):
         # start, end, step
         p = Parser('none..none, none').range()
         assert p.cursor == 16
@@ -180,12 +180,12 @@ class TestParserNodeMatching:
         assert p.cursor == 6
         assert p[-1] == RangeNode(NoneNode())
 
-    def test_Parser_grouping(self):
+    def test_grouping(self):
         p = Parser('(a=0)').grouping()
         assert p.cursor == 5
         assert p[-1] == ASSIGNMENT
 
-    def test_Parser_tuple(self):
+    def test_tuple(self):
         p = Parser('(a=0, a=0)').tuple()
         assert p.cursor == 10
         assert p[-1] == TupleNode([ASSIGNMENT]*2)
@@ -194,7 +194,7 @@ class TestParserNodeMatching:
         assert p.cursor == 5
         assert p[-1] == TupleNode([ASSIGNMENT])
 
-    def test_Parser_literal(self):
+    def test_literal(self):
         # Test string
         assert Parser("'test'").literal()[-1] == StringNode("'test'")
         # Test number
@@ -207,7 +207,7 @@ class TestParserNodeMatching:
         with pytest.raises(ParseFailed):
             Parser('test').literal()
 
-    def test_Parser_string(self):
+    def test_string(self):
         # Test single quotes
         p = Parser("'test string'").string()
         assert p.cursor == 13
@@ -220,7 +220,7 @@ class TestParserNodeMatching:
         with pytest.raises(ParseFailed):
             Parser('test').string()
 
-    def test_Parser_number(self):
+    def test_number(self):
         # Test decimal
         p = Parser('0_12.34_5e7_89j').number()
         assert p.cursor == 15
@@ -243,7 +243,7 @@ class TestParserNodeMatching:
         with pytest.raises(ParseFailed):
             Parser('_0').number()
 
-    def test_Parser_boolean(self):
+    def test_boolean(self):
         p = Parser('true').boolean()
         assert p.cursor == 4
         assert p[-1] == BooleanNode('true')
@@ -251,7 +251,7 @@ class TestParserNodeMatching:
         with pytest.raises(ParseFailed):
             Parser('ture').boolean()
 
-    def test_Parser_none(self):
+    def test_none(self):
         p = Parser('none').none()
         assert p.cursor == 4
         assert p[-1] == NoneNode()
@@ -259,7 +259,7 @@ class TestParserNodeMatching:
         with pytest.raises(ParseFailed):
             Parser('non').none()
 
-    def test_Parser_identifier(self):
+    def test_identifier(self):
         p = Parser('_test2?').identifier()
         assert p.cursor == 7
         assert p[-1] == IdentifierNode('_test2?')
