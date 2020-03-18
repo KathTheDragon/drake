@@ -12,8 +12,7 @@ expression -> assignment
             | lambda
             | declaration
             | boolor
-assignment -> Delimited[target] "=" expression
-            | target AUG_ASSIGN expression
+assignment -> Delimited[target] ASSIGN expression
 target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?

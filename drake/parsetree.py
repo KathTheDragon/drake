@@ -361,10 +361,15 @@ class TargetNode(ParseNode):
 @dataclass
 class AssignmentNode(ParseNode):
     targets: Union[TargetNode, List[TargetNode]]
+    operator: str
     expression: ParseNode
 
     def __str__(self):
-        return pprint('Assign', *self.targets, self.expression)
+        if self.operator == '=':
+            nodetype = 'Assign'
+        else:
+            nodetype = f'Assign {self.operator}'
+        return pprint(nodetype, *self.targets, self.expression)
 
 @dataclass
 class TypeNode(ParseNode):

@@ -403,22 +403,28 @@ def targetnode(node, scope, values):
 
 def assignmentnode(node, scope, values):
     expression = analyse(node.expression, scope, values)
-    if not isinstance(node.targets, list):
-        name, type, local, const = targetnode(node.targets, scope, values)
-        if type is None:
-            type = expression.type
-        else:
-            typecheck(type, expression.type)
-        index, _scope = scope.bind(name, type, True, local, const)
-        targets = IdentifierNode(type, index, _scope)
-    else:
-        targets = []
-        for target, targettype in unpack(node.targets, expression.type):
-            name, type, local, const = targetnode(target, scope, values)
+    if node.operator == '=':
+        if not isinstance(node.targets, list):
+            name, type, local, const = targetnode(node.targets, scope, values)
             if type is None:
-                type = targettype
+                type = expression.type
             else:
-                typecheck(type, targettype)
+                typecheck(type, expression.type)
             index, _scope = scope.bind(name, type, True, local, const)
-            targets.append(IdentifierNode(type, index, _scope))
-    return AssignmentNode(expression.type, targets, expression)
+            targets = IdentifierNode(type, index, _scope)
+        else:
+            targets = []
+            for target, targettype in unpack(node.targets, expression.type):
+                name, type, local, const = targetnode(target, scope, values)
+                if type is None:
+                    type = targettype
+                else:
+                    typecheck(type, targettype)
+                index, _scope = scope.bind(name, type, True, local, const)
+                targets.append(IdentifierNode(type, index, _scope))
+        return AssignmentNode(expression.type, targets, expression)
+    else:
+        if not isinstance(node.targets, list):
+            pass
+        else:
+            raise InvalidSyntax('augmented assignment requires only a single target')

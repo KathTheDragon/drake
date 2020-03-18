@@ -15,7 +15,7 @@ OCTAL = re.compile(r'0o(?:_?[0-7])+')
 HEXADECIMAL = re.compile('0x(?:_?[0-9a-fA-F])+')
 DECIMAL = re.compile(r'[0-9](?:_?[0-9])*(?:\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?[jJ]?')
 
-AUGMENTED_ASSIGNMENT = '|= ^= &= <<= >>= += -= *= /= %= **='.split()
+ASSIGNMENT = '= |= ^= &= <<= >>= += -= *= /= %= **='.split()
 RESERVED = [
     'and',
     'as',
@@ -264,17 +264,8 @@ class Parser:
         raise exception
 
     def assignment(parser):
-        try:
-            return parser.delimitedlist(Parser.target).match('=').expression() \
-                          .withnode(AssignmentNode, args=2, location=parser.location)
-        except ParseFailed:
-            # There must be a better way
-            _parser = parser.target()
-            identifier = IdentifierNode(_parser[-1].name)
-            return _parser.addparsed(identifier).choices(*AUGMENTED_ASSIGNMENT, parse=True).expression() \
-                          .withnode(BinaryOpNode, args=3, location=parser.location) \
-                          .withnode(AssignmentNode, args=2, location=parser.location)
-
+        return parser.delimitedlist(Parser.target).choices(*ASSIGNMENT, parse=True).expression() \
+                     .withnode(AssignmentNode, args=3, location=parser.location)
 
     def target(parser):
         location = parser.location
