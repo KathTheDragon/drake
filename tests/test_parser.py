@@ -6,7 +6,7 @@ from drake import parser
 from drake.parser import Parser, ParseFailed
 from drake.parsetree import *
 
-ASSIGNMENT = Parser('a=0').assignment()[-1]
+ASSIGNMENT = AssignmentNode(TargetNode('', None, IdentifierNode('a')), '=', NumberNode('0'))
 
 class TestParserAttributes:
     def test_location(self):
