@@ -206,6 +206,43 @@ class TestParserNodeMatching:
         assert p.cursor == 4
         assert p[-1] == PassNode()
 
+    def test_param(self):
+        # Test starred parameter
+        p = Parser('*<Number> a').param()
+        assert p[-1] == UnaryOpNode(
+            '*',
+            DeclarationNode(
+                False,
+                TypeNode(IdentifierNode('Number')),
+                IdentifierNode('a')
+            )
+        )
+        # Test keyword parameter
+        p = Parser('<Number> a=0').param()
+        assert p[-1] == PairNode(
+            DeclarationNode(
+                False,
+                TypeNode(IdentifierNode('Number')),
+                IdentifierNode('a')
+            ),
+            NumberNode('0')
+        )
+        # Test declaration parameter
+        p = Parser('<Number> a').param()
+        assert p[-1] == DeclarationNode(
+            False,
+            TypeNode(IdentifierNode('Number')),
+            IdentifierNode('a')
+        )
+
+    def test_declaration(self):
+        p = Parser('const <Number> a').declaration()
+        assert p[-1] == DeclarationNode(
+            True,
+            TypeNode(IdentifierNode('Number')),
+            IdentifierNode('a')
+        )
+
     def test_boolor(self):
         # Test recursion
         p = Parser('a or b or c').boolor()
@@ -455,6 +492,24 @@ class TestParserNodeMatching:
             IdentifierNode('a'),
             RangeNode(IdentifierNode('b'))
         )
+
+    def test_arg(self):
+        # Test starred argument
+        p = Parser('*nonlocal a=0').arg()
+        assert p[-1] == UnaryOpNode(
+            '*',
+            AssignmentNode(
+                TargetNode('nonlocal', None, IdentifierNode('a')),
+                '=',
+                NumberNode('0')
+            )
+        )
+        # Test keyword argument
+        p = Parser('a=0').arg()
+        assert p[-1] == PairNode(IdentifierNode('a'), NumberNode('0'))
+        # Test expression
+        p = Parser('0').arg()
+        assert p[-1] == NumberNode('0')
 
     def test_atom(self):
         # Test mapping
