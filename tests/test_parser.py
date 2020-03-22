@@ -206,6 +206,230 @@ class TestParserNodeMatching:
         assert p.cursor == 4
         assert p[-1] == PassNode()
 
+    def test_boolor(self):
+        # Test recursion
+        p = Parser('a or b or c').boolor()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            'or',
+            BinaryOpNode(IdentifierNode('b'), 'or', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a xor b or c').boolor()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), 'xor', IdentifierNode('b')),
+            'or',
+            IdentifierNode('c')
+        )
+
+    def test_boolxor(self):
+        # Test recursion
+        p = Parser('a xor b xor c').boolxor()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            'xor',
+            BinaryOpNode(IdentifierNode('b'), 'xor', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a and b xor c').boolxor()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), 'and', IdentifierNode('b')),
+            'xor',
+            IdentifierNode('c')
+        )
+
+    def test_booland(self):
+        # Test recursion
+        p = Parser('a and b and c').booland()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            'and',
+            BinaryOpNode(IdentifierNode('b'), 'and', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a in b and c').booland()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), 'in', IdentifierNode('b')),
+            'and',
+            IdentifierNode('c')
+        )
+
+    def test_inclusion(self):
+        # Test recursion
+        p = Parser('a in b in c').inclusion()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            'in',
+            BinaryOpNode(IdentifierNode('b'), 'in', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a is b in c').inclusion()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), 'is', IdentifierNode('b')),
+            'in',
+            IdentifierNode('c')
+        )
+
+    def test_identity(self):
+        # Test recursion
+        p = Parser('a is b is c').identity()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            'is',
+            BinaryOpNode(IdentifierNode('b'), 'is', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a < b is c').identity()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '<', IdentifierNode('b')),
+            'is',
+            IdentifierNode('c')
+        )
+
+    def test_comparison(self):
+        # Test recursion
+        p = Parser('a < b < c').comparison()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '<',
+            BinaryOpNode(IdentifierNode('b'), '<', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('a | b < c').comparison()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '|', IdentifierNode('b')),
+            '<',
+            IdentifierNode('c')
+        )
+
+    def test_bitor(self):
+        # Test recursion
+        p = Parser('a | b | c').bitor()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '|', IdentifierNode('b')),
+            '|',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a | b ^ c').bitor()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '|',
+            BinaryOpNode(IdentifierNode('b'), '^', IdentifierNode('c'))
+        )
+
+    def test_bitxor(self):
+        # Test recursion
+        p = Parser('a ^ b ^ c').bitxor()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '^', IdentifierNode('b')),
+            '^',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a ^ b & c').bitxor()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '^',
+            BinaryOpNode(IdentifierNode('b'), '&', IdentifierNode('c'))
+        )
+
+    def test_bitand(self):
+        # Test recursion
+        p = Parser('a & b & c').bitand()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '&', IdentifierNode('b')),
+            '&',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a & b << c').bitand()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '&',
+            BinaryOpNode(IdentifierNode('b'), '<<', IdentifierNode('c'))
+        )
+
+    def test_shift(self):
+        # Test recursion
+        p = Parser('a << b << c').shift()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '<<', IdentifierNode('b')),
+            '<<',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a << b + c').shift()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '<<',
+            BinaryOpNode(IdentifierNode('b'), '+', IdentifierNode('c'))
+        )
+
+    def test_addition(self):
+        # Test recursion
+        p = Parser('a + b + c').addition()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '+', IdentifierNode('b')),
+            '+',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a + b * c').addition()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '+',
+            BinaryOpNode(IdentifierNode('b'), '*', IdentifierNode('c'))
+        )
+
+    def test_product(self):
+        # Test recursion
+        p = Parser('a * b * c').product()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '*', IdentifierNode('b')),
+            '*',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a * b % c').product()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '*',
+            BinaryOpNode(IdentifierNode('b'), '%', IdentifierNode('c'))
+        )
+
+    def test_modulus(self):
+        # Test recursion
+        p = Parser('a % b % c').modulus()
+        assert p[-1] == BinaryOpNode(
+            BinaryOpNode(IdentifierNode('a'), '%', IdentifierNode('b')),
+            '%',
+            IdentifierNode('c')
+        )
+        # Test precedence
+        p = Parser('a % b ** c').modulus()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '%',
+            BinaryOpNode(IdentifierNode('b'), '**', IdentifierNode('c'))
+        )
+
+    def test_exponent(self):
+        # Test recursion
+        p = Parser('a ** b ** c').exponent()
+        assert p[-1] == BinaryOpNode(
+            IdentifierNode('a'),
+            '**',
+            BinaryOpNode(IdentifierNode('b'), '**', IdentifierNode('c'))
+        )
+        # Test precedence
+        p = Parser('-a ** b').exponent()
+        assert p[-1] == BinaryOpNode(
+            UnaryOpNode('-', IdentifierNode('a')),
+            '**',
+            IdentifierNode('b')
+        )
+
     def test_atom(self):
         # Test mapping
         assert Parser('{0:0}').atom() == Parser('{0:0}').mapping()
