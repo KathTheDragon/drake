@@ -222,6 +222,8 @@ class Parser:
                 return item(parser)
 
     def leftrecurse(parser, operators, operand):
+        if isinstance(operators, str):
+            operators = (operators,)
         location = parser.location
         parser = operand(parser)
         with OPTIONAL:
@@ -231,6 +233,8 @@ class Parser:
         return parser
 
     def rightrecurse(parser, operators, operand):
+        if isinstance(operators, str):
+            operators = (operators,)
         location = parser.location
         parser = operand(parser)
         with OPTIONAL:
