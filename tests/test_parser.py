@@ -430,6 +430,32 @@ class TestParserNodeMatching:
             IdentifierNode('b')
         )
 
+    def test_unary(self):
+        p = Parser('- ! a.b').unary()
+        assert p[-1] == UnaryOpNode(
+            '-',
+            UnaryOpNode(
+                '!',
+                LookupNode(IdentifierNode('a'), IdentifierNode('b'))
+            )
+        )
+
+    def test_primary(self):
+        p = Parser('a.b(c)[d]').primary()
+        assert p[-1] == SubscriptNode(
+            CallNode(
+                LookupNode(IdentifierNode('a'), IdentifierNode('b')),
+                [IdentifierNode('c')]
+            ),
+            ListNode([IdentifierNode('d')])
+        )
+        # Test range subscript
+        p = Parser('a[b..]').primary()
+        assert p[-1] == SubscriptNode(
+            IdentifierNode('a'),
+            RangeNode(IdentifierNode('b'))
+        )
+
     def test_atom(self):
         # Test mapping
         assert Parser('{0:0}').atom() == Parser('{0:0}').mapping()
