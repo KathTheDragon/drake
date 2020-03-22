@@ -633,8 +633,7 @@ class Parser:
 
     def list(parser):
         try:
-            return parser.match('[').range().match(']') \
-                         .withnode(ListNode, args=1, location=parser.location)
+            return parser.match('[').range().match(']')
         except ParseFailed:
             return parser.match('[').nodelist(Parser.expression).match(']') \
                          .withnode(ListNode, args=1, location=parser.location)

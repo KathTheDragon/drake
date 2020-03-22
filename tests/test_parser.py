@@ -491,7 +491,7 @@ class TestParserNodeMatching:
         # range
         p = Parser('[0..]').list()
         assert p.cursor == 5
-        assert p[-1] == ListNode(Parser('0..').range()[-1])
+        assert p[-1] == Parser('0..').range()[-1]
         # list
         p = Parser('[a=0,a=0]').list()
         assert p.cursor == 9
