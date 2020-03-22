@@ -583,7 +583,6 @@ class Parser:
                     try:
                         parser = parser.match('(').nodelist(Parser.arg).match(')') \
                                        .withnode(CallNode, args=2, location=location)
-                        obj = CallNode(obj, args)
                     except ParseFailed:
                         try:
                             _parser = parser.range()
