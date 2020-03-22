@@ -474,21 +474,15 @@ class Parser:
 
     def param(parser):
         location = parser.location
-        parser = parser.typehint()
         try:
-            parser = parser.match('**')
-            op = '**'
+            parser = parser.choices('*', '**', parse=True)
+            op = True
         except ParseFailed:
-            try:
-                parser = parser.match('*')
-                op = '*'
-            except ParseFailed:
-                op = None
-        parser = parser.identifier() \
-                       .withnode(DeclarationNode, args=2, location=location)
+            op = False
+        parser = parser.addparsed(False).typehint().identifier() \
+                       .withnode(DeclarationNode, args=3, location=location)
         if op:
-            return parser.addparsed(op) \
-                         .withnode(UnaryOpNode, args=2, location=location)
+            return parser.withnode(UnaryOpNode, args=2, location=location)
         else:
             with OPTIONAL:
                 parser = parser.match('=').expression() \
