@@ -206,6 +206,23 @@ class TestParserNodeMatching:
         assert p.cursor == 4
         assert p[-1] == PassNode()
 
+    def test_lambda(self):
+        # Test delimited params
+        p = Parser('(<Number> a, <Number> b) -> a=0').lambda_()
+        assert p[-1] == LambdaNode(
+            [
+                DeclarationNode(False, NUMBER_TYPE, IdentifierNode('a')),
+                DeclarationNode(False, NUMBER_TYPE, IdentifierNode('b'))
+            ],
+            ASSIGNMENT
+        )
+        # Test non-delimited param
+        p = Parser('<Number> a -> a=0').lambda_()
+        assert p[-1] == LambdaNode(
+            [DeclarationNode(False, NUMBER_TYPE, IdentifierNode('a'))],
+            ASSIGNMENT
+        )
+
     def test_param(self):
         # Test starred parameter
         p = Parser('*<Number> a').param()
