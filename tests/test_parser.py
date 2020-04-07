@@ -7,6 +7,7 @@ from drake.parser import Parser, ParseFailed
 from drake.parsetree import *
 
 ASSIGNMENT = AssignmentNode(TargetNode('', None, IdentifierNode('a')), '=', NumberNode('0'))
+NUMBER_TYPE = TypeNode(IdentifierNode('Number'))
 
 class TestParserAttributes:
     def test_location(self):
