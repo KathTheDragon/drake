@@ -188,7 +188,10 @@ class Parser:
     def nodelist(parser, item):
         with OPTIONAL:
             parser = parser.newline()
-        parser = item(parser)
+        try:
+            parser = item(parser)
+        except ParseFailed:
+            return parser.addparsed([])
         num = 1
         try:
             try:

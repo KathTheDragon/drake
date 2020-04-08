@@ -1,4 +1,4 @@
-List[item] -> "\n"? item (("\n" item)+ | ("," "\n"? item)* ","?) "\n"?
+List[item] -> "\n"? (item (("\n" item)+ | ("," "\n"? item)* ","?) "\n"?)?
 Delimited[item]
            -> ("(" List[item] ")" | item)
 Left[op, operand]
