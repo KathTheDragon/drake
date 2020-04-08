@@ -172,6 +172,237 @@ class TestParserGenericMatching:
         assert p[-1] == BinaryOpNode(NoneNode(), '+', BinaryOpNode(NoneNode(), '-', NoneNode()))
 
 class TestParserNodeMatching:
+    def test_program(self):
+        # Test single expression
+        p = Parser('a=0').program()
+        assert p.cursor == 3
+        assert p[-1] == ModuleNode(BlockNode([ASSIGNMENT]))
+        # Test multiple expressions
+        p = Parser('a=0, a=0').program()
+        assert p.cursor == 8
+        assert p[-1] == ModuleNode(BlockNode([ASSIGNMENT]*2))
+    
+    def test_expression(self):
+        assert Parser('a=0').expression() == Parser('a=0').assignment()
+        assert Parser('do {}').expression() == Parser('do {}').keyword()
+        assert Parser('() -> 0').expression() == Parser('() -> 0').lambda_()
+        assert Parser('<T> a').expression() == Parser('<T> a').declaration()
+        assert Parser('a or b').expression() == Parser('a or b').boolor()
+
+    def test_assignment(self):
+        # Test simple assignment
+        p = Parser('a = 0').assignment()
+        assert p.cursor == 5
+        assert p[-1] == AssignmentNode(TargetNode('', None, IdentifierNode('a')), '=', NumberNode('0'))
+        # Test augmented assignment
+        p = Parser('a += 0').assignment()
+        assert p.cursor == 6
+        assert p[-1] == AssignmentNode(TargetNode('', None, IdentifierNode('a')), '+=', NumberNode('0'))
+        # Test multiple assignment
+        p = Parser('(a,b) = 0').assignment()
+        assert p.cursor == 9
+        assert p[-1] == AssignmentNode(
+            [
+                TargetNode('', None, IdentifierNode('a')),
+                TargetNode('', None, IdentifierNode('b'))
+            ], '=', NumberNode('0')
+        )
+        # Test chained assignment
+        p = Parser('a = b = 0').assignment()
+        assert p.cursor == 9
+        assert p[-1] == AssignmentNode(
+            TargetNode('', None, IdentifierNode('a')), '=',
+            AssignmentNode(TargetNode('', None, IdentifierNode('b')), '=', NumberNode('0'))
+        )
+
+    def test_target(self):
+        # Test bare identifier
+        p = Parser('a').target()
+        assert p.cursor == 1
+        assert p[-1] == TargetNode('', None, IdentifierNode('a'))
+        # Test mode + identifier
+        p = Parser('const a').target()
+        assert p.cursor == 7
+        assert p[-1] == TargetNode('const', None, IdentifierNode('a'))
+        # Test type + identifier
+        p = Parser('<T> a').target()
+        assert p.cursor == 5
+        assert p[-1] == TargetNode('', TypeNode(IdentifierNode('T')), IdentifierNode('a'))
+        # Test full target
+        p = Parser('const <T> a').target()
+        assert p.cursor == 11
+        assert p[-1] == TargetNode('const', TypeNode(IdentifierNode('T')), IdentifierNode('a'))
+
+    def test_typehint(self):
+        p = Parser('<T>').typehint()
+        assert p.cursor == 3
+        assert p[-1] == TypeNode(IdentifierNode('T'))
+
+    def test_type(self):
+        # Test unparametrised type
+        p = Parser('T').type()
+        assert p.cursor == 1
+        assert p[-1] == TypeNode(IdentifierNode('T'))
+        # Test parametrised type
+        p = Parser('T[A,B]').type()
+        assert p.cursor == 6
+        assert p[-1] == TypeNode(
+            IdentifierNode('T'), [
+                TypeNode(IdentifierNode('A')),
+                TypeNode(IdentifierNode('B'))
+            ]
+        )
+
+    def test_keyword(self):
+        assert Parser('if a then b').keyword() == Parser('if a then b').if_()
+        assert Parser('case a in {}').keyword() == Parser('case a in {}').case()
+        assert Parser('try a finally b').keyword() == Parser('try a finally b').try_()
+        assert Parser('for a in b {}').keyword() == Parser('for a in b {}').for_()
+        assert Parser('while a {}').keyword() == Parser('while a {}').while_()
+        assert Parser('iter []').keyword() == Parser('iter []').iter()
+        assert Parser('do {}').keyword() == Parser('do {}').do()
+        assert Parser('object {}').keyword() == Parser('object {}').object_()
+        assert Parser('enum {}').keyword() == Parser('enum {}').enum()
+        assert Parser('module {}').keyword() == Parser('module {}').module()
+        assert Parser('exception {}').keyword() == Parser('exception {}').exception()
+        assert Parser('mutable []').keyword() == Parser('mutable []').mutable()
+        assert Parser('throw a').keyword() == Parser('throw a').throw()
+        assert Parser('return a').keyword() == Parser('return a').return_()
+        assert Parser('yield a').keyword() == Parser('yield a').yield_()
+        assert Parser('yield from a').keyword() == Parser('yield from a').yieldfrom()
+        assert Parser('break').keyword() == Parser('break').break_()
+        assert Parser('continue').keyword() == Parser('continue').continue_()
+        assert Parser('pass').keyword() == Parser('pass').pass_()
+
+    def test_if(self):
+        # Test no default
+        p = Parser('if a=0 then a=0').if_()
+        assert p.cursor == 15
+        assert p[-1] == IfNode(ASSIGNMENT, ASSIGNMENT, None)
+        # Test with default
+        p = Parser('if a=0 then a=0 else a=0').if_()
+        assert p.cursor == 24
+        assert p[-1] == IfNode(ASSIGNMENT, ASSIGNMENT, ASSIGNMENT)
+
+    def test_case(self):
+        # Test no default
+        p = Parser('case a in {}').case()
+        assert p.cursor == 12
+        assert p[-1] == CaseNode(IdentifierNode('a'), MappingNode([]), None)
+        # Test with default
+        p = Parser('case a in {} else a=0').case()
+        assert p.cursor == 21
+        assert p[-1] == CaseNode(IdentifierNode('a'), MappingNode([]), ASSIGNMENT)
+
+    def test_try(self):
+        # Test try-finally
+        p = Parser('try a=0 finally a=0').try_()
+        assert p.cursor == 19
+        assert p[-1] == TryNode(ASSIGNMENT, [], ASSIGNMENT)
+        # Test try-catch
+        p = Parser('try a=0 catch a a=0').try_()
+        assert p.cursor == 19
+        assert p[-1] == TryNode(ASSIGNMENT, [CatchNode(IdentifierNode('a'), None, ASSIGNMENT)], None)
+        # Test try-catch-as
+        p = Parser('try a=0 catch a as b a=0').try_()
+        assert p.cursor == 24
+        assert p[-1] == TryNode(ASSIGNMENT, [CatchNode(IdentifierNode('a'), IdentifierNode('b'), ASSIGNMENT)], None)
+        # Test try-catch-finally
+        p = Parser('try a=0 catch a a=0 finally a=0').try_()
+        assert p.cursor == 31
+        assert p[-1] == TryNode(ASSIGNMENT, [CatchNode(IdentifierNode('a'), None, ASSIGNMENT)], ASSIGNMENT)
+
+    def test_for(self):
+        # Test single loop variable
+        p = Parser('for a in a=0 {}').for_()
+        assert p.cursor == 15
+        assert p[-1] == ForNode(IdentifierNode('a'), ASSIGNMENT, BlockNode([]))
+        # Test multiple loop variables
+        p = Parser('for (a,b) in a=0 {}').for_()
+        assert p.cursor == 19
+        assert p[-1] == ForNode([IdentifierNode('a'), IdentifierNode('b')], ASSIGNMENT, BlockNode([]))
+
+    def test_while(self):
+        p = Parser('while a=0 {}').while_()
+        assert p.cursor == 12
+        assert p[-1] == WhileNode(ASSIGNMENT, BlockNode([]))
+
+    def test_iter(self):
+        # Test iter-for
+        p = Parser('iter for a in a=0 {}').iter()
+        assert p.cursor == 20
+        assert p[-1] == IterNode(ForNode(IdentifierNode('a'), ASSIGNMENT, BlockNode([])))
+        # Test iter-while
+        p = Parser('iter while a=0 {}').iter()
+        assert p.cursor == 17
+        assert p[-1] == IterNode(WhileNode(ASSIGNMENT, BlockNode([])))
+        # Test iter-list
+        p = Parser('iter []').iter()
+        assert p.cursor == 7
+        assert p[-1] == IterNode(ListNode([]))
+
+    def test_do(self):
+        p = Parser('do {}').do()
+        assert p.cursor == 5
+        assert p[-1] == DoNode(BlockNode([]))
+
+    def test_object(self):
+        p = Parser('object {}').object_()
+        assert p.cursor == 9
+        assert p[-1] == ObjectNode(BlockNode([]))
+
+    def test_enum(self):
+        # Test non-flag enum
+        p = Parser('enum {}').enum()
+        assert p.cursor == 7
+        assert p[-1] == EnumNode(False, [])
+        # Test flag enum
+        p = Parser('enum flags {}').enum()
+        assert p.cursor == 13
+        assert p[-1] == EnumNode(True, [])
+
+    def test_enumitem(self):
+        # Test implicit value
+        p = Parser('a').enumitem()
+        assert p.cursor == 1
+        assert p[-1] == PairNode(IdentifierNode('a'), None)
+        # Test explicit value
+        p = Parser('a = 0').enumitem()
+        assert p.cursor == 5
+        assert p[-1] == PairNode(IdentifierNode('a'), NumberNode('0'))
+
+    def test_module(self):
+        p = Parser('module {}').module()
+        assert p.cursor == 9
+        assert p[-1] == ModuleNode(BlockNode([]))
+
+    def test_exception(self):
+        p = Parser('exception {}').exception()
+        assert p.cursor == 12
+        assert p[-1] == ExceptionNode(BlockNode([]))
+
+    def test_mutable(self):
+        # Test mutable object
+        p = Parser('mutable object {}').mutable()
+        assert p.cursor == 17
+        assert p[-1] == MutableNode(ObjectNode(BlockNode([])))
+        # Test mutable mapping
+        p = Parser('mutable {}').mutable()
+        assert p.cursor == 10
+        assert p[-1] == MutableNode(MappingNode([]))
+        # Test mutable list
+        p = Parser('mutable []').mutable()
+        assert p.cursor == 10
+        assert p[-1] == MutableNode(ListNode([]))
+        # Test mutable tuple
+        p = Parser('mutable ()').mutable()
+        assert p.cursor == 10
+        assert p[-1] == MutableNode(TupleNode([]))
+        # Test mutable string
+        p = Parser('mutable ""').mutable()
+        assert p.cursor == 10
+        assert p[-1] == MutableNode(StringNode('""'))
+
     def test_throw(self):
         p = Parser('throw a=0').throw()
         assert p.cursor == 9
