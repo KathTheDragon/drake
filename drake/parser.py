@@ -314,7 +314,8 @@ class Parser:
             Parser.yield_,
             Parser.yieldfrom,
             Parser.break_,
-            Parser.continue_
+            Parser.continue_,
+            Parser.pass_
         )
         for item in items:
             try:
