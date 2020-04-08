@@ -331,7 +331,7 @@ class Parser:
 
     def case(parser):
         location = parser.location
-        parser = parser.match('case').expression().match('in').mapping()
+        parser = parser.match('case').primary().match('in').mapping()
         try:
             parser = parser.match('else').expression()
         except ParseFailed:

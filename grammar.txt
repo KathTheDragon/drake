@@ -21,7 +21,7 @@ keyword    -> if | case | try | for | while
             | throw | return | yield | yieldfrom
             | break | continue | pass
 if         -> "if" expression "then" expression ("else" expression)
-case       -> "case" expression "in" mapping ("else" expression)
+case       -> "case" primary "in" mapping ("else" expression)
 try        -> "try" expression (("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+ ("finally" expression)? | "finally" expression)
 for        -> "for" Delimited[IDENTIFIER] "in" expression block
 while      -> "while" expression block
