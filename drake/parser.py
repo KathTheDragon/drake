@@ -288,12 +288,12 @@ class Parser:
 
     def type(parser):
         location = parser.location
-        parser = parser.identifier() \
-                       .withnode(TypeNode, args=1, location=location)
-        with OPTIONAL:
-            parser = parser.match('[').nodelist(Parser.type).match(']') \
-                           .withnode(TypeNode, args=2, location=location)
-        return parser
+        parser = parser.identifier()
+        try:
+            parser = parser.match('[').nodelist(Parser.type).match(']')
+        except ParseFailed:
+            parser = parser.addparsed([])
+        return parser.withnode(TypeNode, args=2, location=location)
 
     def keyword(parser):
         items = (
