@@ -333,7 +333,7 @@ class ForNode(ParseNode):
     body: BlockNode
 
     def __str__(self):
-        return pprint('For', *self.vars, self.container, self.body)
+        return pprint('For', self.vars, self.container, self.body)
 
 @dataclass
 class WhileNode(ParseNode):
@@ -369,7 +369,7 @@ class AssignmentNode(ParseNode):
             nodetype = 'Assign'
         else:
             nodetype = f'Assign {self.operator}'
-        return pprint(nodetype, *self.targets, self.expression)
+        return pprint(nodetype, self.targets, self.expression)
 
 @dataclass
 class TypeNode(ParseNode):
