@@ -646,7 +646,13 @@ class Parser:
         return parser.withnode(RangeNode, args=3, location=location)
 
     def grouping(parser):
-        return parser.match('(').expression().match(')')
+        parser = parser.match('(')
+        with OPTIONAL:
+            parser = parser.newline()
+        parser = parser.expression()
+        with OPTIONAL:
+            parser = parser.newline()
+        return parser.match(')')
 
     def tuple(parser):
         return parser.match('(').nodelist(Parser.expression).match(')') \
