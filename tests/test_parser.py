@@ -147,28 +147,28 @@ class TestParserGenericMatching:
 
     def test_leftrecurse(self):
         # Test no operations
-        p = Parser('none').leftrecurse(('+',), Parser.none)
+        p = Parser('none').leftrecurse(Parser.none, '+')
         assert p[-1] == NoneNode()
         # Test any given operator can be matched
-        p = Parser('none + none').leftrecurse(('+', '-'), Parser.none)
+        p = Parser('none + none').leftrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(NoneNode(), '+', NoneNode())
-        p = Parser('none - none').leftrecurse(('+', '-'), Parser.none)
+        p = Parser('none - none').leftrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(NoneNode(), '-', NoneNode())
         # Test multiple operations
-        p = Parser('none + none - none').leftrecurse(('+', '-'), Parser.none)
+        p = Parser('none + none - none').leftrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(BinaryOpNode(NoneNode(), '+', NoneNode()), '-', NoneNode())
 
     def test_rightrecurse(self):
         # Test no operations
-        p = Parser('none').rightrecurse(('+',), Parser.none)
+        p = Parser('none').rightrecurse(Parser.none, '+')
         assert p[-1] == NoneNode()
         # Test any given operator can be matched
-        p = Parser('none + none').rightrecurse(('+', '-'), Parser.none)
+        p = Parser('none + none').rightrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(NoneNode(), '+', NoneNode())
-        p = Parser('none - none').rightrecurse(('+', '-'), Parser.none)
+        p = Parser('none - none').rightrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(NoneNode(), '-', NoneNode())
         # Test multiple operations
-        p = Parser('none + none - none').rightrecurse(('+', '-'), Parser.none)
+        p = Parser('none + none - none').rightrecurse(Parser.none, '+', '-')
         assert p[-1] == BinaryOpNode(NoneNode(), '+', BinaryOpNode(NoneNode(), '-', NoneNode()))
 
 class TestParserNodeMatching:

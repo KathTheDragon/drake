@@ -224,9 +224,7 @@ class Parser:
             else:
                 return item(parser)
 
-    def leftrecurse(parser, operators, operand):
-        if isinstance(operators, str):
-            operators = (operators,)
+    def leftrecurse(parser, operand, *operators):
         location = parser.location
         parser = operand(parser)
         with OPTIONAL:
@@ -235,13 +233,11 @@ class Parser:
                         .withnode(BinaryOpNode, args=3, location=location)
         return parser
 
-    def rightrecurse(parser, operators, operand):
-        if isinstance(operators, str):
-            operators = (operators,)
+    def rightrecurse(parser, operand, *operators):
         location = parser.location
         parser = operand(parser)
         with OPTIONAL:
-            parser = parser.choices(*operators, parse=True).rightrecurse(operators, operand) \
+            parser = parser.choices(*operators, parse=True).rightrecurse(operand, *operators) \
                            .withnode(BinaryOpNode, args=3, location=location)
         return parser
 
@@ -502,13 +498,13 @@ class Parser:
                      .withnode(DeclarationNode, args=3, location=parser.location)
 
     def boolor(parser):
-        return parser.rightrecurse('or', Parser.boolxor)
+        return parser.rightrecurse(Parser.boolxor, 'or')
 
     def boolxor(parser):
-        return parser.rightrecurse('xor', Parser.booland)
+        return parser.rightrecurse(Parser.booland, 'xor')
 
     def booland(parser):
-        return parser.rightrecurse('and', Parser.inclusion)
+        return parser.rightrecurse(Parser.inclusion, 'and')
 
     # Have to special-case these two because of the multi-word operators
     def inclusion(parser):
@@ -536,31 +532,31 @@ class Parser:
         return parser
 
     def comparison(parser):
-        return parser.rightrecurse(('<', '<=', '>', '>=', '==', '!='), Parser.bitor)
+        return parser.rightrecurse(Parser.bitor, '<', '<=', '>', '>=', '==', '!=')
 
     def bitor(parser):
-        return parser.leftrecurse('|', Parser.bitxor)
+        return parser.leftrecurse(Parser.bitxor, '|')
 
     def bitxor(parser):
-        return parser.leftrecurse('^', Parser.bitand)
+        return parser.leftrecurse(Parser.bitand, '^')
 
     def bitand(parser):
-        return parser.leftrecurse('&', Parser.shift)
+        return parser.leftrecurse(Parser.shift, '&')
 
     def shift(parser):
-        return parser.leftrecurse(('<<', '>>'), Parser.addition)
+        return parser.leftrecurse(Parser.addition, '<<', '>>')
 
     def addition(parser):
-        return parser.leftrecurse(('+', '-'), Parser.product)
+        return parser.leftrecurse(Parser.product, '+', '-')
 
     def product(parser):
-        return parser.leftrecurse(('*', '/'), Parser.modulus)
+        return parser.leftrecurse(Parser.modulus, '*', '/')
 
     def modulus(parser):
-        return parser.leftrecurse('%', Parser.exponent)
+        return parser.leftrecurse(Parser.exponent, '%')
 
     def exponent(parser):
-        return parser.rightrecurse('**', Parser.unary)
+        return parser.rightrecurse(Parser.unary, '**')
 
     def unary(parser):
         try:
