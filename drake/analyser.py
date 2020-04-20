@@ -47,6 +47,14 @@ def normalise_number(number):
         return integer, fractional, exponent, imagunit
 
 ## Helper Functions
+def register(registry, item):
+    if item in registry:
+        index = registry.index(item)
+    else:
+        index = len(registry)
+        registry.append(item)
+    return index
+
 def unpack(vars, type):
     if not vars:
         raise ValueError('vars cannot be empty')
@@ -71,38 +79,19 @@ def identifiernode(node, scope, values):
     return IdentifierNode(type, index, _scope)
 
 def stringnode(node, scope, values):
-    value = normalise_string(node.value)
-    if value in values:
-        index = values.index(value)
-    else:
-        index = len(values)
-        values.append(node.value)
+    index = register(values, normalise_string(node.value))
     return ValueNode(types.String, index)
 
 def numbernode(node, scope, values):
-    value = normalise_number(node.value)
-    if value in values:
-        index = values.index(value)
-    else:
-        index = len(values)
-        values.append(value)
+    index = register(values, normalise_number(node.value))
     return ValueNode(types.Number, index)
 
 def booleannode(node, scope, values):
-    value = (node.value == 'true')
-    if value in values:
-        index = values.index(value)
-    else:
-        index = len(values)
-        values.append(value)
+    index = register(values, node.value == 'true')
     return ValueNode(types.Boolean, index)
 
 def nonenode(node, scope, values):
-    if None in values:
-        index = values.index(None)
-    else:
-        index = len(values)
-        values.append(None)
+    index = register(values, None)
     return ValueNode(types.None_, index)
 
 def range(node, scope, values):
