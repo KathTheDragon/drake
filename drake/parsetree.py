@@ -347,7 +347,7 @@ class WhileNode(ParseNode):
 class TargetNode(ParseNode):
     mode: str
     typehint: Optional['TypeNode']
-    name: str
+    name: IdentifierNode
 
     def __str__(self):
         fragments = []
@@ -355,7 +355,7 @@ class TargetNode(ParseNode):
             fragments.append(mode)
         if self.typehint:
             fragments.append(f'<{self.typehint}>')
-        fragments.append(self.name)
+        fragments.append(str(self.name))
         return ' '.join(fragments)
 
 @dataclass
@@ -373,11 +373,11 @@ class AssignmentNode(ParseNode):
 
 @dataclass
 class TypeNode(ParseNode):
-    type: str
+    type: IdentifierNode
     params: List['TypeNode'] = field(default_factory=list)
 
     def __str__(self):
-        type = self.type.value
+        type = self.type.name
         if self.params:
             return f'{type}[{", ".join(self.params)}]'
         else:
