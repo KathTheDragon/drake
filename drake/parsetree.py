@@ -51,7 +51,7 @@ def indent(string):
     return '\n'.join('  '+line for line in string.splitlines())
 
 def isprimary(*nodes):
-    return all(isinstance(node, (LiteralNode, NoneNode, IdentifierNode, list)) for node in nodes)
+    return all(isinstance(node, (LiteralNode, NoneNode, IdentifierNode)) for node in nodes)
 
 def pprint(name, *args):
     argstrings = []
@@ -59,7 +59,7 @@ def pprint(name, *args):
         if isinstance(arg, ParseNode):
             argstrings.append(str(arg))
         elif isinstance(arg, list):
-            argstrings.append(f'({", ".join(item.value for item in arg)})')
+            argstrings.append(pprint('', *arg).strip())
         elif arg:
             argstrings.append(arg)
     if isprimary(*args):
