@@ -94,7 +94,7 @@ def nonenode(node, scope, values):
     index = register(values, None)
     return ValueNode(types.None_, index)
 
-def range(node, scope, values):
+def rangenode(node, scope, values):
     scope = scope.child()
     start = analyse(node.start, scope, values)
     type = start.type
