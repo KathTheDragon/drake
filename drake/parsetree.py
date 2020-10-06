@@ -110,8 +110,11 @@ class BooleanNode(LiteralNode):
     pass
 
 @dataclass
-class NoneNode(ParseNode):
-    pass
+class NoneNode(LiteralNode):
+    value: str = field(init=False, default='none')
+
+    def __str__(self):
+        return 'None'
 
 @dataclass
 class SequenceNode(ParseNode):
