@@ -84,20 +84,11 @@ class InvalidSyntax(ParserError):
     def __init__(self, error, location=()):
         super().__init__(error, location)
 
-def Expected(expected, got='', parser=None):
+def Expected(expected, got='', location=()):
     error = f'expected {expected}'
     if got:
-        error += f', got {got}'
-    elif parser:
-        if cursor < len(source):
-            source, cursor = parser.source, parser.cursor
-            error += f', got {source[cursor]}'
-        else:
-            error += ', got EOF'
-    if parser:
-        return InvalidSyntax(error, parser)
-    else:
-        return InvalidSyntax
+        error += f', got {got!r}'
+    return InvalidSyntax(error, location)
 
 ## Context managers
 OPTIONAL = contextlib.suppress(ParseFailed)
@@ -697,5 +688,5 @@ class Parser:
         location = parser.location
         parser = parser.match(IDENTIFIER, 'identifier', parse=True)
         if parser[-1] in RESERVED:
-            raise ParseFailed('identifier', location)
+            raise Expected('identifier', got=parser[-1], location=location)
         return parser.withnode(IdentifierNode, args=1, location=location)
