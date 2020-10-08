@@ -88,8 +88,13 @@ class LookupNode(ASTNode):
     attribute: int  # Attributes are just identifiers pointing to an object's internal namespace
 
 @dataclass
+class KwargNode(ASTNode):
+    index: int
+    value: ASTNode
+
+@dataclass
 class CallNode(ASTNode):
-    function: ...  # Need to figure out how functions should be done
+    function: ASTNode
     arguments: List[Union[ASTNode, Tuple[int, ASTNode]]]
 
 @dataclass

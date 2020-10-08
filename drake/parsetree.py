@@ -177,8 +177,16 @@ class LookupNode(ParseNode):
     def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
+@dataclass
+class KwargNode(ParseNode):
+    name: IdentifierNode
+    value: ParseNode
+
+    def __str__(self):
+        return pprint('Kwarg', self.name, self.value)
+
 VArg = Union[ParseNode, 'UnaryOpNode']  # expr | '*' expr
-KwArg = Union[PairNode, 'UnaryOpNode']  # name = expr | '**' expr
+KwArg = Union[KwargNode, 'UnaryOpNode']  # name = expr | '**' expr
 
 @dataclass
 class CallNode(ParseNode):

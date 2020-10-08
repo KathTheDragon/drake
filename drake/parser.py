@@ -582,7 +582,7 @@ class Parser:
         except ParseFailed:
             try:
                 return parser.identifier().match('=').expression() \
-                             .withnode(PairNode, args=2, location=parser.location)
+                             .withnode(KwargNode, args=2, location=parser.location)
             except ParseFailed:
                 return parser.expression()
 

@@ -188,8 +188,21 @@ def lookupnode(node, scope, values):
     type = namespace.get(index, 0).type
     return LookupNode(type, obj, index)
 
+def kwargnode(node, scope, values):
+    index = ...  # Somehow we need to fetch the appropriate index here
+    value = analyse(node.value, scope, values)
+    return KwargNode(value.type, index, value)
+
 def callnode(node, scope, values):
-    pass
+    function = analyse(node.function, scope, values)
+    arguments = [analyse(argument, scope, values)]
+    # This typechecking will *have* to be reworked - keyword arguments really
+    # should be freely orderable. Perhaps reorder the parameter list in place?
+    argumenttypes = [argument.type for argument in arguments]
+    for lambdatype in function.type.params:
+        paramtypes, returntype = lambdatype.params
+        pass  # Will implement later cos it's complicated
+    return CallNode(returntype, function, arguments)
 
 def unaryopnode(node, scope, values):
     pass
