@@ -464,17 +464,12 @@ class Parser:
                      .withnode(LambdaNode, args=2, location=parser.location)
 
     def param(parser):
-        location = parser.location
         try:
-            parser = parser.choices('*', '**', parse=True)
-            op = True
+            return parser.choices('*', '**', parse=True).declaration(False) \
+                         .withnode(UnaryOpNode, args=2, location=parser.location)
         except ParseFailed:
-            op = False
-        parser = parser.addparsed(False).typehint().identifier() \
-                       .withnode(DeclarationNode, args=3, location=location)
-        if op:
-            return parser.withnode(UnaryOpNode, args=2, location=location)
-        else:
+            location = parser.location
+            parser = parser.declaration(False)
             with OPTIONAL:
                 parser = parser.match('=').expression() \
                                .withnode(PairNode, args=2, location=location)
