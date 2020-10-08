@@ -373,7 +373,7 @@ def whilenode(node, scope, values):
 def typenode(node, scope, values):
     type = scope.getname(node.type)
     params = [typenode(param, scope, values) for param in node.params]
-    if type != types.Type_:
+    if not isinstance(type, Type):
         raise types.TypeMismatch(types.Type_, type)
     return type[*params]
 
