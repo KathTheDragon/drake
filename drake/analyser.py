@@ -31,7 +31,7 @@ def normalise_number(number):
     if number.startswith('0b') or number.startswith('0o') or number.startswith('0x'):
         return str(int(number)), '', '', ''
     else:
-        match = re.match(rf'(?P<integer>[0-9]+)(?:\.(?P<fractional>[0-9]+))?(?:[eE](?P<exponent>[+-]?[0-9]+))?(?P<imagunit>[jJ])?')
+        match = re.match(r'(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?([jJ])?', number)
         integer, fractional, exponent, imagunit = match.groups(default='')
         integer = integer.lstrip('0') or '0'
         fractional = fractional.rstrip('0')
