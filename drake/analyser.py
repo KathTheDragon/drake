@@ -226,7 +226,7 @@ def lambdanode(node, scope, values):
     scope = scope.child()
     params = [analyse(param, scope, values) for param in node.params]
     returns = analyse(node.returns, scope, values)
-    paramstypes = [param.type for param in params]
+    paramstypes = types.Tuple[tuple(param.type for param in params)]
     returntype = returns.type
     type = types.Function[types.Lambda[paramstypes, returntype]]
     return LambdaNode(type, params, returns)
