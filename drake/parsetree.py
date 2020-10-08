@@ -19,6 +19,8 @@ __all__ = [
     'CallNode',
     'UnaryOpNode',
     'BinaryOpNode',
+    'VParamNode',
+    'KwParamNode',
     'LambdaNode',
     'IterNode',
     'DoNode',
@@ -203,12 +205,36 @@ class BinaryOpNode(ParseNode):
     def __str__(self):
         return pprint(f'Binary {self.operator}', self.left, self.right)
 
-VParam = Union['DeclarationNode', UnaryOpNode]  # type name | '*' type name
-KwParam = Union[PairNode, UnaryOpNode]  # type name = expr | '**' type name
+@dataclass
+class ParamNode(ParseNode):
+    starred: bool
+    typehint: TypeNode
+    name: IdentifierNode
+
+    def __str__(self):
+        star = '*' if self.nodetype == 'VParam' else '**'
+        if self.starred:
+            return f'{self.nodetype} {star} <{self.typehint}> {self.name}'
+        else:
+            return f'{self.nodetype} <{self.typehint}> {self.name}'
+
+@dataclass
+class VParamNode(ParamNode):
+    pass
+
+@dataclass
+class KwParamNode(ParamNode):
+    value: Optional[ParseNode] = None
+
+    def __str__(self):
+        if value is not None:
+            return pprint('KwParam', f'<{self.typehint}> {self.name}', self.value)
+        else:
+            return super().__str__()
 
 @dataclass
 class LambdaNode(ParseNode):
-    params: List[Union[VParam, KwParam]]
+    params: List[Union[VParamNode, KwParamNode]]
     returns: ParseNode
 
     def __str__(self):
