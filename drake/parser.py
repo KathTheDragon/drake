@@ -480,11 +480,14 @@ class Parser:
                                .withnode(PairNode, args=2, location=location)
             return parser
 
-    def declaration(parser):
+    def declaration(parser, parseconst=True):
         location = parser.location
-        try:
-            parser = parser.match('const').addparsed(True)
-        except ParseFailed:
+        if parseconst:
+            try:
+                parser = parser.match('const').addparsed(True)
+            except ParseFailed:
+                parser = parser.addparsed(False)
+        else:
             parser = parser.addparsed(False)
         return parser.typehint().identifier() \
                      .withnode(DeclarationNode, args=3, location=location)
