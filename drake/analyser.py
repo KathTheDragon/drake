@@ -262,7 +262,7 @@ def objectnode(node, scope, values):
     definition = blocknode(node.definition, scope, values)
     namespace = definition.locals
     typecheck(types.None_, definition.type)
-    objecttype = Type(objectid, namespace=namespace)
+    objecttype = types.Type(objectid, namespace=namespace)
     type = types.Type_[objecttype]
     return ObjectNode(type, definition)
 
