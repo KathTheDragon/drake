@@ -41,7 +41,7 @@ break      -> "break"
 continue   -> "continue"
 pass       -> "pass"
 lambda     -> Delimited[param] "->" expression
-param      -> typehint (("*" | "**") IDENTIFIER | IDENTIFIER ("=" expression)?)
+param      -> ("*" | "**") typehint IDENTIFIER | typehint IDENTIFIER ("=" expression)?
 declaration-> "const"? typehint IDENTIFIER
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
