@@ -17,6 +17,7 @@ __all__ = [
     'CallNode',
     'UnaryOpNode',
     'BinaryOpNode',
+    'ParamNode',
     'LambdaNode',
     'IterNode',
     'MutableNode',
@@ -103,8 +104,13 @@ class BinaryOpNode(ASTNode):
     right: ASTNode
 
 @dataclass
+class ParamNode(ASTNode):
+    index: int
+    default: Optional[ASTNode]
+
+@dataclass
 class LambdaNode(ASTNode):
-    params: List[Union[ASTNode, Tuple[int, ASTNode]]]
+    params: List[ParamNode]
     body: ASTNode
 
 @dataclass

@@ -197,8 +197,39 @@ def unaryopnode(node, scope, values):
 def binaryopnode(node, scope, values):
     pass
 
+def vparamnode(node, scope, values):
+    type = typenode(node.typehint)
+    name = node.name.name
+    if node.starred:
+        index, _ = scope.bind(name, types.List[type], assignment=True, local=True)
+        type = types.Type('*', type)
+    else:
+        scope.bind(name, type, assignment=True)
+    return ParamNode(type, index)
+
+def kwparamnode(node, scope, values):
+    type = typenode(node.typehint)
+    name = node.name.name
+    if node.value is not None:
+        value = analyse(node.value, scope, values)
+        typecheck(type, value.type)
+    else:
+        value = None
+    if node.starred:
+        index, _ = scope.bind(name, types.Mapping[types.String, type], assignment=True, local=True)
+        type = types.Type('**', type)
+    else:
+        scope.bind(name, type, assignment=True)
+    return ParamNode(type, index, value)
+
 def lambdanode(node, scope, values):
-    pass
+    scope = scope.child()
+    params = [analyse(param, scope, values) for param in node.params]
+    returns = analyse(node.returns, scope, values)
+    paramstypes = [param.type for param in params]
+    returntype = returns.type
+    type = types.Function[types.Lambda[paramstypes, returntype]]
+    return LambdaNode(type, params, returns)
 
 def iternode(node, scope, values):
     expression = analyse(node.expression, scope, values)
