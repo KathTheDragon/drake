@@ -156,17 +156,19 @@ class Parser:
             pattern = re.compile(re.escape(pattern))
         return parser.raw_match(pattern, text, parse).skip()
 
-    def newline(parser):
-        parser = parser.raw_match(NEWLINE, 'newline').skip()
-        with OPTIONAL:
-            parser = parser.newline()
+    def newline(parser, required=False):
+        num = 0
+        try:
+            while True:
+                parser = parser.raw_match(NEWLINE, 'newline').skip()
+                num += 1
+        except ParseFailed:
+            if required and num == 0:
+                raise
         return parser
 
     def comma(parser):
-        parser = parser.match(',')
-        with OPTIONAL:
-            parser = parser.newline()
-        return parser
+        return parser.match(',').newline()
 
     def choices(parser, *tokens, parse=False):
         exception = ValueError('items cannot be empty')
@@ -183,8 +185,7 @@ class Parser:
 
     # Generic matching methods
     def nodelist(parser, item):
-        with OPTIONAL:
-            parser = parser.newline()
+        parser = parser.newline()
         try:
             parser = item(parser)
         except ParseFailed:
@@ -193,7 +194,7 @@ class Parser:
         try:
             try:
                 while True:
-                    parser = item(parser.newline())
+                    parser = item(parser.newline(True))
                     num += 1
             except ParseFailed:
                 if num == 1:
@@ -205,9 +206,7 @@ class Parser:
                     num += 1
             with OPTIONAL:
                 parser = parser.match(',')
-        with OPTIONAL:
-            parser = parser.newline()
-        return parser.withnode(List, args=num)
+        return parser.newline().withnode(List, args=num)
 
     def delimitedlist(parser, item, forcelist=False):
         try:
@@ -639,13 +638,7 @@ class Parser:
         return parser.withnode(RangeNode, args=3, location=location)
 
     def grouping(parser):
-        parser = parser.match('(')
-        with OPTIONAL:
-            parser = parser.newline()
-        parser = parser.expression()
-        with OPTIONAL:
-            parser = parser.newline()
-        return parser.match(')')
+        return parser.match('(').newline().expression().newline().match(')')
 
     def tuple(parser):
         return parser.match('(').nodelist(Parser.expression).match(')') \
