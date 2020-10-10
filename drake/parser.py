@@ -162,6 +162,12 @@ class Parser:
             parser = parser.newline()
         return parser
 
+    def comma(parser):
+        parser = parser.match(',')
+        with OPTIONAL:
+            parser = parser.newline()
+        return parser
+
     def choices(parser, *tokens, parse=False):
         exception = ValueError('items cannot be empty')
         for token in tokens:
@@ -195,10 +201,7 @@ class Parser:
         except ParseFailed:
             with OPTIONAL:
                 while True:
-                    _parser = parser.match(',')
-                    with OPTIONAL:
-                        _parser = _parser.newline()
-                    parser = item(_parser)
+                    parser = item(parser.comma())
                     num += 1
             with OPTIONAL:
                 parser = parser.match(',')
