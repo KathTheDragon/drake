@@ -184,29 +184,60 @@ class Parser:
         raise exception
 
     # Generic matching methods
-    def nodelist(parser, item):
+    def _list(parser, item, separator, num=0):
+        parser = item(parser)
+        num += 1
+        with OPTIONAL:
+            while True:
+                parser = item(separator(parser))
+                num += 1
+        return parser.withnode(List, args=num)
+
+    def _nodelist(parser, item, separator):
         parser = parser.newline()
-        try:
-            parser = item(parser)
-        except ParseFailed:
-            return parser.addparsed([])
-        num = 1
+        parser = item(parser)
+        parser = separator(parser)
+        parser = parser._list(item, separator, 1)
+        with OPTIONAL:
+            parser = separator(parser)
+        return parser
+
+    def nodelist(parser, item):
         try:
             try:
-                while True:
-                    parser = item(parser.newline(True))
-                    num += 1
+                return parser._nodelist(item, lambda p: p.newline(True))
             except ParseFailed:
-                if num == 1:
-                    raise
+                return parser._nodelist(item, Parser.comma)
         except ParseFailed:
-            with OPTIONAL:
-                while True:
-                    parser = item(parser.comma())
-                    num += 1
-            with OPTIONAL:
-                parser = parser.match(',')
-        return parser.newline().withnode(List, args=num)
+            try:
+                parser = parser.newline()
+                parser = item(parser)
+                with OPTIONAL:
+                    parser = parser.comma()
+                return parser.newline().withnode(List, args=1)
+            except ParseFailed:
+                return parser.newline().withnode(List)
+
+    def _nodelist2(parser, item1, item2, separator):
+        parser = parser.newline()
+        parser = parser._list(item1, separator)
+        parser = separator(parser)
+        parser = parser._list(item2, separator)
+        with OPTIONAL:
+            parser = separator(parser)
+        return parser
+
+    def nodelist2(parser, item1, item2):
+        try:
+            try:
+                return parser._nodelist2(item1, item2, lambda p: p.newline(True))
+            except ParseFailed:
+                return parser._nodelist2(item1, item2, Parser.comma)
+        except ParseFailed:
+            try:
+                return parser.nodelist(item1).withnode(List)
+            except ParseFailed:
+                return parser.withnode(List).nodelist(item2)
 
     def delimitedlist(parser, item, forcelist=False):
         try:
@@ -216,6 +247,15 @@ class Parser:
                 return item(parser).withnode(List, args=1)
             else:
                 return item(parser)
+
+    def delimitedlist2(parser, item1, item2):
+        try:
+            return parser.match('(').nodelist2(item1, item2).match(')')
+        except ParseFailed:
+            try:
+                return item1(parser).withnode(List, args=1).withnode(List)
+            except ParseFailed:
+                return item2(parser).withnode(List).withnode(List, args=1)
 
     def leftrecurse(parser, operand, *operators):
         location = parser.location
