@@ -502,20 +502,25 @@ class Parser:
                      .withnode(PassNode, location=parser.location)
 
     def lambda_(parser):
-        return parser.delimitedlist(Parser.param, True).match('->').expression() \
-                     .withnode(LambdaNode, args=2, location=parser.location)
+        return parser.delimitedlist2(Parser.vparam, Parser.kwparam).match('->').expression() \
+                     .withnode(LambdaNode, args=3, location=parser.location)
 
-    def param(parser):
+    def vparam(parser):
+        location = parser.location
         try:
-            return parser.choices('*', '**', parse=True).declaration(False) \
-                         .withnode(UnaryOpNode, args=2, location=parser.location)
+            parser = parser.match('*').addparsed(True)
         except ParseFailed:
-            location = parser.location
-            parser = parser.declaration(False)
-            with OPTIONAL:
-                parser = parser.match('=').expression() \
-                               .withnode(PairNode, args=2, location=location)
-            return parser
+            parser = parser.addparsed(False)
+        return parser.typehint().identifier() \
+                     .withnode(VParamNode, args=3, location=location)
+
+    def kwparam(parser):
+        try:
+            return parser.match('**').addparsed(True).typehint().identifier() \
+                         .withnode(KwParamNode, args=3, location=parser.location)
+        except ParseFailed:
+            return parser.addparsed(False).typehint().identifier().match(':').expression() \
+                         .withnode(KwParamNode, args=4, location=parser.location)
 
     def declaration(parser, parseconst=True):
         location = parser.location
@@ -607,8 +612,8 @@ class Parser:
                                    .withnode(LookupNode, args=2, location=location)
                 except ParseFailed:
                     try:
-                        parser = parser.match('(').nodelist(Parser.arg).match(')') \
-                                       .withnode(CallNode, args=2, location=location)
+                        parser = parser.match('(').nodelist2(Parser.varg, Parser.kwarg).match(')') \
+                                       .withnode(CallNode, args=3, location=location)
                     except ParseFailed:
                         try:
                             _parser = parser.range()
@@ -617,16 +622,20 @@ class Parser:
                         parser = _parser.withnode(SubscriptNode, args=2, location=location)
         return parser
 
-    def arg(parser):
+    def varg(parser):
         try:
-            return parser.choices('*', '**', parse=True).expression() \
+            return parser.match('*', parse=True).expression() \
                          .withnode(UnaryOpNode, args=2, location=parser.location)
         except ParseFailed:
-            try:
-                return parser.identifier().match('=').expression() \
-                             .withnode(KwargNode, args=2, location=parser.location)
-            except ParseFailed:
-                return parser.expression()
+            return parser.expression()
+
+    def kwarg(parser):
+        try:
+            return parser.match('**', parse=True).expression() \
+                         .withnode(UnaryOpNode, args=2, location=parser.location)
+        except ParseFailed:
+            return parser.identifier().match(':').expression() \
+                         .withnode(KwargNode, args=2, location=parser.location)
 
     def atom(parser):
         items = (

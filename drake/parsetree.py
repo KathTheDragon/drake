@@ -191,10 +191,11 @@ KwArg = Union[KwargNode, 'UnaryOpNode']  # name = expr | '**' expr
 @dataclass
 class CallNode(ParseNode):
     function: ParseNode
-    arguments: List[Union[VArg, KwArg]]
+    vargs: List[VArg]
+    kwargs: List[KwArg]
 
     def __str__(self):
-        return pprint('Call', self.function, *self.arguments)
+        return pprint('Call', self.function, self.vargs, self.kwargs)
 
 @dataclass
 class UnaryOpNode(ParseNode):
@@ -242,11 +243,12 @@ class KwParamNode(ParamNode):
 
 @dataclass
 class LambdaNode(ParseNode):
-    params: List[Union[VParamNode, KwParamNode]]
+    vparams: List[VParamNode]
+    kwparams: List[KwParamNode]
     returns: ParseNode
 
     def __str__(self):
-        return pprint(self.nodetype, *self.params, self.returns)
+        return pprint(self.nodetype, self.vparams, self.kwparams, self.returns)
 
 @dataclass
 class KeywordNode(ParseNode):
