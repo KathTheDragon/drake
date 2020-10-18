@@ -55,7 +55,7 @@ TOKENS = {
     'OCTAL': r'0o(?:_?[0-7])+',
     'HEXADECIMAL': r'0x(?:_?[\da-fA-F])+',
     'DECIMAL': r'\d(?:_?\d)*(?:\.\d(?:_?\d)*)?(?:[eE][+-]?\d(?:_?\d)*)?[jJ]?',
-    'UNKNOWN': r'.+?'
+    'UNKNOWN': r'.'
 }
 TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKENS.items()), re.M)
 
