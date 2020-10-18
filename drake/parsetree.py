@@ -19,6 +19,8 @@ __all__ = [
     'CallNode',
     'UnaryOpNode',
     'BinaryOpNode',
+    'VParamNode',
+    'KwParamNode',
     'LambdaNode',
     'IterNode',
     'DoNode',
@@ -175,16 +177,25 @@ class LookupNode(ParseNode):
     def __str__(self):
         return pprint('Lookup', self.obj, self.attribute)
 
+@dataclass
+class KwargNode(ParseNode):
+    name: IdentifierNode
+    value: ParseNode
+
+    def __str__(self):
+        return pprint('Kwarg', self.name, self.value)
+
 VArg = Union[ParseNode, 'UnaryOpNode']  # expr | '*' expr
-KwArg = Union[PairNode, 'UnaryOpNode']  # name = expr | '**' expr
+KwArg = Union[KwargNode, 'UnaryOpNode']  # name = expr | '**' expr
 
 @dataclass
 class CallNode(ParseNode):
     function: ParseNode
-    arguments: List[Union[VArg, KwArg]]
+    vargs: List[VArg]
+    kwargs: List[KwArg]
 
     def __str__(self):
-        return pprint('Call', self.function, *self.arguments)
+        return pprint('Call', self.function, self.vargs, self.kwargs)
 
 @dataclass
 class UnaryOpNode(ParseNode):
@@ -203,16 +214,41 @@ class BinaryOpNode(ParseNode):
     def __str__(self):
         return pprint(f'Binary {self.operator}', self.left, self.right)
 
-VParam = Union['DeclarationNode', UnaryOpNode]  # type name | '*' type name
-KwParam = Union[PairNode, UnaryOpNode]  # type name = expr | '**' type name
+@dataclass
+class ParamNode(ParseNode):
+    starred: bool
+    typehint: 'TypeNode'
+    name: IdentifierNode
+
+    def __str__(self):
+        star = '*' if self.nodetype == 'VParam' else '**'
+        if self.starred:
+            return f'{self.nodetype} {star} <{self.typehint}> {self.name}'
+        else:
+            return f'{self.nodetype} <{self.typehint}> {self.name}'
+
+@dataclass
+class VParamNode(ParamNode):
+    pass
+
+@dataclass
+class KwParamNode(ParamNode):
+    value: Optional[ParseNode] = None
+
+    def __str__(self):
+        if value is not None:
+            return pprint('KwParam', f'<{self.typehint}> {self.name}', self.value)
+        else:
+            return super().__str__()
 
 @dataclass
 class LambdaNode(ParseNode):
-    params: List[Union[VParam, KwParam]]
+    vparams: List[VParamNode]
+    kwparams: List[KwParamNode]
     returns: ParseNode
 
     def __str__(self):
-        return pprint(self.nodetype, *self.params, self.returns)
+        return pprint(self.nodetype, self.vparams, self.kwparams, self.returns)
 
 @dataclass
 class KeywordNode(ParseNode):
