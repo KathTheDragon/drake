@@ -62,13 +62,13 @@ TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKE
 ## Classes
 @dataclass
 class Token:
-    type: str
+    kind: str
     value: str
     linenum: int
     column: int
 
     def __iter__(self):
-        yield self.type
+        yield self.kind
         yield self.value
 
 ## Functions
