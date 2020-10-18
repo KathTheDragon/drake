@@ -13,7 +13,6 @@ KEYWORDS = [
     'else',
     'enum',
     'exception',
-    'finally',
     'flags',
     'for',
     'from',

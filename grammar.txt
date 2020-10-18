@@ -29,7 +29,7 @@ keyword    -> if | case | try | for | while
             | break | continue | pass
 if         -> "if" expression "then" expression ("else" expression)
 case       -> "case" primary "in" mapping ("else" expression)
-try        -> "try" expression (("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+ ("finally" expression)? | "finally" expression)
+try        -> "try" expression ("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+
 for        -> "for" Delimited[IDENTIFIER] "in" expression block
 while      -> "while" expression block
 iter       -> "iter" (list | for | while)
