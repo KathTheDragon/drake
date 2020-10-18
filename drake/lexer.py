@@ -1,5 +1,6 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field, InitVar
+from typing import Iterator
 
 ## Constants
 KEYWORDS = [
