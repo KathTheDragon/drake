@@ -75,6 +75,29 @@ class Token:
         yield self.kind
         yield self.value
 
+EOF = Token('EOF', 'eof', -1, -1)
+
+@dataclass
+class Lexer:
+    source: InitVar[str]
+    _nexttoken: Token = field(init=False, default=None)
+    _tokens: Iterator[Token] = field(init=False)
+
+    def __post_init__(self, source):
+        self.EOF = EOF
+        self._tokens = lex(source)
+        self._next()
+
+    def _next(self):
+        token = self._nexttoken
+        self._nexttoken = next(self._tokens, self.EOF)
+        if self._nexttoken.kind == 'EOF':
+            self.EOF = self._nexttoken
+        return token
+
+    def _peek(self):
+        return self._nexttoken
+
 ## Functions
 def lex(source):
     linenum = 1
@@ -85,6 +108,8 @@ def lex(source):
         if type == 'BLANK':
             newlines = len(f'{value} '.splitlines()) - 1
             if newlines:
+                # To-do: suppress newlines after commas and open brackets, and
+                # before close brackets
                 yield Token('NEWLINE', 'nl', linenum, column)
                 linenum += newlines
             continue
