@@ -13,7 +13,7 @@ Left[op, operand]
 Right[op, operand]
            -> operand (op Right[op, operand])?
 
-program    -> List[expression] "EOF"
+program    -> List[expression] EOF
 expression -> assignment
             | keyword
             | lambda
