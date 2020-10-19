@@ -78,5 +78,4 @@ list       -> "[" (range | List[expression]) "]"
 range      -> primary ".." primary? ("," primary)?
 grouping   -> "(" expression ")"
 tuple      -> "(" List[expression] ")"
-literal    -> STRING | number | "true" | "false" | "none"
-number     -> BINARY | OCTAL | HEXADECIMAL | DECIMAL
+literal    -> STRING | NUMBER | "true" | "false" | "none"
