@@ -173,61 +173,13 @@ class Parser(Lexer):
     def bracketexpr(self):
         self.next('LBRACKET')
         if self.maybe('RBRACKET'):
-            if self.peek('ASSIGNMENT'):
-                return self.assignment([])
-            elif self.peek('LAMBDA'):
-                return self.lambda_([])
-            else:
-                return TupleNode()
+            return self.dispatchbracketitems([])
         else:
             item = self.bracketitem()
-            items = [item]
             if self.maybe('RBRACKET'):
-                if self.peek('ASSIGNMENT'):
-                    return self.assignment(items)
-                elif self.peek('LAMBDA'):
-                    return self.lambda_(items)
-                else:
-                    if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                        self.error()
-                    return GroupingNode(item)
-            elif self.peek('NEWLINE'):
-                while True:
-                    if self.maybe('NEWLINE'):
-                        items.append(self.bracketitem())
-                    elif self.maybe('RBRACKET'):
-                        if self.peek('ASSIGNMENT'):
-                            return self.assignment(items)
-                        elif self.peek('LAMBDA'):
-                            return self.lambda_(items)
-                        else:
-                            for item in items:
-                                if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                                    self.error()
-                            return TupleNode(items)
-                    else:
-                        self.error()
-            elif self.peek('COMMA'):
-                while True:
-                    if self.maybe('COMMA'):
-                        if self.maybe('RBRACKET'):
-                            return self.dispatchbracketitems(items)
-                        else:
-                            items.append(self.bracketitem())
-                    elif self.maybe('RBRACKET'):
-                        if self.peek('ASSIGNMENT'):
-                            return self.assignment(items)
-                        elif self.peek('LAMBDA'):
-                            return self.lambda_(items)
-                        else:
-                            for item in items:
-                                if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                                    self.error()
-                            return TupleNode(items)
-                    else:
-                        self.error()
+                return self.dispatchbracketitems(item)
             else:
-                self.error()
+                return self._itemlist(item, self.bracketitem, 'RBRACKET')
 
     def dispatchbracketitems(self, items):
         if isinstance(items, list):
