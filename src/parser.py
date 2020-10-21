@@ -62,7 +62,7 @@ class Parser(Lexer):
         items = [item]
         while True:
             if self.maybe(separator):
-                if self.peek(lookahead):
+                if self.maybe(lookahead):
                     return items
                 else:
                     items.append(itemfunc())
