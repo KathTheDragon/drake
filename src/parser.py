@@ -230,19 +230,25 @@ class Parser(Lexer):
                 self.error()
 
     def dispatchbracketitems(self, items):
-        if self.peek('ASSIGNMENT'):
-            return self.assignment(items)
-        elif self.peek('LAMBDA'):
-            return self.lambda_(items)
-        elif isinstance(items, list):
-            for item in items:
-                if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                    self.error()
-            return TupleNode(items)
+        if isinstance(items, list):
+            if self.peek('ASSIGNMENT'):
+                return self.assignment(items)
+            elif self.peek('LAMBDA'):
+                return self.lambda_(items)
+            else:
+                for item in items:
+                    if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
+                        self.error()
+                return TupleNode(items)
         else:
-            if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                self.error()
-            return GroupingNode(items)
+            if self.peek('ASSIGNMENT'):
+                return self.assignment([items])
+            elif self.peek('LAMBDA'):
+                return self.lambda_([items])
+            else:
+                if isinstance(items, (TargetNode, VParamNode, KwParamNode)):
+                    self.error()
+                return GroupingNode(items)
 
     def bracketitem(self):
         if self.peek('KEYWORD', 'nonlocal', 'const'):
