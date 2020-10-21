@@ -49,30 +49,27 @@ class Parser(Lexer):
             return self._itemlist(itemfunc(), itemfunc, lookahead)
 
     def _itemlist(self, item, itemfunc, lookahead):
-        items = [item]
         if self.maybe(lookahead):
-            return items
+            return [item]
         elif self.peek('NEWLINE'):
-            while True:
-                if self.maybe('NEWLINE'):
-                    items.append(itemfunc())
-                elif self.maybe(lookahead):
-                    return items
-                else:
-                    self.error()
+            self._separateditems(item, itemfunc, 'NEWLINE', lookahead)
         elif self.peek('COMMA'):
-            while True:
-                if self.maybe('COMMA'):
-                    if self.peek(lookahead):
-                        return items
-                    else:
-                        items.append(itemfunc())
-                elif self.maybe(lookahead):
-                    return items
-                else:
-                    self.error()
+            self._separateditems(item, itemfunc, 'COMMA', lookahead)
         else:
             self.error()
+
+    def _separateditems(self, item, itemfunc, separator, lookahead):
+        items = [item]
+        while True:
+            if self.maybe(separator):
+                if self.peek(lookahead):
+                    return items
+                else:
+                    items.append(itemfunc())
+            elif self.maybe(lookahead):
+                return items
+            else:
+                self.error()
 
     def leftop(self, operand, *ops):
         left = operand()
