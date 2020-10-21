@@ -52,9 +52,9 @@ class Parser(Lexer):
         if self.maybe(lookahead):
             return [item]
         elif self.peek('NEWLINE'):
-            self._separateditems(item, itemfunc, 'NEWLINE', lookahead)
+            return self._separateditems(item, itemfunc, 'NEWLINE', lookahead)
         elif self.peek('COMMA'):
-            self._separateditems(item, itemfunc, 'COMMA', lookahead)
+            return self._separateditems(item, itemfunc, 'COMMA', lookahead)
         else:
             self.error()
 
