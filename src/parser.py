@@ -42,17 +42,24 @@ class Parser(Lexer):
             self.error()
 
     ## Helpers
-    def itemlist(self, itemfunc, lookahead):
+    def itemlist(self, itemfunc, lookahead, forcelist=True):
         if self.maybe(lookahead):
             return []
         else:
-            return self._itemlist(itemfunc(), itemfunc, lookahead)
+            return self._itemlist(itemfunc(), itemfunc, lookahead, forcelist)
 
-    def _itemlist(self, item, itemfunc, lookahead):
+    def _itemlist(self, item, itemfunc, lookahead, forcelist=True):
         if self.maybe(lookahead):
-            return [item]
+            if forcelist:
+                return [item]
+            else:
+                return item
         elif self.peek('NEWLINE'):
-            return self._separateditems(item, itemfunc, 'NEWLINE', lookahead)
+            items = self._separateditems(item, itemfunc, 'NEWLINE', lookahead)
+            if not forcelist and len(items) == 1:
+                return item
+            else:
+                return items
         elif self.peek('COMMA'):
             return self._separateditems(item, itemfunc, 'COMMA', lookahead)
         else:
@@ -172,15 +179,8 @@ class Parser(Lexer):
 
     def bracketexpr(self):
         self.next('LBRACKET')
-        if self.maybe('RBRACKET'):
-            return self.dispatchbracketitems([])
-        else:
-            item = self.bracketitem()
-            if self.maybe('RBRACKET'):
-                return self.dispatchbracketitems(item)
-            else:
-                items = self._itemlist(item, self.bracketitem, 'RBRACKET')
-                return self.dispatchbracketitems(items)
+        items = self.itemlist(self.bracketitem, 'RBRACKET', forcelist=False)
+        return self.dispatchbracketitems(items):
 
     def dispatchbracketitems(self, items):
         if self.peek('ASSIGNMENT'):
@@ -576,14 +576,11 @@ class Parser(Lexer):
 
     def bracket(self):
         self.next('LBRACKET')
-        if self.maybe('RBRACKET'):
-            return TupleNode()
+        exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False)
+        if isinstance(exprs, list):
+            return TupleNode(exprs)
         else:
-            expr = self.expression()
-            if self.maybe('RBRACKET'):
-                return GroupingNode(expr)
-            else:
-                return TupleNode(self._itemlist(expr, self.expression, 'RBRACKET'))
+            return GroupingNode(exprs)
 
     def grouping(self):
         self.next('LBRACKET')
