@@ -179,7 +179,8 @@ class Parser(Lexer):
             if self.maybe('RBRACKET'):
                 return self.dispatchbracketitems(item)
             else:
-                return self._itemlist(item, self.bracketitem, 'RBRACKET')
+                items = self._itemlist(item, self.bracketitem, 'RBRACKET')
+                return self.dispatchbracketitems(items)
 
     def dispatchbracketitems(self, items):
         if isinstance(items, list):
