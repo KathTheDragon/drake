@@ -180,19 +180,10 @@ class Parser(Lexer):
     def bracketexpr(self):
         self.next('LBRACKET')
         items = self.itemlist(self.bracketitem, 'RBRACKET', forcelist=False)
-        return self.dispatchbracketitems(items):
-
-    def dispatchbracketitems(self, items):
         if self.peek('ASSIGNMENT'):
-            if isinstance(items, list):
-                return self.assignment(items)
-            else:
-                return self.assignment([item])
+            return self.assignment(items)
         elif self.peek('LAMBDA'):
-            if isinstance(items, list):
-                return self.lambda_(items)
-            else:
-                return self.lambda_([item])
+            return self.lambda_(items)
         elif isinstance(items, list):
             for item in items:
                 if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
@@ -250,6 +241,8 @@ class Parser(Lexer):
 
     def lambda_(self, params):
         _params = []
+        if not isinstance(params, list):
+            params = [params]
         # This should probably enforce parameter ordering too
         for param in params:
             if isinstance(param, (VParamNode, KwParamNode)):
