@@ -93,6 +93,9 @@ class Lexer:
         self._nexttoken = next(self._tokens, self.EOF)
         if self._nexttoken.kind == 'EOF':
             self.EOF = self._nexttoken
+        if token.kind in ('LBRACKET', 'LSQUARE', 'LBRACE', 'COMMA'):
+            if self._nexttoken.kind == 'NEWLINE':
+                self._next()
         return token
 
     def _peek(self):
