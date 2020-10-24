@@ -3,60 +3,99 @@ from dataclasses import dataclass, field, InitVar
 from typing import Iterator
 
 ## Constants
-KEYWORDS = [
-    'as',
-    'break',
-    'case',
-    'catch',
-    'const',
-    'continue',
-    'do',
-    'else',
-    'enum',
-    'exception',
-    'flags',
-    'for',
-    'from',
-    'if',
-    'iter',
-    'module',
-    'mutable',
-    'object',
-    'pass',
-    'then',
-    'throw',
-    'while',
-    'yield',
-]
-KEYWORD_OPERATORS = [
-    'and',
-    'in',
-    'is',
-    'not',
-    'or',
-    'xor',
-]
+ASSIGNMENT = {
+    'OP_ADDEQ':     r'\+=',
+    'OP_SUBEQ':     r'-=',
+    'OP_POWEQ':     r'\*\*=',
+    'OP_MULTEQ':    r'\*=',
+    'OP_DIVEQ':     r'/=',
+    'OP_MODEQ':     r'%=',
+    'OP_BITANDEQ':  r'&=',
+    'OP_BITXOREQ':  r'^=',
+    'OP_BITOREQ':   r'\|=',
+    'OP_LSHIFTEQ':  r'<<=',
+    'OP_RSHIFTEQ':  r'>>=',
+    'OP_ASSIGN':    r'=(?!=)',
+}
+OP_COMP = {
+    'OP_LE':        r'<=',
+    'OP_LT':        r'<',
+    'OP_GE':        r'>=',
+    'OP_GT':        r'>',
+    'OP_NE':        r'!=',
+    'OP_EQ':        r'==',
+}
+OPERATORS = {
+    'OP_ADD':       r'\+',
+    'OP_SUB':       r'-',
+    'OP_POW':       r'\*\*',
+    'OP_MULT':      r'\*',
+    'OP_DIV':       r'/',
+    'OP_MOD':       r'%',
+    'OP_BITAND':    r'&',
+    'OP_BITXOR':    r'^',
+    'OP_BITOR':     r'\|',
+    'OP_LSHIFT':    r'<<',
+    'OP_RSHIFT':    r'>>',
+    'OP_INV':       r'!',
+    'OP_AND':       r'and',
+    'OP_XOR':       r'xor',
+    'OP_OR':        r'or',
+    'OP_NOT':       r'not',
+    'OP_IS':        r'is',
+    'OP_IN':        r'in',
+} | OP_COMP
+KEYWORDS = {
+    'KW_AS':        r'as',
+    'KW_CASE':      r'case',
+    'KW_CATCH':     r'catch',
+    'KW_CONST':     r'const',
+    'KW_DO':        r'do',
+    'KW_ELSE':      r'else',
+    'KW_ENUM':      r'enum',
+    'KW_EXCEPTION': r'exception',
+    'KW_FLAGS':     r'flags',
+    'KW_FOR':       r'for',
+    'KW_FROM':      r'from',
+    'KW_IF':        r'if',
+    'KW_ITER':      r'iter',
+    'KW_MODULE':    r'module',
+    'KW_MUTABLE':   r'mutable',
+    'KW_OBJECT':    r'object',
+    'KW_THEN':      r'then',
+    'KW_THROW':     r'throw',
+    'KW_TRY':       r'try',
+    'KW_WHILE':     r'while',
+    'KW_YIELD':     r'yield',
+}
+LITERALS = {
+    'BOOLEAN':      r'true|false',
+    'NONE':         r'none',
+    'BREAK':        r'break',
+    'CONTINUE':     r'continue',
+    'PASS':         r'pass',
+    'STRING':       r'\'(?:[^\\\n]|\\.)*?\'|\"(?:[^\\\n]|\\.)*?\"',
+    'BINARY':       r'0b(?:_?[01])+',
+    'OCTAL':        r'0o(?:_?[0-7])+',
+    'HEXADECIMAL':  r'0x(?:_?[\da-fA-F])+',
+    'DECIMAL':      r'\d(?:_?\d)*(?:\.\d(?:_?\d)*)?(?:[eE][+-]?\d(?:_?\d)*)?[jJ]?',
+}
 TOKENS = {
-    'BLANK': r'(?://.*$|/\*(?:.|[\r\n])*?\*/|\s)+',
-    'LAMBDA': r'->',
-    'RANGE': r'\.\.',
-    'DOT': r'\.',
-    'COMMA': r',',
-    'COLON': r':',
-    'LBRACKET': r'\(',
-    'LSQUARE': r'\[',
-    'LBRACE': r'\{',
-    'RBRACKET': r'\)',
-    'RSQUARE': r'\]',
-    'RBRACE': r'\}',
-    'OPERATOR': r'(?:[-+/%&|^!=]|[*<>]{1,2})=?',
-    'IDENTIFIER': r'[a-zA-Z_]\w*[!?]?',
-    'STRING': r'\'(?:[^\\\n]|\\.)*?\'|\"(?:[^\\\n]|\\.)*?\"',
-    'BINARY': r'0b(?:_?[01])+',
-    'OCTAL': r'0o(?:_?[0-7])+',
-    'HEXADECIMAL': r'0x(?:_?[\da-fA-F])+',
-    'DECIMAL': r'\d(?:_?\d)*(?:\.\d(?:_?\d)*)?(?:[eE][+-]?\d(?:_?\d)*)?[jJ]?',
-    'UNKNOWN': r'.'
+    'BLANK':        r'(?://.*$|/\*(?:.|[\r\n])*?\*/|\s)+',
+    'LAMBDA':       r'->',
+    'RANGE':        r'\.\.',
+    'DOT':          r'\.',
+    'COMMA':        r',',
+    'COLON':        r':',
+    'LBRACKET':     r'\(',
+    'LSQUARE':      r'\[',
+    'LBRACE':       r'\{',
+    'RBRACKET':     r'\)',
+    'RSQUARE':      r'\]',
+    'RBRACE':       r'\}',
+} | ASSIGNMENT | OPERATORS | KEYWORDS | LITERALS | {
+    'IDENTIFIER':   r'[a-zA-Z_]\w*[!?]?',
+    'UNKNOWN':      r'.'
 }
 TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKENS.items()), re.M)
 
@@ -113,18 +152,6 @@ def lex(source):
                 yield Token('NEWLINE', 'nl', linenum, column)
                 linenum += newlines
             continue
-        elif type == 'OPERATOR':
-            if value.endswith('=') and value not in ('<=', '>=', '==', '!='):
-                type = 'ASSIGNMENT'
-        elif type == 'IDENTIFIER':
-            if value in KEYWORDS:
-                type = 'KEYWORD'
-            elif value in KEYWORD_OPERATORS:
-                type = 'OPERATOR'
-            elif value in ('true', 'false'):
-                type = 'BOOLEAN'
-            elif value == 'none':
-                type = 'NONE'
         elif type in ('BINARY', 'OCTAL', 'HEXADECIMAL', 'DECIMAL'):
             type = 'NUMBER'
         yield Token(type, value, linenum, column)
