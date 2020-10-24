@@ -20,12 +20,12 @@ expression -> assignment
             | declaration
             | boolor
 assignment -> Delimited[target] ASSIGN expression
-target     -> ("nonlocal" | "const")? typehint? IDENTIFIER
+target     -> "const"? typehint? IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
-            | throw | return | yield | yieldfrom
+            | throw | yield | yieldfrom
 if         -> "if" expression "then" expression ("else" expression)?
 case       -> "case" primary "in" mapping ("else" expression)?
 try        -> "try" expression ("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+
@@ -40,7 +40,6 @@ module     -> "module" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | mapping | list | tuple | STRING)
 throw      -> "throw" expression
-return     -> "return" expression
 yieldfrom  -> "yield" "from" expression
 yield      -> "yield" expression
 lambda     -> Delimited2[vparam, kwparam] "->" expression
