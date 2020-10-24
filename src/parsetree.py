@@ -94,29 +94,42 @@ class IdentifierNode(ParseNode):
 
 @dataclass
 class LiteralNode(ParseNode):
+    pass
+
+@dataclass
+class ValueLiteralNode(LiteralNode):
     value: str
 
     def __str__(self):
         return f'{self.nodetype} {self.value}'
 
 @dataclass
-class StringNode(LiteralNode):
+class StringNode(ValueLiteralNode):
     pass
 
 @dataclass
-class NumberNode(LiteralNode):
+class NumberNode(ValueLiteralNode):
     pass
 
 @dataclass
-class BooleanNode(LiteralNode):
+class BooleanNode(ValueLiteralNode):
     pass
 
 @dataclass
 class NoneNode(LiteralNode):
-    value: str = field(init=False, default='none')
+    pass
 
-    def __str__(self):
-        return 'None'
+@dataclass
+class BreakNode(LiteralNode):
+    pass
+
+@dataclass
+class ContinueNode(LiteralNode):
+    pass
+
+@dataclass
+class PassNode(LiteralNode):
+    pass
 
 @dataclass
 class SequenceNode(ParseNode):
@@ -300,27 +313,11 @@ class ThrowNode(KeywordNode):
     pass
 
 @dataclass
-class ReturnNode(KeywordNode):
-    pass
-
-@dataclass
 class YieldNode(KeywordNode):
     pass
 
 @dataclass
 class YieldFromNode(KeywordNode):
-    pass
-
-@dataclass
-class BreakNode(ParseNode):
-    pass
-
-@dataclass
-class ContinueNode(ParseNode):
-    pass
-
-@dataclass
-class PassNode(ParseNode):
     pass
 
 @dataclass
@@ -358,12 +355,11 @@ class CatchNode(ParseNode):
 
 @dataclass
 class TryNode(ParseNode):
-    body: ParseNode
+    expression: ParseNode
     catches: List[CatchNode]
-    finally_: Optional[ParseNode]
 
     def __str__(self):
-        return pprint('Try', self.body, *self.catch, self.finally_)
+        return pprint('Try', self.expression, *self.catch)
 
 @dataclass
 class ForNode(ParseNode):
@@ -384,14 +380,14 @@ class WhileNode(ParseNode):
 
 @dataclass
 class TargetNode(ParseNode):
-    mode: str
+    const: bool
     typehint: Optional['TypeNode']
     name: IdentifierNode
 
     def __str__(self):
         fragments = []
-        if self.mode:
-            fragments.append(mode)
+        if self.const:
+            fragments.append('const')
         if self.typehint:
             fragments.append(f'<{self.typehint}>')
         fragments.append(str(self.name))
