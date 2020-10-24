@@ -26,7 +26,6 @@ type       -> IDENTIFIER ("[" List[type] "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | return | yield | yieldfrom
-            | break | continue | pass
 if         -> "if" expression "then" expression ("else" expression)?
 case       -> "case" primary "in" mapping ("else" expression)?
 try        -> "try" expression ("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+
@@ -44,9 +43,6 @@ throw      -> "throw" expression
 return     -> "return" expression
 yieldfrom  -> "yield" "from" expression
 yield      -> "yield" expression
-break      -> "break"
-continue   -> "continue"
-pass       -> "pass"
 lambda     -> Delimited2[vparam, kwparam] "->" expression
 vparam     -> "*"? typehint IDENTIFIER
 kwparam    -> "**" typehint IDENTIFIER | typehint IDENTIFIER ":" expression
@@ -78,4 +74,4 @@ list       -> "[" (range | List[expression]) "]"
 range      -> primary ".." primary? ("," primary)?
 grouping   -> "(" expression ")"
 tuple      -> "(" List[expression] ")"
-literal    -> STRING | NUMBER | "true" | "false" | "none"
+literal    -> STRING | NUMBER | "true" | "false" | "none" | "break" | "continue" | "pass"
