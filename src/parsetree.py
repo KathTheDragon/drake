@@ -8,6 +8,10 @@ __all__ = [
     'NumberNode',
     'BooleanNode',
     'NoneNode',
+    'BreakNode',
+    'ContinueNode',
+    'PassNode',
+    'GroupingNode',
     'PairNode',
     'MappingNode',
     'BlockNode',
@@ -30,12 +34,8 @@ __all__ = [
     'ExceptionNode',
     'MutableNode',
     'ThrowNode',
-    'ReturnNode',
     'YieldNode',
     'YieldFromNode',
-    'BreakNode',
-    'ContinueNode',
-    'PassNode',
     'IfNode',
     'CaseNode',
     'CatchNode',
@@ -130,6 +130,10 @@ class ContinueNode(LiteralNode):
 @dataclass
 class PassNode(LiteralNode):
     pass
+
+@dataclass
+class GroupingNode(ParseNode):
+    expression: ParseNode
 
 @dataclass
 class SequenceNode(ParseNode):
@@ -348,10 +352,10 @@ class CaseNode(ParseNode):
 class CatchNode(ParseNode):
     exception: IdentifierNode
     name: Optional[IdentifierNode]
-    body: ParseNode  # Might change to BlockNode
+    expression: ParseNode  # Might change to BlockNode
 
     def __str__(self):
-        return pprint('Catch', self.exception, self.container, self.body)
+        return pprint('Catch', self.exception, self.name, self.expression)
 
 @dataclass
 class TryNode(ParseNode):
