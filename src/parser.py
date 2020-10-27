@@ -129,6 +129,8 @@ class Parser(lexer.Lexer):
             return self.mutable()
         elif self.peek('KW_OBJECT'):
             return self.object()
+        elif self.peek('KW_RAISES'):
+            return self.raises()
         elif self.peek('KW_THROW'):
             return self.throw()
         elif self.peek('KW_TRY'):
@@ -381,6 +383,15 @@ class Parser(lexer.Lexer):
     def throw(self):
         self.next('KW_THROW')
         return ThrowNode(self.expression())
+
+    def raises(self):
+        self.next('KW_RAISES')
+        self.next('LBRACKET')
+        expression = self.expression()
+        self.next('COMMA')
+        exception = self.identifier()
+        self.next('RBRACKET')
+        return RaisesNode(expression, exception)
 
     def yield_(self):
         self.next('KW_YIELD')

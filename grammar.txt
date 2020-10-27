@@ -40,6 +40,7 @@ module     -> "module" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | mapping | list | tuple | STRING)
 throw      -> "throw" expression
+raises     -> "raises" "(" expression "," IDENTIFIER ")"
 yieldfrom  -> "yield" "from" expression
 yield      -> "yield" expression
 lambda     -> Delimited2[vparam, kwparam] "->" expression

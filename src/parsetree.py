@@ -40,6 +40,7 @@ __all__ = [
     'CaseNode',
     'CatchNode',
     'TryNode',
+    'RaisesNode',
     'ForNode',
     'WhileNode',
     'TypeNode',
@@ -364,6 +365,14 @@ class TryNode(ParseNode):
 
     def __str__(self):
         return pprint('Try', self.expression, *self.catch)
+
+@dataclass
+class RaisesNode(ParseNode):
+    expression: ParseNode
+    exception: IdentifierNode
+
+    def __str__(self):
+        return pprint('Raises', self.expression, self.exception)
 
 @dataclass
 class ForNode(ParseNode):

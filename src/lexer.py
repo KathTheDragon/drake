@@ -62,6 +62,7 @@ KEYWORDS = {
     'KW_MODULE':    r'module',
     'KW_MUTABLE':   r'mutable',
     'KW_OBJECT':    r'object',
+    'KW_RAISES':    r'raises',
     'KW_THEN':      r'then',
     'KW_THROW':     r'throw',
     'KW_TRY':       r'try',
