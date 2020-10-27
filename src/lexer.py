@@ -104,14 +104,14 @@ TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKE
 class Token:
     kind: str
     value: str
-    linenum: int
-    column: int
+    linenum: int = field(default=-1, compare=False)
+    column: int = field(default=-1, compare=False)
 
     def __iter__(self):
         yield self.kind
         yield self.value
 
-EOF = Token('EOF', 'eof', -1, -1)
+EOF = Token('EOF', 'eof')
 
 @dataclass
 class Lexer:
