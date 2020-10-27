@@ -368,6 +368,8 @@ class Parser(lexer.Lexer):
         self.next('KW_MUTABLE')
         if self.peek('KW_OBJECT'):
             value = self.object()
+        elif self.peek('KW_ITER'):
+            value = self.iter()
         elif self.peek('LBRACE'):
             value = self.mapping()
         elif self.peek('LSQUARE'):

@@ -38,7 +38,7 @@ enum       -> "enum" "flags"? "{" List[enumitem] "}"
 enumitem   -> IDENTIFIER ("=" NUMBER)?
 module     -> "module" block
 exception  -> "exception" block
-mutable    -> "mutable" (object | mapping | list | tuple | STRING)
+mutable    -> "mutable" (object | iter | mapping | list | tuple | STRING)
 throw      -> "throw" expression
 raises     -> "raises" "(" expression "," IDENTIFIER ")"
 yieldfrom  -> "yield" "from" expression
