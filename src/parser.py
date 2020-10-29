@@ -80,7 +80,7 @@ class Parser(lexer.Lexer):
             if self.peek(*ops):
                 op = self.next().value
                 right = operand()
-                left = BinaryOpNode(left, op, right)
+                left = self.binaryopnode(left, op, right)
             else:
                 return left
 
@@ -89,14 +89,13 @@ class Parser(lexer.Lexer):
         if self.peek(*ops):
             op = self.next().value
             right = self.rightop(ops, operand)
-            return BinaryOpNode(left, op, right)
+            return self.binaryopnode(left, op, right)
         else:
             return left
 
     ## States
     def parse(self):
-        program = ModuleNode(self.itemlist(self.expression, 'EOF'))
-        return program
+        return self.modulenode(self.itemlist(self.expression, 'EOF'))
 
     def expression(self):
         if self.peek('KW_CASE'):
@@ -212,7 +211,7 @@ class Parser(lexer.Lexer):
             params = self.itemlist(self.type, 'RSQUARE')
         else:
             params = []
-        return TypeNode(name, params)
+        return self.typenode(name, params)
 
     def if_(self):
         self.next('KW_IF')
@@ -223,7 +222,7 @@ class Parser(lexer.Lexer):
             iffalse = self.expression()
         else:
             iffalse = None
-        return IfNode(condition, iftrue, iffalse)
+        return self.ifnode(condition, iftrue, iffalse)
 
     def case(self):
         self.next('KW_CASE')
@@ -234,7 +233,7 @@ class Parser(lexer.Lexer):
             default = self.expression()
         else:
             default = None
-        return CaseNode(value, mapping, default)
+        return self.casenode(value, mapping, default)
 
     def try_(self):
         self.next('KW_TRY')
@@ -243,7 +242,7 @@ class Parser(lexer.Lexer):
             ... # Catch route
         else:
             self.error()
-        return TryNode(expression, catches)
+        return self.trynode(expression, catches)
 
     def for_(self):
         self.next('KW_FOR')
@@ -254,13 +253,13 @@ class Parser(lexer.Lexer):
         self.next('OP_IN')
         container = self.expression()
         body = self.block()
-        return ForNode(vars, container, body)
+        return self.fornode(vars, container, body)
 
     def while_(self):
         self.next('KW_WHILE')
         condition = self.expression()
         body = self.block()
-        return WhileNode(condition, body)
+        return self.whilenode(condition, body)
 
     def iter(self):
         self.next('KW_ITER')
@@ -272,15 +271,15 @@ class Parser(lexer.Lexer):
             iterable = self.while_()
         else:
             self.error()
-        return IterNode(iterable)
+        return self.iternode(iterable)
 
     def do(self):
         self.next('KW_DO')
-        return DoNode(self.block())
+        return self.donode(self.block())
 
     def object(self):
         self.next('KW_OBJECT')
-        return ObjectNode(self.block())
+        return self.objectnode(self.block())
 
     def enum(self):
         self.next('KW_ENUM')
@@ -289,7 +288,7 @@ class Parser(lexer.Lexer):
         else:
             flags = False
         self.next('LBRACE')
-        return EnumNode(flags, self.itemlist(self.enumitem, 'RBRACE'))
+        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE'))
 
     def enumitem(self):
         name = self.identifier()
@@ -297,15 +296,15 @@ class Parser(lexer.Lexer):
             value = self.number()
         else:
             value = None
-        return EnumItemNode(name, value)
+        return self.enumitemnode(name, value)
 
     def module(self):
         self.next('KW_MODULE')
-        return ModuleNode(self.block())
+        return self.modulenode(self.block())
 
     def exception(self):
         self.next('KW_EXCEPTION')
-        return ExceptionNode(self.block())
+        return self.exceptionnode(self.block())
 
     def mutable(self):
         self.next('KW_MUTABLE')
@@ -323,11 +322,11 @@ class Parser(lexer.Lexer):
             value = self.string()
         else:
             self.error()
-        return MutableNode(value)
+        return self.mutablenode(value)
 
     def throw(self):
         self.next('KW_THROW')
-        return ThrowNode(self.expression())
+        return self.thrownode(self.expression())
 
     def raises(self):
         self.next('KW_RAISES')
@@ -336,14 +335,14 @@ class Parser(lexer.Lexer):
         self.next('COMMA')
         exception = self.identifier()
         self.next('RBRACKET')
-        return RaisesNode(expression, exception)
+        return self.raisesnode(expression, exception)
 
     def yield_(self):
         self.next('KW_YIELD')
         if self.maybe('KW_FROM'):
-            return YieldFromNode(self.expression())
+            return self.yieldfromnode(self.expression())
         else:
-            return YieldNode(self.expression())
+            return self.yieldnode(self.expression())
 
     def boolor(self):
         return self.rightop(self.boolxor, 'OP_OR')
@@ -358,11 +357,11 @@ class Parser(lexer.Lexer):
         left = self.identity()
         if self.maybe('OP_IN'):
             right = self.inclusion()
-            return BinaryOpNode(left, 'in', right)
+            return self.binaryopnode(left, 'in', right)
         elif self.maybe('OP_NOT'):
             self.next('OP_IN')
             right = self.inclusion()
-            return BinaryOpNode(left, 'not in', right)
+            return self.binaryopnode(left, 'not in', right)
         else:
             return left
 
@@ -374,7 +373,7 @@ class Parser(lexer.Lexer):
             else:
                 op = 'is'
             right = self.identity()
-            return BinaryOpNode(left, op, right)
+            return self.binaryopnode(left, op, right)
         else:
             return left
 
@@ -409,7 +408,7 @@ class Parser(lexer.Lexer):
         if self.peek('OP_SUB', 'OP_INV', 'OP_NOT'):
             op = self.next()
             expr = self.unary()
-            return UnaryOpNode(op, expr)
+            return self.unaryopnode(op, expr)
         else:
             return self.primary()
 
@@ -420,13 +419,13 @@ class Parser(lexer.Lexer):
         while True:
             if self.maybe('DOT'):
                 attr = self.identifier()
-                obj = LookupNode(obj, attr)
+                obj = self.lookupnode(obj, attr)
             elif self.maybe('LBRACKET'):
                 args = self.itemlist(self.arg, 'RBRACKET')
-                obj = CallNode(obj, args)
+                obj = self.callnode(obj, args)
             elif self.peek('LSQUARE'):
                 subscript = self.list()
-                obj = SubscriptNode(obj, subscript)
+                obj = self.subscriptnode(obj, subscript)
             else:
                 return obj
 
@@ -434,12 +433,12 @@ class Parser(lexer.Lexer):
         if self.peek('OP_MULT', 'OP_POW'):
             star = self.next()
             expr = self.expression()
-            return UnaryOpNode(star, expr)
+            return self.unaryopnode(star, expr)
         elif self.peek('IDENTIFIER'):
             name = self.identifier()
             self.next('COLON')
             expr = self.expression()
-            return KwargNode(name, expr)
+            return self.kwargnode(name, expr)
         else:
             return self.expression()
 
@@ -458,70 +457,70 @@ class Parser(lexer.Lexer):
     def brace(self):
         self.next('LBRACE')
         if self.maybe('RBRACE'):
-            return MappingNode()
+            return self.mappingnode([])
         else:
             expr = self.expression()
             if self.maybe('COLON'):
-                pair = PairNode(expr, self.expression())
-                return MappingNode(self._itemlist(pair, self.pair, 'RBRACE'))
+                pair = self.pairnode(expr, self.expression())
+                return self.mappingnode(self._itemlist(pair, self.pair, 'RBRACE'))
             else:
-                return BlockNode(self._itemlist(expr, self.expression, 'RBRACE'))
+                return self.blocknode(self._itemlist(expr, self.expression, 'RBRACE'))
 
     def mapping(self):
         self.next('LBRACE')
-        return MappingNode(self.itemlist(self.pair, 'RBRACE'))
+        return self.mappingnode(self.itemlist(self.pair, 'RBRACE'))
 
     def pair(self):
         key = self.expression()
         self.next('COLON')
         value = self.expression()
-        return PairNode(key, value)
+        return self.pairnode(key, value)
 
     def block(self):
         self.next('LBRACE')
-        return BlockNode(self.itemlist(self.expression, 'RBRACE'))
+        return self.blocknode(self.itemlist(self.expression, 'RBRACE'))
 
     def list(self):
         self.next('LSQUARE')
         if self.maybe('RSQUARE'):
-            return ListNode()
+            return self.listnode([])
         else:
             expr = self.expression()
             if self.maybe('RANGE'):
                 if self.maybe('RSQUARE'):
-                    return RangeNode(expr)
+                    return self.rangenode(expr, None, None)
                 elif self.maybe('COMMA'):
                     step = self.unary()
-                    return RangeNode(expr, step=step)
+                    return self.rangenode(expr, None, step)
                 else:
                     stop = self.expression()
                     if self.maybe('RSQUARE'):
-                        return RangeNode(expr, stop)
+                        return self.rangenode(expr, stop, None)
                     elif self.maybe('COMMA'):
                         step = self.unary()
-                        return RangeNode(expr, stop, step=step)
+                        return self.rangenode(expr, stop, step)
                     else:
                         self.error()
             else:
-                return ListNode(self._itemlist(expr, self.expression, 'RSQUARE'))
+                return self.listnode(self._itemlist(expr, self.expression, 'RSQUARE'))
 
     def bracket(self):
         self.next('LBRACKET')
         exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False)
         if isinstance(exprs, list):
-            return TupleNode(exprs)
+            return self.tuplenode(exprs)
         else:
-            return GroupingNode(exprs)
+            return self.groupingnode(exprs)
 
     def grouping(self):
         self.next('LBRACKET')
         expr = self.expression()
         self.next('RBRACKET')
-        return GroupingNode(expr)
+        return self.groupingnode(expr)
 
     def tuple(self):
         self.next('LBRACKET')
-        return TupleNode(self.expression, 'RBRACKET')
+        return self.tuplenode(self.expression, 'RBRACKET')
 
     def literal(self):
         if self.peek('STRING'):
@@ -542,32 +541,32 @@ class Parser(lexer.Lexer):
             self.error()
 
     def string(self):
-        return StringNode(self.next('STRING').value)
+        return self.stringnode(self.next('STRING').value)
 
     def number(self):
-        return NumberNode(self.next('NUMBER').value)
+        return self.numbernode(self.next('NUMBER').value)
 
     def boolean(self):
-        return BooleanNode(self.next('BOOLEAN').value)
+        return self.booleannode(self.next('BOOLEAN').value)
 
     def none(self):
         self.next('NONE')
-        return NoneNode()
+        return self.nonenode()
 
     def break_(self):
         self.next('BREAK')
-        return BreakNode()
+        return self.breaknode()
 
     def continue_(self):
         self.next('CONTINUE')
-        return ContinueNode()
+        return self.continuenode()
 
     def pass_(self):
         self.next('PASS')
-        return PassNode()
+        return self.passnode()
 
     def identifier(self):
-        return IdentifierNode(self.next('IDENTIFIER').value)
+        return self.identifiernode(self.next('IDENTIFIER').value)
 
     # Node functions
 
