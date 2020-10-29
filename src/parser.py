@@ -149,6 +149,7 @@ class Parser(lexer.Lexer):
             typehint, name = self.typedname()
         else:
             typehint, name = None, self.identifier()
+        return self.targetnode(typehint, name)
 
     def bracketexpr(self):
         self.next('LBRACKET')
