@@ -174,7 +174,7 @@ class Parser(lexer.Lexer):
                 return self._primary(self.groupingnode(exprs))
 
     def assignment(self, targets):
-        op = self.next(*lexer.ASSIGNMENT)
+        op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression()
         return self.assignmentnode(targets, op, value)
 
