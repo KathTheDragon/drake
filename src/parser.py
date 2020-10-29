@@ -98,46 +98,34 @@ class Parser(lexer.Lexer):
         return self.modulenode(self.itemlist(self.expression, 'EOF'))
 
     def expression(self):
-        if self.peek('KW_CASE'):
-            return self.case()
-        elif self.peek('KW_CONST', 'KW_LET'):
-            return self.declaration()
-        elif self.peek('KW_DO'):
-            return self.do()
-        elif self.peek('KW_ENUM'):
-            return self.enum()
-        elif self.peek('KW_EXCEPTION'):
-            return self.exception()
-        elif self.peek('KW_FOR'):
-            return self.for_()
-        elif self.peek('KW_IF'):
-            return self.if_()
-        elif self.peek('KW_ITER'):
-            return self.iter()
-        elif self.peek('KW_MODULE'):
-            return self.module()
-        elif self.peek('KW_MUTABLE'):
-            return self.mutable()
-        elif self.peek('KW_OBJECT'):
-            return self.object()
-        elif self.peek('KW_RAISES'):
-            return self.raises()
-        elif self.peek('KW_THROW'):
-            return self.throw()
-        elif self.peek('KW_TRY'):
-            return self.try_()
-        elif self.peek('KW_WHILE'):
-            return self.while_()
-        elif self.peek('KW_YIELD'):
-            return self.yield_()
-        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
-            return self.lambda_([self.param()])
-        elif self.peek('OP_SUB', 'OP_INV', 'OP_NOT'):
-            return self.unary()
-        elif self.peek('LBRACKET'):
-            return self.bracketexpr()
-        else:
-            return self.primary()
+        kind = self.peek().kind
+        func = {
+            'KW_CASE': self.case,
+            'KW_CONST': self.declaration,
+            'KW_LET': self.declaration,
+            'KW_DO': self.do,
+            'KW_ENUM': self.enum,
+            'KW_EXCEPTION': self.exception,
+            'KW_FOR': self.for_,
+            'KW_IF': self.if_,
+            'KW_ITER': self.iter,
+            'KW_MODULE': self.module,
+            'KW_MUTABLE': self.mutable,
+            'KW_OBJECT': self.object,
+            'KW_RAISES': self.raises,
+            'KW_THROW': self.throw,
+            'KW_TRY': self.try_,
+            'KW_WHILE': self.while_,
+            'KW_YIELD': self.yield_,
+            'OP_MULT': self.lambda_,
+            'OP_POW': self.lambda_,
+            'OP_LT': self.lambda_,
+            'OP_SUB': self.unary,
+            'OP_INV': self.unary,
+            'OP_NOT': self.unary,
+            'LBRACKET': self.bracketexpr
+        }.get(kind, self.primary)
+        return func()
 
     def declaration(self):
         if self.maybe('KW_LET'):
@@ -181,7 +169,9 @@ class Parser(lexer.Lexer):
         value = self.expression()
         return self.assignmentnode(declaration, op, value)
 
-    def lambda_(self, params):
+    def lambda_(self, params=None):
+        if params is None:
+            params = [self.param()]
         self.next('LAMBDA')
         body = self.expression()
         return self.lambdanode(params, [], body)
