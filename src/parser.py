@@ -471,7 +471,9 @@ class Parser(lexer.Lexer):
             return self.primary()
 
     def primary(self):
-        obj = self.atom()
+        return self._primary(self.atom())
+
+    def _primary(self, obj):
         while True:
             if self.maybe('DOT'):
                 attr = self.identifier()
