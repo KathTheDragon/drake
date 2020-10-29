@@ -59,6 +59,7 @@ KEYWORDS = {
     'KW_FROM':      r'from',
     'KW_IF':        r'if',
     'KW_ITER':      r'iter',
+    'KW_LET':       r'let',
     'KW_MODULE':    r'module',
     'KW_MUTABLE':   r'mutable',
     'KW_OBJECT':    r'object',
@@ -148,8 +149,6 @@ def lex(source):
         if type == 'BLANK':
             newlines = len(f'{value} '.splitlines()) - 1
             if newlines:
-                # To-do: suppress newlines after commas and open brackets, and
-                # before close brackets
                 yield Token('NEWLINE', 'nl', linenum, column)
                 linenum += newlines
             continue

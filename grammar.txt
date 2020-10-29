@@ -16,15 +16,16 @@ Right[op, operand]
            -> operand (op Right[op, operand])?
 
 program    -> List[expression] EOF
-expression -> assignment
+expression -> declaration
+            | assignment
             | keyword
             | lambda
-            | declaration
             | boolor
-assignment -> Delimited[target] ASSIGN expression
-target     -> "const"? typehint? IDENTIFIER
+declaration-> ("let" | "const") typehint? IDENTIFIER
 typehint   -> "<" type ">"
 type       -> IDENTIFIER ("[" List[type] "]")?
+assignment -> Delimited[target] ASSIGN expression
+target     -> declaration
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | raises | yield | yieldfrom

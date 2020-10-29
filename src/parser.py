@@ -101,16 +101,12 @@ class Parser(lexer.Lexer):
     def expression(self):
         if self.peek('KW_CASE'):
             return self.case()
-        elif self.peek('KW_CONST'):
-            if self.peek('OP_LT'):
-                typehint, name = self.typedname()
-                if self.peek(*lexer.ASSIGNMENT):
-                    return self.assignment(TargetNode(True, typehint, name))
-                else:
-                    return DeclarationNode(True, typehint, name)
+        elif self.peek('KW_CONST', 'KW_LET'):
+            declaration = self.declaration()
+            if self.peek(*lexer.ASSIGNMENT):
+                return self.assignment(declaration)
             else:
-                name = self.identifier()
-                return self.assignment(TargetNode(True, None, name))
+                return declaration
         elif self.peek('KW_DO'):
             return self.do()
         elif self.peek('KW_ENUM'):
@@ -139,122 +135,69 @@ class Parser(lexer.Lexer):
             return self.while_()
         elif self.peek('KW_YIELD'):
             return self.yield_()
-        elif self.peek('OP_LT'):
-            typehint, name = self.typedname()
-            if self.peek(*lexer.ASSIGNMENT):
-                return self.assignment(TargetNode(False, typehint, name))
-            elif self.peek('LAMBDA'):
-                return self.lambda_([VParamNode(False, typehint, name)])
-            elif self.maybe('COLON'):
-                value = self.expression()
-                return self.lambda_([KwParamNode(False, typehint, name, value)])
-            else:
-                return DeclarationNode(False, typehint, name)
-        elif self.peek('OP_MULT', 'OP_POW'):
-            if self.peek('OP_MULT'):
-                cls = VParamNode
-            else:
-                cls = KwParamNode
-            self.next()
-            typehint, name = self.typedname()
-            param = cls(True, typehint, name)
-            return self.lambda_([param])
+        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
+            return self.lambda_([self.param()])
         elif self.peek('OP_SUB', 'OP_INV', 'OP_NOT'):
             return self.unary()
         elif self.peek('LBRACKET'):
             return self.bracketexpr()
-        elif self.peek('LBRACE'):
-            return self.brace()
-        elif self.peek('LSQUARE'):
-            return self.list()
-        elif self.peek('IDENTIFIER'):
-            name = self.identifier()
-            if self.peek(*lexer.ASSIGNMENT):
-                return self.assignment(name)
-            elif self.peek('LAMBDA'):
-                return self.lambda_([name])
-            else:
-                return name
         else:
-            return self.literal()
+            return self.primary()
+
+    def declaration(self):
+        if self.maybe('KW_LET'):
+            const = False
+        elif self.maybe('KW_CONST'):
+            const = True
+        else:
+            self.error()
+        if self.maybe('OP_LT'):
+            typehint, name = self.typedname()
+        else:
+            typehint, name = None, self.identifier()
+        return self.declarationnode(const, typehint, name)
 
     def bracketexpr(self):
         self.next('LBRACKET')
-        items = self.itemlist(self.bracketitem, 'RBRACKET', forcelist=False)
-        if self.peek(*lexer.ASSIGNMENT):
+        if self.maybe('RBRACKET'):
+            return self._primary(self.tuplenode([]))
+        elif self.peek('KW_LET', 'KW_CONST'):
+            items = self.itemlist(self.declaration, 'RBRACKET')
             return self.assignment(items)
-        elif self.peek('LAMBDA'):
+        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
+            items = self.itemlist(self.param, 'RBRACKET')
             return self.lambda_(items)
-        elif isinstance(items, list):
-            for item in items:
-                if isinstance(item, (TargetNode, VParamNode, KwParamNode)):
-                    self.error()
-            return TupleNode(items)
         else:
-            if isinstance(items, (TargetNode, VParamNode, KwParamNode)):
-                self.error()
-            return GroupingNode(items)
-
-    def bracketitem(self):
-        if self.peek('KW_CONST'):
-            keyword = self.next().value
-            if self.peek('OP_LT'):
-                typehint, name = self.typedname()
+            exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False)
+            if isinstance(exprs, list):
+                return self._primary(self.tuplenode(exprs))
             else:
-                typehint, name = None, self.identifier()
-            return TargetNode(keyword, typehint, name)
-        elif self.peek('OP_MULT', 'OP_POW'):
-            if self.peek('OP_MULT'):
-                cls = VParamNode
-            else:
-                cls = KwParamNode
-            self.next()
-            typehint, name = self.typedname()
-            return cls(True, typehint, name)
-        elif self.peek('OP_LT'):
-            typehint, name = self.typedname()
-            if self.peek('COLON'):
-                value = self.expression()
-                return KwParamNode(False, typehint, name, value)
-            else:
-                return DeclarationNode(False, typehint, name)
-        else:
-            return self.expression()
+                return self._primary(self.groupingnode(exprs))
 
     def assignment(self, targets):
-        if isinstance(targets, list):
-            targets = [self.checktarget(target) for target in targets]
-        else:
-            targets = self.checktarget(targets)
         op = self.next(*lexer.ASSIGNMENT)
         value = self.expression()
-        return AssignmentNode(targets, op, value)
-
-    def checktarget(self, target):
-        if isinstance(target, TargetNode):
-            return target
-        elif isinstance(target, DeclarationNode):
-            return TargetNode(target.const, target.typehint, target.name)
-        elif isinstance(target, IdentifierNode):
-            return TargetNode(False, None, target)
-        else:
-            self.error()
+        return self.assignmentnode(targets, op, value)
 
     def lambda_(self, params):
-        _params = []
-        if not isinstance(params, list):
-            params = [params]
-        # This should probably enforce parameter ordering too
-        for param in params:
-            if isinstance(param, (VParamNode, KwParamNode)):
-                _params.append(param)
-            elif isinstance(param, DeclarationNode):
-                _params.append(VParamNode(False, param.typehint, param.name))
-            else:
-                self.error()
         self.next('LAMBDA')
         body = self.expression()
-        return LambdaNode(_params, [], body)
+        return self.lambdanode(params, [], body)
+
+    def param(self):
+        if self.maybe('OP_MULT'):
+            return self.vparamnode(True, *self.typedname())
+        elif self.maybe('OP_POW'):
+            return self.kwparamnode(True, *self.typedname())
+        elif self.peek('OP_LT'):
+            typehint, name = self.typedname()
+            if self.maybe('COLON'):
+                value = self.expression()
+                return self.kwparamnode(False, typehint, name, value)
+            else:
+                return self.vparamnode(False, typehint, name)
+        else:
+            self.error()
 
     def typedname(self):
         self.next('OP_LT')
