@@ -101,11 +101,7 @@ class Parser(lexer.Lexer):
         if self.peek('KW_CASE'):
             return self.case()
         elif self.peek('KW_CONST', 'KW_LET'):
-            declaration = self.declaration()
-            if self.peek(*lexer.ASSIGNMENT):
-                return self.assignment(declaration)
-            else:
-                return declaration
+            return self.declaration()
         elif self.peek('KW_DO'):
             return self.do()
         elif self.peek('KW_ENUM'):
@@ -154,7 +150,11 @@ class Parser(lexer.Lexer):
             targets = self.itemlist(self.target, 'RBRACKET', forcelist=False)
         else:
             targets = self.target()
-        return self.declarationnode(const, targets)
+        declaration = self.declarationnode(const, targets)
+        if self.peek(*lexer.ASSIGNMENT):
+            return self.assignment(declaration)
+        else:
+            return declaration
 
     def target(self):
         if self.peek('OP_LT'):
