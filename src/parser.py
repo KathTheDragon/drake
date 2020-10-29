@@ -623,3 +623,137 @@ class Parser(lexer.Lexer):
 
     def identifier(self):
         return IdentifierNode(self.next('IDENTIFIER').value)
+
+    # Node functions
+
+    def assignmentnode(self, targets, operator, expression):
+        return AssignmentNode(targets, operator, expression)
+
+    def targetnode(self, const, typehint, name):
+        return TargetNode(const, typehint, name)
+
+    def typenode(self, type, params):
+        return TypeNode(type, params)
+
+    def ifnode(self, condition, then, default):
+        return IfNode(condition, then, default)
+
+    def casenode(self, value, cases, default):
+        return CaseNode(value, cases, default)
+
+    def trynode(self, expression, catches):
+        return TryNode(expression, catches)
+
+    def catchnode(self, exception, name, expression):
+        return CatchNode(exception, name, expression)
+
+    def fornode(self, vars, container, body):
+        return ForNode(vars, container, body)
+
+    def whilenode(self, condition, body):
+        return WhileNode(condition, body)
+
+    def iternode(self, expression):
+        return IterNode(expression)
+
+    def donode(self, body):
+        return DoNode(body)
+
+    def objectnode(self, body):
+        return ObjectNode(body)
+
+    def enumnode(self, flags, items):
+        return EnumNode(flags, items)
+
+    def modulenode(self, body):
+        return ModuleNode(body)
+
+    def exceptionnode(self, body):
+        return ExceptionNode(body)
+
+    def mutablenode(self, expression):
+        return MutableNode(expression)
+
+    def thrownode(self, expression):
+        return ThrowNode(expression)
+
+    def yieldfromnode(self, expression):
+        return YieldFromNode(expression)
+
+    def yieldnode(self, expression):
+        return YieldNode(expression)
+
+    def lambdanode(self, vparams, kwparams, returns):
+        return LambdaNode(vparams, kwparams, returns)
+
+    def vparamnode(self, starred, typehint, name):
+        return VParamNode(starred, typehint, name)
+
+    def kwparamnode(self, starred, typehint, name, default):
+        return KwParamNode(starred, typehint, name, default)
+
+    def declarationnode(self, const, typehint, name):
+        return DeclarationNode(const, typehint, name)
+
+    def binaryopnode(self, left, operator, right):
+        return BinaryOpNode(left, operator, right)
+
+    def unaryopnode(self, operator, operand):
+        return UnaryOpNode(operator, operand)
+
+    def lookupnode(self, object, attribute):
+        return LookupNode(object, attribute)
+
+    def callnode(self, object, vargs, kwargs):
+        return CallNode(object, vargs, kwargs)
+
+    def kwargnode(self, name, value):
+        return KwargNode(name, value)
+
+    def subscriptnode(self, object, subscript):
+        return SubcriptNode(object, subscript)
+
+    def mappingnode(self, pairs):
+        return MappingNode(pairs)
+
+    def pairnode(self, key, value):
+        return PairNode(key, value)
+
+    def blocknode(self, expressions):
+        return BlockNode(expressions)
+
+    def listnode(self, expressions):
+        return ListNode(expressions)
+
+    def rangenode(self, start, stop, step):
+        return RangeNode(start, stop, step)
+
+    def groupingnode(self, expression):
+        return GroupingNode(expression)
+
+    def tuplenode(self, expressions):
+        return TupleNode(expressions)
+
+    def identifiernode(self, name):
+        return IdentifierNode(name)
+
+    def stringnode(self, value):
+        return StringNode(value)
+
+    def numbernode(self, value):
+        return NumberNode(value)
+
+    def boolnode(self, value):
+        return BoolNode(value)
+
+    def nonenode(self):
+        return NoneNode()
+
+    def breaknode(self):
+        return BreakNode()
+
+    def continuenode(self):
+        return ContinueNode()
+
+    def passnode(self):
+        return PassNode()
