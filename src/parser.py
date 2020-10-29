@@ -150,19 +150,22 @@ class Parser(lexer.Lexer):
             const = True
         else:
             self.error()
-        if self.maybe('OP_LT'):
+        if self.maybe('LBRACKET'):
+            targets = self.itemlist(self.target, 'RBRACKET', forcelist=False)
+        else:
+            targets = self.target()
+        return self.declarationnode(const, targets)
+
+    def target(self):
+        if self.peek('OP_LT'):
             typehint, name = self.typedname()
         else:
             typehint, name = None, self.identifier()
-        return self.declarationnode(const, typehint, name)
 
     def bracketexpr(self):
         self.next('LBRACKET')
         if self.maybe('RBRACKET'):
             return self._primary(self.tuplenode([]))
-        elif self.peek('KW_LET', 'KW_CONST'):
-            items = self.itemlist(self.declaration, 'RBRACKET')
-            return self.assignment(items)
         elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
             items = self.itemlist(self.param, 'RBRACKET')
             return self.lambda_(items)
@@ -173,10 +176,10 @@ class Parser(lexer.Lexer):
             else:
                 return self._primary(self.groupingnode(exprs))
 
-    def assignment(self, targets):
+    def assignment(self, declaration):
         op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression()
-        return self.assignmentnode(targets, op, value)
+        return self.assignmentnode(declaration, op, value)
 
     def lambda_(self, params):
         self.next('LAMBDA')
@@ -570,11 +573,14 @@ class Parser(lexer.Lexer):
 
     # Node functions
 
-    def assignmentnode(self, targets, operator, expression):
-        return AssignmentNode(targets, operator, expression)
+    def assignmentnode(self, declaration, operator, expression):
+        return AssignmentNode(declaration, operator, expression)
 
-    def targetnode(self, const, typehint, name):
-        return TargetNode(const, typehint, name)
+    def declarationnode(self, const, targets):
+        return DeclarationNode(const, targets)
+
+    def targetnode(self, typehint, name):
+        return TargetNode(typehint, name)
 
     def typenode(self, type, params):
         return TypeNode(type, params)
@@ -635,9 +641,6 @@ class Parser(lexer.Lexer):
 
     def kwparamnode(self, starred, typehint, name, default):
         return KwParamNode(starred, typehint, name, default)
-
-    def declarationnode(self, const, typehint, name):
-        return DeclarationNode(const, typehint, name)
 
     def binaryopnode(self, left, operator, right):
         return BinaryOpNode(left, operator, right)

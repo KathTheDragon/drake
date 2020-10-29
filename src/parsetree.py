@@ -44,8 +44,8 @@ __all__ = [
     'ForNode',
     'WhileNode',
     'TypeNode',
-    'DeclarationNode',
     'TargetNode',
+    'DeclarationNode',
     'AssignmentNode',
 ]
 
@@ -392,34 +392,6 @@ class WhileNode(ParseNode):
         return pprint('While', self.condition, self.body)
 
 @dataclass
-class TargetNode(ParseNode):
-    const: bool
-    typehint: Optional['TypeNode']
-    name: IdentifierNode
-
-    def __str__(self):
-        fragments = []
-        if self.const:
-            fragments.append('const')
-        if self.typehint:
-            fragments.append(f'<{self.typehint}>')
-        fragments.append(str(self.name))
-        return ' '.join(fragments)
-
-@dataclass
-class AssignmentNode(ParseNode):
-    targets: Union[TargetNode, List[TargetNode]]
-    operator: str
-    expression: ParseNode
-
-    def __str__(self):
-        if self.operator == '=':
-            nodetype = 'Assign'
-        else:
-            nodetype = f'Assign {self.operator}'
-        return pprint(nodetype, self.targets, self.expression)
-
-@dataclass
 class TypeNode(ParseNode):
     type: IdentifierNode
     params: List['TypeNode'] = field(default_factory=list)
@@ -432,13 +404,39 @@ class TypeNode(ParseNode):
             return type
 
 @dataclass
+class TargetNode(ParseNode):
+    typehint: Optional[TypeNode]
+    name: IdentifierNode
+
+    def __str__(self):
+        fragments = []
+        if self.const:
+            fragments.append('const')
+        if self.typehint:
+            fragments.append(f'<{self.typehint}>')
+        fragments.append(str(self.name))
+        return ' '.join(fragments)
+
+@dataclass
 class DeclarationNode(ParseNode):
     const: bool
-    typehint: TypeNode
-    name: IdentifierNode
+    targets: Union[TargetNode, List[TargetNode]]
 
     def __str__(self):
         if self.const:
             return f'const <{self.typehint}> {self.name}'
         else:
             return f'<{self.typehint}> {self.name}'
+
+@dataclass
+class AssignmentNode(ParseNode):
+    declaration: DeclarationNode
+    operator: str
+    expression: ParseNode
+
+    def __str__(self):
+        if self.operator == '=':
+            nodetype = 'Assign'
+        else:
+            nodetype = f'Assign {self.operator}'
+        return pprint(nodetype, self.targets, self.expression)
