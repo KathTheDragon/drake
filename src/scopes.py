@@ -74,26 +74,23 @@ class Scope:
     def getname(self, name, local=None):
         return self.get(*self.index(name, local))
 
-    def bind(self, name, type, assignment=True, local=True, const=False):
-        try:
-            index, scope = self.index(name, local)
-            binding = self.get(index, scope)
-            binding.rebind(type, assignment, const)
-            return index, scope
-        except NameNotFound:
-            if local == False:
-                raise
+    def bind(self, name, type, assignment=True, const=False):
+        for index, binding in enumerate(self.bindings):
+            if binding.name == name:
+                binding.rebind(type, assignment, const)
+                return index
+        else:
             index = len(self.bindings)
             binding = Binding(name, type, assignment, const)
             self.bindings.append(binding)
-            return index, 0
+            return index
 
     def child(self, *bindings):
         return Scope(bindings, parent=self)
 
 class _Builtins(Scope):
     def index(self, name):
-        index, scope = super().index(name)
+        index, _ = super().index(name, local=True)
         return index, -1
 
 builtins = _Builtins(
