@@ -88,7 +88,7 @@ class Parser(lexer.Lexer):
         left = operand()
         if self.peek(*ops):
             op = self.next().value
-            right = self.rightop(ops, operand)
+            right = self.rightop(operand, *ops)
             return self.binaryopnode(left, op, right)
         else:
             return left
