@@ -140,7 +140,7 @@ class Parser(lexer.Lexer):
             targets = self.target(**kwargs)
         declaration = self.declarationnode(const, targets, **kwargs)
         if self.peek(*lexer.ASSIGNMENT):
-            return self.assignment(declaration, **kwargs)
+            return self.assignment(const, targets, **kwargs)
         else:
             return declaration
 
@@ -165,10 +165,10 @@ class Parser(lexer.Lexer):
             else:
                 return self._primary(self.groupingnode(exprs, **kwargs), **kwargs)
 
-    def assignment(self, declaration, **kwargs):
+    def assignment(self, const, targets, **kwargs):
         op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression(**kwargs)
-        return self.assignmentnode(declaration, op, value, **kwargs)
+        return self.assignmentnode(const, targets, op, value, **kwargs)
 
     def lambda_(self, params=None, **kwargs):
         if params is None:
@@ -564,8 +564,8 @@ class Parser(lexer.Lexer):
 
     # Node functions
 
-    def assignmentnode(self, declaration, operator, expression, **kwargs):
-        return AssignmentNode(declaration, operator, expression)
+    def assignmentnode(self, const, targets, operator, expression, **kwargs):
+        return AssignmentNode(const, targets, operator, expression)
 
     def declarationnode(self, const, targets, **kwargs):
         return DeclarationNode(const, targets)

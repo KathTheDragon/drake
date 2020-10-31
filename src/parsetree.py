@@ -429,14 +429,16 @@ class DeclarationNode(ParseNode):
             return f'<{self.typehint}> {self.name}'
 
 @dataclass
-class AssignmentNode(ParseNode):
-    declaration: DeclarationNode
+class AssignmentNode(DeclarationNode):
     operator: str
     expression: ParseNode
 
     def __str__(self):
-        if self.operator == '=':
-            nodetype = 'Assign'
-        else:
+        nodetype = ''
+        if self.const:
+            nodetype = 'Assign const'
+        elif self.operator != '=':
             nodetype = f'Assign {self.operator}'
+        else:
+            nodetype = 'Assign'
         return pprint(nodetype, self.targets, self.expression)
