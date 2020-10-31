@@ -166,7 +166,10 @@ class Parser(lexer.Lexer):
                 return self._primary(self.groupingnode(exprs, **kwargs), **kwargs)
 
     def assignment(self, const, targets, **kwargs):
-        op = self.next(*lexer.ASSIGNMENT).value
+        if const:
+            op = self.next('OP_ASSIGN').value
+        else:
+            op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression(**kwargs)
         return self.assignmentnode(const, targets, op, value, **kwargs)
 
