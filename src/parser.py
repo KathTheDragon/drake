@@ -148,7 +148,7 @@ class Parser(lexer.Lexer):
         if self.peek('OP_LT'):
             typehint, name = self.typedname(**kwargs)
         else:
-            typehint, name = None, self.identifier(**kwargs)
+            typehint, name = None, self.name(**kwargs)
         return self.targetnode(const, typehint, name, **kwargs)
 
     def bracketexpr(self, **kwargs):
@@ -199,7 +199,7 @@ class Parser(lexer.Lexer):
         self.next('OP_LT')
         typehint = self.type(**kwargs)
         self.next('OP_GT')
-        name = self.identifier(**kwargs)
+        name = self.name(**kwargs)
         return typehint, name
 
     def type(self, **kwargs):
@@ -244,9 +244,9 @@ class Parser(lexer.Lexer):
     def for_(self, **kwargs):
         self.next('KW_FOR')
         if self.maybe('LBRACKET'):
-            vars = self.itemlist(self.identifier, 'RBRACKET', **kwargs)
+            vars = self.itemlist(self.name, 'RBRACKET', **kwargs)
         else:
-            vars = self.identifier(**kwargs)
+            vars = self.name(**kwargs)
         self.next('OP_IN')
         container = self.expression(**kwargs)
         body = self.block(**kwargs)
@@ -288,7 +288,7 @@ class Parser(lexer.Lexer):
         return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', **kwargs), **kwargs)
 
     def enumitem(self, **kwargs):
-        name = self.identifier(**kwargs)
+        name = self.name(**kwargs)
         if self.maybe('OP_ASSIGN'):
             value = self.number(**kwargs)
         else:
@@ -415,7 +415,7 @@ class Parser(lexer.Lexer):
     def _primary(self, obj, **kwargs):
         while True:
             if self.maybe('DOT'):
-                attr = self.identifier(**kwargs)
+                attr = self.name(**kwargs)
                 obj = self.lookupnode(obj, attr, **kwargs)
             elif self.maybe('LBRACKET'):
                 args = self.itemlist(self.arg, 'RBRACKET', **kwargs)
@@ -432,7 +432,7 @@ class Parser(lexer.Lexer):
             expr = self.expression(**kwargs)
             return self.unaryopnode(star, expr, **kwargs)
         elif self.peek('IDENTIFIER'):
-            name = self.identifier(**kwargs)
+            name = self.name(**kwargs)
             self.next('COLON')
             expr = self.expression(**kwargs)
             return self.kwargnode(name, expr, **kwargs)
@@ -565,6 +565,9 @@ class Parser(lexer.Lexer):
     def identifier(self, **kwargs):
         return self.identifiernode(self.next('IDENTIFIER').value, **kwargs)
 
+    def name(self, **kwargs):
+        return self.namenode(self.next('IDENTIFIER').value, **kwargs)
+
     # Node functions
 
     def assignmentnode(self, const, targets, operator, expression, **kwargs):
@@ -677,6 +680,9 @@ class Parser(lexer.Lexer):
 
     def identifiernode(self, name, **kwargs):
         return IdentifierNode(name)
+
+    def namenode(self, name, **kwargs):
+        return NameNode(name)
 
     def stringnode(self, value, **kwargs):
         return StringNode(value)

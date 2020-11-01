@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple, Union
 
 __all__ = [
     'ParseNode',
+    'NameNode',
     'IdentifierNode',
     'StringNode',
     'NumberNode',
@@ -87,11 +88,15 @@ class ParseNode:
         return self.__class__.__name__[:-4]
 
 @dataclass
-class IdentifierNode(ParseNode):
+class NameNode(ParseNode):
     name: str
 
     def __str__(self):
-        return f'Identifier {self.name}'
+        return f'{self.nodetype} {self.name}'
+
+@dataclass
+class IdentifierNode(NameNode):
+    pass
 
 @dataclass
 class LiteralNode(ParseNode):
