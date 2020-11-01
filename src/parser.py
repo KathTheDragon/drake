@@ -335,8 +335,9 @@ class Parser(lexer.Lexer):
         self.next('KW_RAISES')
         self.next('LBRACKET')
         expression = self.expression(**kwargs)
-        self.next('COMMA')
+        self.next('COMMA', 'NEWLINE')
         exception = self.identifier(**kwargs)
+        self.maybe('COMMA', 'NEWLINE')
         self.next('RBRACKET')
         return self.raisesnode(expression, exception, **kwargs)
 
