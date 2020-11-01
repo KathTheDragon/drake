@@ -4,17 +4,19 @@ from .parsetree import *
 
 ## Exceptions
 class InvalidSyntax(Exception):
-    def __init__(self, token=None):
-        if token is not None:
+    def __init__(self, token, message=''):
+        if message:
+            super().__init__(f'{message} {token.value} @ {token.linenum}:{token.column}')
+        else:
             super().__init__(f'{token.value} @ {token.linenum}:{token.column}')
 
 ## Parser
 @dataclass
 class Parser(lexer.Lexer):
-    def error(self, token=None):
+    def error(self, token=None, message=''):
         if token is None:
             token = self._peek()
-        raise InvalidSyntax(token)
+        raise InvalidSyntax(token, message)
 
     def peek(self, *kinds):
         token = self._peek()
@@ -30,12 +32,14 @@ class Parser(lexer.Lexer):
         else:
             return False
 
-    def next(self, *kinds):
+    def next(self, *kinds, message=''):
         token = self._peek()
         if not kinds or token.kind in kinds:
             return self._next()
         else:
-            self.error()
+            if not message:
+                message = f'expected {kinds}, got'
+            self.error(message=message)
 
     ## Helpers
     def itemlist(self, itemfunc, lookahead, forcelist=True, **kwargs):
@@ -167,7 +171,9 @@ class Parser(lexer.Lexer):
 
     def assignment(self, const, targets, **kwargs):
         if const:
-            op = self.next('OP_ASSIGN').value
+            op = self.next('OP_ASSIGN',
+                message='const assignment cannot be augmented:'
+            ).value
         else:
             op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression(**kwargs)
