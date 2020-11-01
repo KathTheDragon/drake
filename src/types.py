@@ -69,11 +69,11 @@ builtin = (
 ) + subscriptable + exceptions
 
 ## Functions
-def typecheck(expected, actual):
-    if expected.name != actual.name:
-        raise TypeMismatch(expected, actual)
-    for expparam, actparam in zip_longest(expected.params, actual.params):
-        typecheck(expparam, actparam)
+def typecheck(actual, expected):
+    if actual.name != expected.name:
+        raise TypeMismatch(actual, expected)
+    for actparam, expparam in zip_longest(actual.params, expected.params):
+        typecheck(actparam, expparam)
 
 def is_subscriptable(type):
     return type in subscriptable  # Needs to be made aware of custom types
