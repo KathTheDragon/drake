@@ -174,6 +174,10 @@ class Parser(lexer.Lexer):
             op = self.next('OP_ASSIGN',
                 message='const assignment cannot be augmented:'
             ).value
+        elif isinstance(targets, list):
+            op = self.next('OP_ASSIGN',
+                message='multiple assignment cannot be augmented:'
+            ).value
         else:
             op = self.next(*lexer.ASSIGNMENT).value
         value = self.expression(**kwargs)
