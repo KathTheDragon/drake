@@ -409,7 +409,7 @@ class Parser(lexer.Lexer):
 
     def unary(self, **kwargs):
         if self.peek('OP_SUB', 'OP_INV', 'OP_NOT', **kwargs):
-            op = self.next()
+            op = self.next().value
             expr = self.unary(**kwargs)
             return self.unaryopnode(op, expr, **kwargs)
         else:
@@ -434,7 +434,7 @@ class Parser(lexer.Lexer):
 
     def arg(self, **kwargs):
         if self.peek('OP_MULT', 'OP_POW'):
-            star = self.next()
+            star = self.next().value
             expr = self.expression(**kwargs)
             return self.unaryopnode(star, expr, **kwargs)
         elif self.peek('IDENTIFIER'):
