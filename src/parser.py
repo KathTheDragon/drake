@@ -135,21 +135,21 @@ class Parser(lexer.Lexer):
         else:
             self.error()
         if self.maybe('LBRACKET'):
-            targets = self.itemlist(self.target, 'RBRACKET', forcelist=False, **kwargs)
+            targets = self.itemlist(self.target, 'RBRACKET', forcelist=False, const=const, **kwargs)
         else:
-            targets = self.target(**kwargs)
+            targets = self.target(const, **kwargs)
         declaration = self.declarationnode(const, targets, **kwargs)
         if self.peek(*lexer.ASSIGNMENT):
             return self.assignment(const, targets, **kwargs)
         else:
             return declaration
 
-    def target(self, **kwargs):
+    def target(self, const, **kwargs):
         if self.peek('OP_LT'):
             typehint, name = self.typedname(**kwargs)
         else:
             typehint, name = None, self.identifier(**kwargs)
-        return self.targetnode(typehint, name, **kwargs)
+        return self.targetnode(const, typehint, name, **kwargs)
 
     def bracketexpr(self, **kwargs):
         self.next('LBRACKET')
@@ -573,7 +573,7 @@ class Parser(lexer.Lexer):
     def declarationnode(self, const, targets, **kwargs):
         return DeclarationNode(const, targets)
 
-    def targetnode(self, typehint, name, **kwargs):
+    def targetnode(self, const, typehint, name, **kwargs):
         return TargetNode(typehint, name)
 
     def typenode(self, type, params, **kwargs):
