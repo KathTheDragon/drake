@@ -164,7 +164,7 @@ class ContinueNode(ASTNode):
 class IfNode(ASTNode):
     condition: ASTNode
     then: ASTNode
-    default: Optional[ParseNode]
+    default: Optional[ASTNode]
 
 @dataclass
 class CaseNode(ASTNode):
