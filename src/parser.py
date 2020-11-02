@@ -659,7 +659,7 @@ class Parser(lexer.Lexer):
     def lookupnode(self, object, attribute, **kwargs):
         return LookupNode(object, attribute)
 
-    def callnode(self, object, vargs, kwargs, **kwargs):
+    def callnode(self, object, vargs, kwargs, **kwargs_):
         return CallNode(object, vargs, kwargs)
 
     def kwargnode(self, name, value, **kwargs):
