@@ -106,8 +106,8 @@ TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKE
 class Token:
     kind: str
     value: str
-    linenum: int = field(default=-1, compare=False)
-    column: int = field(default=-1, compare=False)
+    linenum: int = field(default=-1)
+    column: int = field(default=-1)
 
     def __iter__(self):
         yield self.kind
