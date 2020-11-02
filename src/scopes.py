@@ -36,9 +36,9 @@ class Binding:
 
 @dataclass
 class Scope:
-    def __init__(self, *bindings, parent=_MISSING):
+    def __init__(self, *bindings, parent=None):
         self.bindings = list(bindings)
-        if parent is _MISSING:
+        if parent is None:
             parent = builtins
         self.parent = parent
 
@@ -89,6 +89,9 @@ class Scope:
         return Scope(bindings, parent=self)
 
 class _Builtins(Scope):
+    def __init__(self, *bindings):
+        self.bindings = bindings
+
     def index(self, name):
         index, _ = super().index(name, local=True)
         return index, -1
