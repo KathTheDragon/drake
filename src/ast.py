@@ -136,6 +136,11 @@ class YieldFromNode(ASTNode):
     expression: ASTNode
 
 @dataclass
+class RaisesNode(ASTNode):
+    expression: ASTNode
+    exception: IdentifierNode
+
+@dataclass
 class IfNode(ASTNode):
     condition: ASTNode
     then: ASTNode
