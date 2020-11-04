@@ -24,11 +24,9 @@ __all__ = [
     'ExceptionNode',
     'ModuleNode',
     'ThrowNode',
-    'ReturnNode',
-    'YieldNode',
-    'YieldFromNode',
     'BreakNode',
     'ContinueNode',
+    'RaisesNode',
     'IfNode',
     'CaseNode',
     'TryNode',
@@ -128,9 +126,6 @@ class ModuleNode(ASTNode):
 class ThrowNode(ASTNode):
     expression: ASTNode
 
-@dataclass
-class ReturnNode(ASTNode):
-    expression: ASTNode
 
 @dataclass
 class YieldNode(ASTNode):
