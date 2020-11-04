@@ -136,14 +136,6 @@ class YieldFromNode(ASTNode):
     expression: ASTNode
 
 @dataclass
-class BreakNode(ASTNode):
-    pass
-
-@dataclass
-class ContinueNode(ASTNode):
-    pass
-
-@dataclass
 class IfNode(ASTNode):
     condition: ASTNode
     then: ASTNode
