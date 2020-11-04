@@ -24,8 +24,6 @@ __all__ = [
     'ExceptionNode',
     'ModuleNode',
     'ThrowNode',
-    'BreakNode',
-    'ContinueNode',
     'RaisesNode',
     'IfNode',
     'CaseNode',
