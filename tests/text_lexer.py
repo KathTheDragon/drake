@@ -94,7 +94,7 @@ class TestLex:
         ]
 
     def test_keywords(self):
-        keywords = lexer.lex('as case catch const do else enum exception flags for from if iter let module mutable object raises then throw try while yield')
+        keywords = lexer.lex('as case catch const do else enum exception flags for if iter let module mutable object raises then throw try while')
         assert list(keywords) == [
             lexer.Token('KW_AS', 'as', 1, 0),
             lexer.Token('KW_CASE', 'case', 1, 3),
@@ -106,7 +106,6 @@ class TestLex:
             lexer.Token('KW_EXCEPTION', 'exception', 1, 33),
             lexer.Token('KW_FLAGS', 'flags', 1, 43),
             lexer.Token('KW_FOR', 'for', 1, 49),
-            lexer.Token('KW_FROM', 'from', 1, 53),
             lexer.Token('KW_IF', 'if', 1, 58),
             lexer.Token('KW_ITER', 'iter', 1, 61),
             lexer.Token('KW_LET', 'let', 1, 66),
@@ -118,7 +117,6 @@ class TestLex:
             lexer.Token('KW_THROW', 'throw', 1, 104),
             lexer.Token('KW_TRY', 'try', 1, 110),
             lexer.Token('KW_WHILE', 'while', 1, 114),
-            lexer.Token('KW_YIELD', 'yield', 1, 120),
             lexer.Token('EOF', 'eof', 1, 125)
         ]
 

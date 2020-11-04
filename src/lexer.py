@@ -56,7 +56,6 @@ KEYWORDS = {
     'KW_EXCEPTION': r'exception',
     'KW_FLAGS':     r'flags',
     'KW_FOR':       r'for',
-    'KW_FROM':      r'from',
     'KW_IF':        r'if',
     'KW_ITER':      r'iter',
     'KW_LET':       r'let',
@@ -68,7 +67,6 @@ KEYWORDS = {
     'KW_THROW':     r'throw',
     'KW_TRY':       r'try',
     'KW_WHILE':     r'while',
-    'KW_YIELD':     r'yield',
 }
 LITERALS = {
     'BOOLEAN':      r'true|false',

@@ -128,14 +128,6 @@ class ThrowNode(ASTNode):
 
 
 @dataclass
-class YieldNode(ASTNode):
-    expression: ASTNode
-
-@dataclass
-class YieldFromNode(ASTNode):
-    expression: ASTNode
-
-@dataclass
 class RaisesNode(ASTNode):
     expression: ASTNode
     exception: IdentifierNode

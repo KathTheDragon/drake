@@ -120,7 +120,6 @@ class Parser(lexer.Lexer):
             'KW_THROW': self.throw,
             'KW_TRY': self.try_,
             'KW_WHILE': self.while_,
-            'KW_YIELD': self.yield_,
             'OP_MULT': self.lambda_,
             'OP_POW': self.lambda_,
             'OP_LT': self.lambda_,
@@ -344,13 +343,6 @@ class Parser(lexer.Lexer):
         self.maybe('COMMA', 'NEWLINE')
         self.next('RBRACKET')
         return self.raisesnode(expression, exception, **kwargs)
-
-    def yield_(self, **kwargs):
-        self.next('KW_YIELD')
-        if self.maybe('KW_FROM'):
-            return self.yieldfromnode(self.expression(**kwargs), **kwargs)
-        else:
-            return self.yieldnode(self.expression(**kwargs), **kwargs)
 
     def boolor(self, **kwargs):
         return self.rightop(self.boolxor, 'OP_OR', **kwargs)

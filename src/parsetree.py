@@ -35,8 +35,6 @@ __all__ = [
     'ExceptionNode',
     'MutableNode',
     'ThrowNode',
-    'YieldNode',
-    'YieldFromNode',
     'IfNode',
     'CaseNode',
     'CatchNode',
@@ -320,14 +318,6 @@ class MutableNode(KeywordNode):
 
 @dataclass
 class ThrowNode(KeywordNode):
-    pass
-
-@dataclass
-class YieldNode(KeywordNode):
-    pass
-
-@dataclass
-class YieldFromNode(KeywordNode):
     pass
 
 @dataclass
