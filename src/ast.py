@@ -15,8 +15,6 @@ __all__ = [
     'SubscriptNode',
     'LookupNode',
     'CallNode',
-    'UnaryOpNode',
-    'BinaryOpNode',
     'LambdaNode',
     'IterNode',
     'MutableNode',
@@ -91,16 +89,6 @@ class CallNode(ASTNode):
     function: ...  # Need to figure out how functions should be done
     arguments: List[Union[ASTNode, Tuple[int, ASTNode]]]
 
-@dataclass
-class UnaryOpNode(ASTNode):
-    operator: str
-    operand: ASTNode
-
-@dataclass
-class BinaryOpNode(ASTNode):
-    operator: str
-    left: ASTNode
-    right: ASTNode
 
 @dataclass
 class LambdaNode(ASTNode):
