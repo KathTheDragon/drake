@@ -1,15 +1,8 @@
 List[item] -> {}
             | item ("\n" item)* "\n"?
             | item ("," item)* ","?
-List2[item1, item2]
-           -> "\n"? item1 ( ("\n" item1)* "\n" item2 ("\n" item2)* "\n"?
-                          | ("," "\n"? item1)* "," "\n"? item2 ("," "\n"? item2)* ","? "\n"?)
-            | List[item1]
-            | List[item2]
 Delimited[item]
            -> "(" List[item] ")" | item
-Delimited2[item1, item2]
-           -> "(" List2[item1, item2] ")" | item1 | item2
 Left[op, operand]
            -> (Left[op, operand] op)? operand
 Right[op, operand]
@@ -46,9 +39,9 @@ throw      -> "throw" expression
 raises     -> "raises" "(" expression "," IDENTIFIER ")"
 yieldfrom  -> "yield" "from" expression
 yield      -> "yield" expression
-lambda     -> Delimited2[vparam, kwparam] "->" expression
-vparam     -> "*"? typehint IDENTIFIER
-kwparam    -> "**" typehint IDENTIFIER | typehint IDENTIFIER ":" expression
+lambda     -> Delimited[param] "->" expression
+param      -> typehint IDENTIFIER (":" expression)?
+            | ("*" | "**") typehint IDENTIFIER
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
@@ -65,9 +58,8 @@ modulus    -> Left["%", exponent]       # mod()
 exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
-primary    -> atom ("." IDENTIFIER | "(" List2[varg, kwarg] ")" | list)*
-varg       -> "*"? expression
-kwarg      -> "**" expression | IDENTIFIER ":" expression
+primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
+arg        -> ("*" | "**")? expression | IDENTIFIER ":" expression
 atom       -> mapping | block | list | grouping | tuple | literal | IDENTIFIER
 mapping    -> "{" List[pair] "}"
 pair       -> expression ":" expression
