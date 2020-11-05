@@ -39,8 +39,6 @@ exception  -> "exception" block
 mutable    -> "mutable" (object | iter | mapping | list | tuple | STRING)
 throw      -> "throw" expression
 raises     -> "raises" "(" expression "," NAME ")"
-yieldfrom  -> "yield" "from" expression
-yield      -> "yield" expression
 lambda     -> Delimited[param] "->" expression
 param      -> typehint NAME (":" expression)?
             | ("*" | "**") typehint NAME
