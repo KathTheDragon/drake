@@ -1,3 +1,4 @@
+### Meta
 List[item] -> {}
             | item ("\n" item)* "\n"?
             | item ("," item)* ","?
@@ -8,6 +9,7 @@ Left[op, operand]
 Right[op, operand]
            -> operand (op Right[op, operand])?
 
+### Main
 program    -> List[expression] EOF
 expression -> assignment
             | declaration
