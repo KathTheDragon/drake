@@ -434,7 +434,7 @@ class Parser(lexer.Lexer):
             star = self.next().value
             expr = self.expression(**kwargs)
             return self.unaryopnode(star, expr, **kwargs)
-        elif self.peek('IDENTIFIER'):
+        elif self.peek('NAME'):
             name = self.name(**kwargs)
             self.next('COLON')
             expr = self.expression(**kwargs)
@@ -449,7 +449,7 @@ class Parser(lexer.Lexer):
             return self.list(**kwargs)
         elif self.peek('LBRACKET'):
             return self.bracket(**kwargs)
-        elif self.peek('IDENTIFIER'):
+        elif self.peek('NAME'):
             return self.identifier(**kwargs)
         else:
             return self.literal(**kwargs)
@@ -566,10 +566,10 @@ class Parser(lexer.Lexer):
         return self.passnode(**kwargs)
 
     def identifier(self, **kwargs):
-        return self.identifiernode(self.next('IDENTIFIER').value, **kwargs)
+        return self.identifiernode(self.next('NAME').value, **kwargs)
 
     def name(self, **kwargs):
-        return self.namenode(self.next('IDENTIFIER').value, **kwargs)
+        return self.namenode(self.next('NAME').value, **kwargs)
 
     # Node functions
 

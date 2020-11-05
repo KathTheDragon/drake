@@ -16,32 +16,32 @@ expression -> assignment
             | boolor
 assignment -> declaration OP_ASSIGN expression
 declaration-> ("let" | "const") Delimited[target]
-target     -> typehint? IDENTIFIER
+target     -> typehint? NAME
 typehint   -> "<" type ">"
-type       -> IDENTIFIER ("[" List[type] "]")?
+type       -> NAME ("[" List[type] "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | raises | yield | yieldfrom
 if         -> "if" expression "then" expression ("else" expression)?
 case       -> "case" primary "in" mapping ("else" expression)?
-try        -> "try" expression ("catch" IDENTIFIER ("as" IDENTIFIER)? expression)+
-for        -> "for" Delimited[IDENTIFIER] "in" expression block
+try        -> "try" expression ("catch" NAME ("as" NAME)? expression)+
+for        -> "for" Delimited[NAME] "in" expression block
 while      -> "while" expression block
 iter       -> "iter" (list | for | while)
 do         -> "do" block
 object     -> "object" block
 enum       -> "enum" "flags"? "{" List[enumitem] "}"
-enumitem   -> IDENTIFIER ("=" NUMBER)?
+enumitem   -> NAME ("=" NUMBER)?
 module     -> "module" block
 exception  -> "exception" block
 mutable    -> "mutable" (object | iter | mapping | list | tuple | STRING)
 throw      -> "throw" expression
-raises     -> "raises" "(" expression "," IDENTIFIER ")"
+raises     -> "raises" "(" expression "," NAME ")"
 yieldfrom  -> "yield" "from" expression
 yield      -> "yield" expression
 lambda     -> Delimited[param] "->" expression
-param      -> typehint IDENTIFIER (":" expression)?
-            | ("*" | "**") typehint IDENTIFIER
+param      -> typehint NAME (":" expression)?
+            | ("*" | "**") typehint NAME
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
@@ -58,9 +58,9 @@ modulus    -> Left["%", exponent]       # mod()
 exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
-primary    -> atom ("." IDENTIFIER | "(" List[arg] ")" | list)*
-arg        -> ("*" | "**")? expression | IDENTIFIER ":" expression
-atom       -> mapping | block | list | grouping | tuple | literal | IDENTIFIER
+primary    -> atom ("." NAME | "(" List[arg] ")" | list)*
+arg        -> ("*" | "**")? expression | NAME ":" expression
+atom       -> mapping | block | list | grouping | tuple | literal | NAME
 mapping    -> "{" List[pair] "}"
 pair       -> expression ":" expression
 block      -> "{" List[expression] "}"

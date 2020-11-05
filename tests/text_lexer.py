@@ -162,9 +162,9 @@ class TestLex:
     def test_identifiers(self):
         identifiers = lexer.lex('a_bC _a! _?')
         assert list(identifiers) == [
-            lexer.Token('IDENTIFIER', 'a_bC', 1, 0),
-            lexer.Token('IDENTIFIER', '_a!', 1, 5),
-            lexer.Token('IDENTIFIER', '_?', 1, 9),
+            lexer.Token('NAME', 'a_bC', 1, 0),
+            lexer.Token('NAME', '_a!', 1, 5),
+            lexer.Token('NAME', '_?', 1, 9),
             lexer.Token('EOF', 'eof', 1, 11)
         ]
 

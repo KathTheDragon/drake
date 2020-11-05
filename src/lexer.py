@@ -94,7 +94,7 @@ TOKENS = {
     'RSQUARE':      r'\]',
     'RBRACE':       r'\}',
 } | ASSIGNMENT | OPERATORS | KEYWORDS | LITERALS | {
-    'IDENTIFIER':   r'[a-zA-Z_]\w*[!?]?',
+    'NAME':         r'[a-zA-Z_]\w*[!?]?',
     'UNKNOWN':      r'.'
 }
 TOKEN_REGEX = re.compile('|'.join(f'(?P<{type}>{regex})' for type, regex in TOKENS.items()), re.M)
