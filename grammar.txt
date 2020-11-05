@@ -49,7 +49,7 @@ boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
 inclusion  -> Right[("in" | "not" "in"), identity]
 identity   -> Right[("is" | "is" "not"), comparison]
-comparison -> Right[comp, bitor]        # comp()
+comparison -> Right[OP_COMP, bitor]     # comp()
 bitor      -> Left["|", bitxor]         # bitor()
 bitxor     -> Left["^", bitand]         # bitxor()
 bitand     -> Left["&", shift]          # bitand()
