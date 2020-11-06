@@ -17,7 +17,6 @@ __all__ = [
     'CallNode',
     'LambdaNode',
     'IterNode',
-    'MutableNode',
     'DoNode',
     'EnumNode',
     'ObjectNode',
@@ -96,9 +95,6 @@ class LambdaNode(ASTNode):
 class IterNode(ASTNode):
     expression: ASTNode
 
-@dataclass
-class MutableNode(ASTNode):
-    expression: ASTNode
 
 @dataclass
 class DoNode(ASTNode):
