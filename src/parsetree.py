@@ -149,11 +149,15 @@ class SequenceNode(ParseNode):
 @dataclass
 class RangeNode(ParseNode):
     start: ParseNode
+    inclusive: bool = False
     end: Optional[ParseNode] = None
     step: Optional[ParseNode] = None
 
     def __str__(self):
-        return pprint('Range', self.start, self.end, self.step)
+        if self.inclusive:
+            return pprint('Range=', self.start, self.end, self.step)
+        else:
+            return pprint('Range', self.start, self.end, self.step)
 
 @dataclass
 class ListNode(SequenceNode):

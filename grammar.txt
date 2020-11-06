@@ -65,7 +65,7 @@ mapping    -> "{" List[pair] "}"
 pair       -> expression ":" expression
 block      -> "{" List[expression] "}"
 list       -> "[" (range | List[expression]) "]"
-range      -> primary ".." primary? ("," primary)?
+range      -> expression ".." ("="? expression)? ("," unary)?
 grouping   -> "(" expression ")"
 tuple      -> "(" List[expression] ")"
 literal    -> STRING | NUMBER | "true" | "false" | "none" | "break" | "continue" | "pass"

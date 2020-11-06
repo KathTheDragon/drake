@@ -488,17 +488,18 @@ class Parser(lexer.Lexer):
             expr = self.expression(**kwargs)
             if self.maybe('RANGE'):
                 if self.maybe('RSQUARE'):
-                    return self.rangenode(expr, None, None, **kwargs)
+                    return self.rangenode(expr, False, None, None, **kwargs)
                 elif self.maybe('COMMA'):
                     step = self.unary(**kwargs)
-                    return self.rangenode(expr, None, step, **kwargs)
+                    return self.rangenode(expr, False, None, step, **kwargs)
                 else:
+                    inclusive = bool(self.maybe('OP_ASSIGN'))
                     stop = self.expression(**kwargs)
                     if self.maybe('RSQUARE'):
-                        return self.rangenode(expr, stop, None, **kwargs)
+                        return self.rangenode(expr, inclusive, stop, None, **kwargs)
                     elif self.maybe('COMMA'):
                         step = self.unary(**kwargs)
-                        return self.rangenode(expr, stop, step, **kwargs)
+                        return self.rangenode(expr, inclusive, stop, step, **kwargs)
                     else:
                         self.error()
             else:
@@ -672,8 +673,8 @@ class Parser(lexer.Lexer):
     def listnode(self, expressions, **kwargs):
         return ListNode(expressions)
 
-    def rangenode(self, start, stop, step, **kwargs):
-        return RangeNode(start, stop, step)
+    def rangenode(self, start, inclusive, stop, step, **kwargs):
+        return RangeNode(start, inclusive, stop, step)
 
     def groupingnode(self, expression, **kwargs):
         return GroupingNode(expression)

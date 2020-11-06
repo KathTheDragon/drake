@@ -50,6 +50,7 @@ class ValueNode(ASTNode):
 @dataclass
 class RangeNode(ASTNode):
     start: ASTNode
+    inclusive: bool = False
     end: Optional[ASTNode] = None
     step: Optional[ASTNode] = None
 
