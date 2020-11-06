@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Union
+from . import types
 from .scopes import Scope
-from .types import Type
+from .types import typecheck
 
 __all__ = [
     'ASTNode',
@@ -35,7 +36,9 @@ __all__ = [
 ## Nodes
 @dataclass
 class ASTNode:
-    type: Type
+    @property
+    def type(self):
+        raise types.InvalidType
 
 @dataclass
 class IdentifierNode(ASTNode):
