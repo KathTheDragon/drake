@@ -3,10 +3,17 @@ from itertools import zip_longest
 from .scopes import Scope, Binding
 
 ## Exceptions
+class InvalidType(Exception):
+    def __init__(self, type=None):
+        if type is not None:
+            super().__init__(str(type))
+        else:
+            super().__init__('no type given')
+
 @dataclass
 class TypeMismatch(Exception):
-    expected: 'Type'
     actual: 'Type'
+    expected: 'Type'
 
 ## Classes
 @dataclass
@@ -22,7 +29,11 @@ class Type:
         else:
             return Type(self.name, (item,), self.mutable, self.namespace)
 
-## Types
+## Internal Types
+Break = Type('Break')
+Continue = Type('Continue')
+
+## External Types
 Type_ = Type('Type')
 None_ = Type('None')
 Boolean = Type('Boolean')
@@ -45,7 +56,7 @@ strings = (String, MutableString)
 lists = (List, MutableList)
 tuples = (Tuple, MutableTuple)
 mappings = (Mapping, MutableMapping)
-subscriptable = strings + lists + tuples + mappings
+subscriptable = strings + lists + mappings
 iterable = strings + lists + mappings + (Iterator,)
 mutable = (
     MutableString,
@@ -66,7 +77,7 @@ builtin = (
     Function,
     Iterator,
     Module,
-) + subscriptable + exceptions
+) + subscriptable + tuples + exceptions
 
 ## Functions
 def typecheck(actual, expected):
@@ -89,6 +100,6 @@ def make_mutable(type):
         Mapping: MutableMapping
     }.get(type, None)
     if mutabletype is None:
-        raise TypeMismatch((String, List, Tuple, Mapping), type)
+        raise TypeMismatch(type, (String, List, Tuple, Mapping))
     else:
         return mutabletuple

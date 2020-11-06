@@ -47,7 +47,12 @@ class IdentifierNode(ASTNode):
 
 @dataclass
 class ValueNode(ASTNode):
+    _type: types.Type = field(init=True)
     index: int  # Values are stored as their index in the global value storage
+
+    @property
+    def type(self):
+        return self._type
 
 @dataclass
 class RangeNode(ASTNode):
