@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from itertools import zip_longest
-from .scopes import Scope, Binding
+from .scopes import Scope
 
 ## Exceptions
 class InvalidType(Exception):
