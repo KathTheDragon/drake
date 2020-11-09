@@ -42,8 +42,8 @@ class Parser(lexer.Lexer):
             self.error(message=message)
 
     ## Helpers
-    def itemlist(self, itemfunc, lookahead, forcelist=True, **kwargs):
-        if self.maybe(lookahead):
+    def itemlist(self, itemfunc, lookahead, empty=True, forcelist=True, **kwargs):
+        if empty and self.maybe(lookahead):
             return []
         else:
             return self._itemlist(itemfunc(), itemfunc, lookahead, forcelist, **kwargs)
@@ -138,7 +138,7 @@ class Parser(lexer.Lexer):
         else:
             self.error()
         if self.maybe('LBRACKET'):
-            targets = self.itemlist(self.target, 'RBRACKET', forcelist=False, const=const, **kwargs)
+            targets = self.itemlist(self.target, 'RBRACKET', empty=False, forcelist=False, const=const, **kwargs)
         else:
             targets = self.target(const, **kwargs)
         declaration = self.declarationnode(const, targets, **kwargs)
@@ -253,7 +253,7 @@ class Parser(lexer.Lexer):
     def for_(self, **kwargs):
         self.next('KW_FOR')
         if self.maybe('LBRACKET'):
-            vars = self.itemlist(self.name, 'RBRACKET', **kwargs)
+            vars = self.itemlist(self.name, 'RBRACKET', empty=False, **kwargs)
         else:
             vars = self.name(**kwargs)
         self.next('OP_IN')
@@ -294,7 +294,7 @@ class Parser(lexer.Lexer):
         else:
             flags = False
         self.next('LBRACE')
-        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', **kwargs), **kwargs)
+        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', empty=False **kwargs), **kwargs)
 
     def enumitem(self, **kwargs):
         name = self.name(**kwargs)
@@ -478,7 +478,7 @@ class Parser(lexer.Lexer):
 
     def block(self, **kwargs):
         self.next('LBRACE')
-        return self.blocknode(self.itemlist(self.expression, 'RBRACE', **kwargs), **kwargs)
+        return self.blocknode(self.itemlist(self.expression, 'RBRACE', empty=False, **kwargs), **kwargs)
 
     def list(self, **kwargs):
         self.next('LSQUARE')

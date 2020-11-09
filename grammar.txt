@@ -1,6 +1,5 @@
 ### Meta
-List[item] -> {}
-            | item ("\n" item)* "\n"?
+List[item] -> item ("\n" item)* "\n"?
             | item ("," item)* ","?
 Delimited[item]
            -> "(" List[item] ")" | item
@@ -10,24 +9,24 @@ Right[op, operand]
            -> operand (op Right[op, operand])?
 
 ### Main
-program    -> List[expression] EOF
+program    -> List[expression]? EOF
 expression -> assignment
             | declaration
             | keyword
             | lambda
             | boolor
 assignment -> declaration OP_ASSIGN expression
-declaration-> ("let" | "const") Delimited[target]
+declaration-> ("let" | "const") ("(" List[target] ")" | target)
 target     -> typehint? NAME
 typehint   -> "<" type ">"
-type       -> identifier ("[" List[type] "]")?
+type       -> identifier ("[" List[type]? "]")?
 keyword    -> if | case | try | for | while
             | iter | do | object | enum | module | exception | mutable
             | throw | raises | yield | yieldfrom
 if         -> "if" expression "then" expression ("else" expression)?
 case       -> "case" primary "in" mapping ("else" expression)?
 try        -> "try" expression ("catch" identifier ("as" NAME)? expression)+
-for        -> "for" Delimited[NAME] "in" expression block
+for        -> "for" ("(" List[NAME] ")" | NAME) "in" expression block
 while      -> "while" expression block
 iter       -> "iter" (list | for | while)
 do         -> "do" block
@@ -39,7 +38,7 @@ exception  -> "exception" block
 mutable    -> "mutable" (object | iter | mapping | list | tuple | STRING)
 throw      -> "throw" expression
 raises     -> "raises" "(" expression "," identifier ")"
-lambda     -> Delimited[param] "->" expression
+lambda     -> ("(" List[param]? ")" | param) "->" expression
 param      -> typehint NAME (":" expression)?
             | ("*" | "**") typehint NAME
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
@@ -58,15 +57,15 @@ modulus    -> Left["%", exponent]       # mod()
 exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
-primary    -> atom ("." NAME | "(" List[arg] ")" | list)*
+primary    -> atom ("." NAME | "(" List[arg]? ")" | list)*
 arg        -> ("*" | "**")? expression | NAME ":" expression
 atom       -> mapping | block | list | grouping | tuple | identifier | literal
-mapping    -> "{" List[pair] "}"
+mapping    -> "{" List[pair]? "}"
 pair       -> expression ":" expression
 block      -> "{" List[expression] "}"
-list       -> "[" (range | List[expression]) "]"
+list       -> "[" (range | List[expression]?) "]"
 range      -> expression ".." ("="? expression)? ("," unary)?
 grouping   -> "(" expression ")"
-tuple      -> "(" List[expression] ")"
+tuple      -> "(" List[expression]? ")"
 identifier -> NAME
 literal    -> STRING | NUMBER | "true" | "false" | "none" | "break" | "continue" | "pass"
