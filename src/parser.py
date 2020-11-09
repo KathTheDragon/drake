@@ -297,7 +297,7 @@ class Parser(lexer.Lexer):
         else:
             flags = False
         self.next('LBRACE')
-        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', empty=False **kwargs), **kwargs)
+        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', empty=False, **kwargs), **kwargs)
 
     def enumitem(self, **kwargs):
         name = self.name(**kwargs)
