@@ -46,7 +46,7 @@ class Parser(lexer.Lexer):
         if empty and self.maybe(lookahead):
             return []
         else:
-            return self._itemlist(itemfunc(), itemfunc, lookahead, forcelist, **kwargs)
+            return self._itemlist(itemfunc(), itemfunc, lookahead, forcelist=forcelist, **kwargs)
 
     def _itemlist(self, item, itemfunc, lookahead, forcelist=True, **kwargs):
         if self.maybe(lookahead):
