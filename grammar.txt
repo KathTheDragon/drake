@@ -1,8 +1,6 @@
 ### Meta
 List[item] -> item ("\n" item)* "\n"?
             | item ("," item)* ","?
-Delimited[item]
-           -> "(" List[item] ")" | item
 Left[op, operand]
            -> (Left[op, operand] op)? operand
 Right[op, operand]
