@@ -157,7 +157,10 @@ class Parser(lexer.Lexer):
     def bracketexpr(self, **kwargs):
         self.next('LBRACKET')
         if self.maybe('RBRACKET'):
-            return self._primary(self.tuplenode([], **kwargs), **kwargs)
+            if self.peek('LAMBDA'):
+                return self.lambda_([], **kwargs)
+            else:
+                return self._primary(self.tuplenode([], **kwargs), **kwargs)
         elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
             items = self.itemlist(self.param, 'RBRACKET', **kwargs)
             return self.lambda_(items, **kwargs)
