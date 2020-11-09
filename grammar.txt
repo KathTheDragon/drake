@@ -36,9 +36,10 @@ exception  -> "exception" block
 mutable    -> "mutable" (object | iter | mapping | list | tuple | STRING)
 throw      -> "throw" expression
 raises     -> "raises" "(" expression "," identifier ")"
-lambda     -> ("(" List[param]? ")" | param) "->" expression
-param      -> typehint NAME (":" expression)?
-            | ("*" | "**") typehint NAME
+lambda     -> param "->" expression
+            | "(" List[param]? (";" List[kwparam])? ")" "->" expression
+param      -> typehint NAME (":" expression)? | "*" typehint NAME
+kwparam    -> typehint NAME ":" expression | "**" typehint NAME
 boolor     -> Right["or", boolxor]      # any() - returns the first truthy argument, else the last
 boolxor    -> Right["xor", booland]     # parity()
 booland    -> Right["and", inclusion]   # all() - return the first falsey argument, else the last
@@ -55,8 +56,9 @@ modulus    -> Left["%", exponent]       # mod()
 exponent   -> Right["**", unary]        # power()
 unary      -> ("not" | "!" | "-") unary # inv(), bitinv(), neg()
             | primary
-primary    -> atom ("." NAME | "(" List[arg]? ")" | list)*
-arg        -> ("*" | "**")? expression | NAME ":" expression
+primary    -> atom ("." NAME | "(" List[arg]? (";" List[kwarg])? ")" | list)*
+arg        -> (NAME ":" | "*")? expression
+kwarg      -> (NAME ":" | "**") expression
 atom       -> mapping | block | list | grouping | tuple | identifier | literal
 mapping    -> "{" List[pair]? "}"
 pair       -> expression ":" expression

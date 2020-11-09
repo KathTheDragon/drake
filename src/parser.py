@@ -42,38 +42,38 @@ class Parser(lexer.Lexer):
             self.error(message=message)
 
     ## Helpers
-    def itemlist(self, itemfunc, lookahead, empty=True, forcelist=True, **kwargs):
-        if empty and self.maybe(lookahead):
+    def itemlist(self, itemfunc, *lookahead, empty=True, forcelist=True, **kwargs):
+        if empty and self.peek(*lookahead):
             return []
         else:
-            return self._itemlist(itemfunc(), itemfunc, lookahead, forcelist=forcelist, **kwargs)
+            return self._itemlist(itemfunc(**kwargs), itemfunc, *lookahead, forcelist=forcelist, **kwargs)
 
-    def _itemlist(self, item, itemfunc, lookahead, forcelist=True, **kwargs):
-        if self.maybe(lookahead):
+    def _itemlist(self, item, itemfunc, *lookahead, forcelist=True, **kwargs):
+        if self.peek(*lookahead):
             if forcelist:
                 return [item]
             else:
                 return item
         elif self.peek('NEWLINE'):
-            items = self._separateditems(item, itemfunc, 'NEWLINE', lookahead, **kwargs)
+            items = self._separateditems(item, itemfunc, 'NEWLINE', *lookahead, **kwargs)
             if not forcelist and len(items) == 1:
                 return item
             else:
                 return items
         elif self.peek('COMMA'):
-            return self._separateditems(item, itemfunc, 'COMMA', lookahead, **kwargs)
+            return self._separateditems(item, itemfunc, 'COMMA', *lookahead, **kwargs)
         else:
             self.error()
 
-    def _separateditems(self, item, itemfunc, separator, lookahead, **kwargs):
+    def _separateditems(self, item, itemfunc, separator, *lookahead, **kwargs):
         items = [item]
         while True:
             if self.maybe(separator):
-                if self.maybe(lookahead):
+                if self.peek(*lookahead):
                     return items
                 else:
                     items.append(itemfunc(**kwargs))
-            elif self.maybe(lookahead):
+            elif self.peek(*lookahead):
                 return items
             else:
                 self.error()
@@ -99,7 +99,9 @@ class Parser(lexer.Lexer):
 
     ## States
     def parse(self, **kwargs):
-        return self.modulenode(self.itemlist(self.expression, 'EOF', **kwargs), **kwargs)
+        exprs = self.itemlist(self.expression, 'EOF', **kwargs)
+        self.next('EOF')
+        return self.modulenode(exprs, **kwargs)
 
     def expression(self, **kwargs):
         kind = self.peek().kind
@@ -139,6 +141,7 @@ class Parser(lexer.Lexer):
             self.error()
         if self.maybe('LBRACKET'):
             targets = self.itemlist(self.target, 'RBRACKET', empty=False, forcelist=False, const=const, **kwargs)
+            self.next('RBRACKET')
         else:
             targets = self.target(const, **kwargs)
         declaration = self.declarationnode(const, targets, **kwargs)
@@ -158,14 +161,21 @@ class Parser(lexer.Lexer):
         self.next('LBRACKET')
         if self.maybe('RBRACKET'):
             if self.peek('LAMBDA'):
-                return self.lambda_([], **kwargs)
+                return self.lambda_([], [], **kwargs)
             else:
                 return self._primary(self.tuplenode([], **kwargs), **kwargs)
-        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT'):
-            items = self.itemlist(self.param, 'RBRACKET', **kwargs)
-            return self.lambda_(items, **kwargs)
+        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT', 'SEMICOLON'):
+            params = self.itemlist(self.param, 'SEMICOLON', 'RBRACKET', **kwargs)
+            if self.maybe('SEMICOLON'):
+                kwparams = self.itemlist(self.kwparam, 'RBRACKET', **kwargs)
+            else:
+                kwparams = []
+            self.next('RBRACKET')
+            return self.lambda_(params, kwparams, **kwargs)
         else:
             exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False, **kwargs)
+            self.next('RBRACKET')
+            # These actually need to jump into boolor
             if isinstance(exprs, list):
                 return self._primary(self.tuplenode(exprs, **kwargs), **kwargs)
             else:
@@ -185,27 +195,34 @@ class Parser(lexer.Lexer):
         value = self.expression(**kwargs)
         return self.assignmentnode(const, targets, op, value, **kwargs)
 
-    def lambda_(self, params=None, **kwargs):
+    def lambda_(self, params=None, kwparams=None, **kwargs):
         if params is None:
             params = [self.param(**kwargs)]
+        if kwparams is None:
+            kwparams = []
         self.next('LAMBDA')
         body = self.expression(**kwargs)
-        return self.lambdanode(params, [], body, **kwargs)
+        return self.lambdanode(params, kwparams, body, **kwargs)
 
     def param(self, **kwargs):
         if self.maybe('OP_MULT'):
             return self.vparamnode(True, *self.typedname(**kwargs), **kwargs)
-        elif self.maybe('OP_POW'):
-            return self.kwparamnode(True, *self.typedname(**kwargs), **kwargs)
-        elif self.peek('OP_LT'):
+        else:
             typehint, name = self.typedname(**kwargs)
             if self.maybe('COLON'):
                 value = self.expression(**kwargs)
-                return self.kwparamnode(False, typehint, name, value, **kwargs)
+                return self.vparamnode(False, typehint, name, value, **kwargs)
             else:
                 return self.vparamnode(False, typehint, name, **kwargs)
+
+    def kwparam(self, **kwargs):
+        if self.maybe('OP_POW'):
+            return self.kwparamnode(True, *self.typedname(**kwargs), **kwargs)
         else:
-            self.error()
+            typehint, name = self.typedname(**kwargs)
+            self.next('COLON')
+            value = self.expression(**kwargs)
+            return self.kwparamnode(False, typehint, name, value, **kwargs)
 
     def typedname(self, **kwargs):
         self.next('OP_LT')
@@ -218,6 +235,7 @@ class Parser(lexer.Lexer):
         name = self.identifier(**kwargs)
         if self.maybe('LSQUARE'):
             params = self.itemlist(self.type, 'RSQUARE', **kwargs)
+            self.next('RSQUARE')
         else:
             params = []
         return self.typenode(name, params, **kwargs)
@@ -257,6 +275,7 @@ class Parser(lexer.Lexer):
         self.next('KW_FOR')
         if self.maybe('LBRACKET'):
             vars = self.itemlist(self.name, 'RBRACKET', empty=False, **kwargs)
+            self.next('RBRACKET')
         else:
             vars = self.name(**kwargs)
         self.next('OP_IN')
@@ -297,7 +316,9 @@ class Parser(lexer.Lexer):
         else:
             flags = False
         self.next('LBRACE')
-        return self.enumnode(flags, self.itemlist(self.enumitem, 'RBRACE', empty=False, **kwargs), **kwargs)
+        items = self.itemlist(self.enumitem, 'RBRACE', empty=False, **kwargs)
+        self.next('RBRACE')
+        return self.enumnode(flags, items, **kwargs)
 
     def enumitem(self, **kwargs):
         name = self.name(**kwargs)
@@ -424,8 +445,13 @@ class Parser(lexer.Lexer):
                 attr = self.name(**kwargs)
                 obj = self.lookupnode(obj, attr, **kwargs)
             elif self.maybe('LBRACKET'):
-                args = self.itemlist(self.arg, 'RBRACKET', **kwargs)
-                obj = self.callnode(obj, args, **kwargs)
+                args = self.itemlist(self.arg, 'SEMICOLON', 'RBRACKET', **kwargs)
+                if self.maybe('SEMICOLON'):
+                    kwargs = self.itemlist(self.kwarg, 'RBRACKET', **kwargs)
+                else:
+                    kwargs = []
+                self.next('RBRACKET')
+                obj = self.callnode(obj, args, kwargs, **kwargs)
             elif self.peek('LSQUARE'):
                 subscript = self.list(**kwargs)
                 obj = self.subscriptnode(obj, subscript, **kwargs)
@@ -433,17 +459,29 @@ class Parser(lexer.Lexer):
                 return obj
 
     def arg(self, **kwargs):
-        if self.peek('OP_MULT', 'OP_POW'):
-            star = self.next().value
+        if self.peek('OP_MULT'):
             expr = self.expression(**kwargs)
-            return self.unaryopnode(star, expr, **kwargs)
+            return self.unaryopnode('*', expr, **kwargs)
         elif self.peek('NAME'):
+            name = self.name(**kwargs)
+            if self.maybe('COLON'):
+                expr = self.expression(**kwargs)
+                return self.kwargnode(name, expr, **kwargs)
+            else:
+                # Inject into boolor
+                self.error()
+        else:
+            return self.expression(**kwargs)
+
+    def kwarg(self, **kwargs):
+        if self.maybe('OP_POW'):
+            expr = self.expression(**kwargs)
+            return self.unaryopnode('**', expr, **kwargs)
+        else:
             name = self.name(**kwargs)
             self.next('COLON')
             expr = self.expression(**kwargs)
             return self.kwargnode(name, expr, **kwargs)
-        else:
-            return self.expression(**kwargs)
 
     def atom(self, **kwargs):
         if self.peek('LBRACE'):
@@ -465,13 +503,19 @@ class Parser(lexer.Lexer):
             expr = self.expression(**kwargs)
             if self.maybe('COLON'):
                 pair = self.pairnode(expr, self.expression(**kwargs), **kwargs)
-                return self.mappingnode(self._itemlist(pair, self.pair, 'RBRACE', **kwargs), **kwargs)
+                items = self._itemlist(pair, self.pair, 'RBRACE', **kwargs)
+                self.next('RBRACE')
+                return self.mappingnode(items, **kwargs)
             else:
-                return self.blocknode(self._itemlist(expr, self.expression, 'RBRACE', **kwargs), **kwargs)
+                items = self._itemlist(expr, self.expression, 'RBRACE', **kwargs)
+                self.next('RBRACE')
+                return self.blocknode(items, **kwargs)
 
     def mapping(self, **kwargs):
         self.next('LBRACE')
-        return self.mappingnode(self.itemlist(self.pair, 'RBRACE', **kwargs), **kwargs)
+        items = self.itemlist(self.pair, 'RBRACE', **kwargs)
+        self.next('RBRACE')
+        return self.mappingnode(items, **kwargs)
 
     def pair(self, **kwargs):
         key = self.expression(**kwargs)
@@ -481,7 +525,9 @@ class Parser(lexer.Lexer):
 
     def block(self, **kwargs):
         self.next('LBRACE')
-        return self.blocknode(self.itemlist(self.expression, 'RBRACE', empty=False, **kwargs), **kwargs)
+        items = self.itemlist(self.expression, 'RBRACE', empty=False, **kwargs)
+        self.next('RBRACE')
+        return self.blocknode(items, **kwargs)
 
     def list(self, **kwargs):
         self.next('LSQUARE')
@@ -506,11 +552,14 @@ class Parser(lexer.Lexer):
                     else:
                         self.error()
             else:
-                return self.listnode(self._itemlist(expr, self.expression, 'RSQUARE', **kwargs), **kwargs)
+                items = self._itemlist(expr, self.expression, 'RSQUARE', **kwargs)
+                self.next('RSQUARE')
+                return self.listnode(items, **kwargs)
 
     def bracket(self, **kwargs):
         self.next('LBRACKET')
         exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False, **kwargs)
+        self.next('RBRACKET')
         if isinstance(exprs, list):
             return self.tuplenode(exprs, **kwargs)
         else:
@@ -524,7 +573,9 @@ class Parser(lexer.Lexer):
 
     def tuple(self, **kwargs):
         self.next('LBRACKET')
-        return self.tuplenode(self.expression, 'RBRACKET', **kwargs)
+        exprs = self.itemlist(self.expression, 'RBRACKET', **kwargs)
+        self.next('RBRACKET')
+        return self.tuplenode(exprs, **kwargs)
 
     def literal(self, **kwargs):
         if self.peek('STRING'):

@@ -87,6 +87,7 @@ TOKENS = {
     'DOT':          r'\.',
     'COMMA':        r',',
     'COLON':        r':',
+    'SEMICOLON':    r';',
     'LBRACKET':     r'\(',
     'LSQUARE':      r'\[',
     'LBRACE':       r'\{',
