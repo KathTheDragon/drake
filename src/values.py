@@ -85,7 +85,7 @@ class Number:
             if fractional:
                 exponent -= len(fractional)
                 integer += fractional
-            numerator = integer.lstrip('0')
+            numerator = int(integer.lstrip('0') or '0')
             if exponent >= 0:
                 numerator *= 10**exponent
                 denominator = 1
