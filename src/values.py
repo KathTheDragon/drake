@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, InitVar
+import math, re
 
 @dataclass
 class Registry:
@@ -37,18 +38,36 @@ class String:
 
 @dataclass
 class Number:
-    numerator: int
-    denominator: int = field(default=1)
-    imaginary: bool = field(default=False)
+    numerator: tuple[int, int]
+    denominator: int
 
-    def __post_init__(self):
-        if self.denominator < 0:
-            self.numerator *= -1
-            self.denominator *= -1
-        gcd = math.gcd(self.numerator, self.denominator)
+    def __init__(self, numerator, denominator=1):
+        if isinstance(numerator, int):
+            real, imag = numerator, 0
+        else:
+            real, imag = numerator
+        if isinstance(denominator, int):
+            dreal, dimag = denominator, 0
+        else:
+            dreal, dimag = denominator
+        if dimag == 0:
+            if dreal < 0:
+                real *= -1
+                imag *= -1
+                denominator = -dreal
+            else:
+                denominator = dreal
+        else:
+            real = real*dreal + imag*dimag
+            imag = imag*dreal - real*dimag
+            denominator = dreal**2 + dimag**2
+        gcd = math.gcd(real, imag, denominator)
         if gcd != 1:
-            self.numerator //= gcd
-            self.denominator //= gcd
+            real //= gcd
+            imag //= gcd
+            denominator //= gcd
+        self.numerator = real, imag
+        self.denominator = denominator
 
     @staticmethod
     def parse(number):
@@ -68,9 +87,13 @@ class Number:
                 integer += fractional
             numerator = integer.lstrip('0')
             if exponent >= 0:
-                return Number(numerator*10**exponent, 1, bool(imagunit))
+                numerator *= 10**exponent
+                denominator = 1
             else:
-                return Number(numerator, 10**(-exponent), bool(imagunit))
+                denominator = 10**(-exponent)
+            if imagunit:
+                numerator = (0, numerator)
+            return Number(numerator, denominator)
 
 @dataclass
 class Boolean:
