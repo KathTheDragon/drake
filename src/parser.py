@@ -612,7 +612,7 @@ class Parser(lexer.Lexer):
         return self.leftop(self.exponent, 'OP_MOD', **kwargs)
 
     def exponent(self, **kwargs):
-        return self.leftop(self.unary, 'OP_POW', **kwargs)
+        return self.rightop(self.unary, 'OP_POW', **kwargs)
 
     def unary(self, **kwargs):
         if self.peek('OP_SUB', 'OP_INV', 'OP_NOT', **kwargs):
