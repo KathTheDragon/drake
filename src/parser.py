@@ -492,8 +492,22 @@ class Parser(lexer.Lexer):
             return self.bracket(**kwargs)
         elif self.peek('NAME'):
             return self.identifier(**kwargs)
+        elif self.peek('STRING'):
+            return self.string(**kwargs)
+        elif self.peek('NUMBER'):
+            return self.number(**kwargs)
+        elif self.peek('BOOLEAN'):
+            return self.boolean(**kwargs)
+        elif self.peek('NONE'):
+            return self.none(**kwargs)
+        elif self.peek('BREAK'):
+            return self.break_(**kwargs)
+        elif self.peek('CONTINUE'):
+            return self.continue_(**kwargs)
+        elif self.peek('PASS'):
+            return self.pass_(**kwargs)
         else:
-            return self.literal(**kwargs)
+            self.error()
 
     def brace(self, **kwargs):
         self.next('LBRACE')
@@ -577,23 +591,6 @@ class Parser(lexer.Lexer):
         self.next('RBRACKET')
         return self.tuplenode(exprs, **kwargs)
 
-    def literal(self, **kwargs):
-        if self.peek('STRING'):
-            return self.string(**kwargs)
-        elif self.peek('NUMBER'):
-            return self.number(**kwargs)
-        elif self.peek('BOOLEAN'):
-            return self.boolean(**kwargs)
-        elif self.peek('NONE'):
-            return self.none(**kwargs)
-        elif self.peek('BREAK'):
-            return self.break_(**kwargs)
-        elif self.peek('CONTINUE'):
-            return self.continue_(**kwargs)
-        elif self.peek('PASS'):
-            return self.pass_(**kwargs)
-        else:
-            self.error()
 
     def string(self, **kwargs):
         return self.stringnode(self.next('STRING').value, **kwargs)
