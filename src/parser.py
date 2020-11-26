@@ -13,7 +13,7 @@ class InvalidSyntax(Exception):
 ## Parser
 @dataclass
 class Parser(lexer.Lexer):
-    def error(self, token=None, message=''):
+    def error(self, token=None, message='', **kwargs):
         if token is None:
             token = self._peek()
         raise InvalidSyntax(token, message)
