@@ -368,74 +368,6 @@ class Parser(lexer.Lexer):
             value = self.expression(**kwargs)
             return self.kwparamnode(False, typehint, name, value, **kwargs)
 
-    def boolor(self, **kwargs):
-        return self.rightop(self.boolxor, 'OP_OR', **kwargs)
-
-    def boolxor(self, **kwargs):
-        return self.rightop(self.booland, 'OP_XOR', **kwargs)
-
-    def booland(self, **kwargs):
-        return self.rightop(self.inclusion, 'OP_AND', **kwargs)
-
-    def inclusion(self, **kwargs):
-        left = self.identity(**kwargs)
-        if self.maybe('OP_IN'):
-            right = self.inclusion(**kwargs)
-            return self.binaryopnode(left, 'in', right, **kwargs)
-        elif self.maybe('OP_NOT'):
-            self.next('OP_IN')
-            right = self.inclusion(**kwargs)
-            return self.binaryopnode(left, 'not in', right, **kwargs)
-        else:
-            return left
-
-    def identity(self, **kwargs):
-        left = self.comparison(**kwargs)
-        if self.maybe('OP_IS'):
-            if self.maybe('OP_NOT'):
-                op = 'is not'
-            else:
-                op = 'is'
-            right = self.identity(**kwargs)
-            return self.binaryopnode(left, op, right, **kwargs)
-        else:
-            return left
-
-    def comparison(self, **kwargs):
-        return self.rightop(self.bitor, *lexer.OP_COMP, **kwargs)
-
-    def bitor(self, **kwargs):
-        return self.leftop(self.bitxor, 'OP_BITOR', **kwargs)
-
-    def bitxor(self, **kwargs):
-        return self.leftop(self.bitand, 'OP_BITXOR', **kwargs)
-
-    def bitand(self, **kwargs):
-        return self.leftop(self.shift, 'OP_BITAND', **kwargs)
-
-    def shift(self, **kwargs):
-        return self.leftop(self.addition, 'OP_LSHIFT', 'OP_RSHIFT', **kwargs)
-
-    def addition(self, **kwargs):
-        return self.leftop(self.product, 'OP_MULT', 'OP_DIV', **kwargs)
-
-    def product(self, **kwargs):
-        return self.leftop(self.modulus, 'OP_ADD', 'OP_SUB', **kwargs)
-
-    def modulus(self, **kwargs):
-        return self.leftop(self.exponent, 'OP_MOD', **kwargs)
-
-    def exponent(self, **kwargs):
-        return self.leftop(self.unary, 'OP_POW', **kwargs)
-
-    def unary(self, **kwargs):
-        if self.peek('OP_SUB', 'OP_INV', 'OP_NOT', **kwargs):
-            op = self.next().value
-            expr = self.unary(**kwargs)
-            return self.unaryopnode(op, expr, **kwargs)
-        else:
-            return self.primary(**kwargs)
-
     def primary(self, **kwargs):
         return self._primary(self.atom(**kwargs), **kwargs)
 
@@ -591,7 +523,6 @@ class Parser(lexer.Lexer):
         self.next('RBRACKET')
         return self.tuplenode(exprs, **kwargs)
 
-
     def string(self, **kwargs):
         return self.stringnode(self.next('STRING').value, **kwargs)
 
@@ -622,6 +553,74 @@ class Parser(lexer.Lexer):
 
     def name(self, **kwargs):
         return self.namenode(self.next('NAME').value, **kwargs)
+
+    def boolor(self, **kwargs):
+        return self.rightop(self.boolxor, 'OP_OR', **kwargs)
+
+    def boolxor(self, **kwargs):
+        return self.rightop(self.booland, 'OP_XOR', **kwargs)
+
+    def booland(self, **kwargs):
+        return self.rightop(self.inclusion, 'OP_AND', **kwargs)
+
+    def inclusion(self, **kwargs):
+        left = self.identity(**kwargs)
+        if self.maybe('OP_IN'):
+            right = self.inclusion(**kwargs)
+            return self.binaryopnode(left, 'in', right, **kwargs)
+        elif self.maybe('OP_NOT'):
+            self.next('OP_IN')
+            right = self.inclusion(**kwargs)
+            return self.binaryopnode(left, 'not in', right, **kwargs)
+        else:
+            return left
+
+    def identity(self, **kwargs):
+        left = self.comparison(**kwargs)
+        if self.maybe('OP_IS'):
+            if self.maybe('OP_NOT'):
+                op = 'is not'
+            else:
+                op = 'is'
+            right = self.identity(**kwargs)
+            return self.binaryopnode(left, op, right, **kwargs)
+        else:
+            return left
+
+    def comparison(self, **kwargs):
+        return self.rightop(self.bitor, *lexer.OP_COMP, **kwargs)
+
+    def bitor(self, **kwargs):
+        return self.leftop(self.bitxor, 'OP_BITOR', **kwargs)
+
+    def bitxor(self, **kwargs):
+        return self.leftop(self.bitand, 'OP_BITXOR', **kwargs)
+
+    def bitand(self, **kwargs):
+        return self.leftop(self.shift, 'OP_BITAND', **kwargs)
+
+    def shift(self, **kwargs):
+        return self.leftop(self.addition, 'OP_LSHIFT', 'OP_RSHIFT', **kwargs)
+
+    def addition(self, **kwargs):
+        return self.leftop(self.product, 'OP_MULT', 'OP_DIV', **kwargs)
+
+    def product(self, **kwargs):
+        return self.leftop(self.modulus, 'OP_ADD', 'OP_SUB', **kwargs)
+
+    def modulus(self, **kwargs):
+        return self.leftop(self.exponent, 'OP_MOD', **kwargs)
+
+    def exponent(self, **kwargs):
+        return self.leftop(self.unary, 'OP_POW', **kwargs)
+
+    def unary(self, **kwargs):
+        if self.peek('OP_SUB', 'OP_INV', 'OP_NOT', **kwargs):
+            op = self.next().value
+            expr = self.unary(**kwargs)
+            return self.unaryopnode(op, expr, **kwargs)
+        else:
+            return self.primary(**kwargs)
 
     # Node functions
 
