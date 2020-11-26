@@ -157,73 +157,6 @@ class Parser(lexer.Lexer):
             typehint, name = None, self.name(**kwargs)
         return self.targetnode(const, typehint, name, **kwargs)
 
-    def bracketexpr(self, **kwargs):
-        self.next('LBRACKET')
-        if self.maybe('RBRACKET'):
-            if self.peek('LAMBDA'):
-                return self.lambda_([], [], **kwargs)
-            else:
-                return self._primary(self.tuplenode([], **kwargs), **kwargs)
-        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT', 'SEMICOLON'):
-            params = self.itemlist(self.param, 'SEMICOLON', 'RBRACKET', **kwargs)
-            if self.maybe('SEMICOLON'):
-                kwparams = self.itemlist(self.kwparam, 'RBRACKET', **kwargs)
-            else:
-                kwparams = []
-            self.next('RBRACKET')
-            return self.lambda_(params, kwparams, **kwargs)
-        else:
-            exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False, **kwargs)
-            self.next('RBRACKET')
-            # These actually need to jump into boolor
-            if isinstance(exprs, list):
-                return self._primary(self.tuplenode(exprs, **kwargs), **kwargs)
-            else:
-                return self._primary(self.groupingnode(exprs, **kwargs), **kwargs)
-
-    def assignment(self, const, targets, **kwargs):
-        if const:
-            op = self.next('OP_ASSIGN',
-                message='const assignment cannot be augmented:'
-            ).value
-        elif isinstance(targets, list):
-            op = self.next('OP_ASSIGN',
-                message='multiple assignment cannot be augmented:'
-            ).value
-        else:
-            op = self.next(*lexer.ASSIGNMENT).value
-        value = self.expression(**kwargs)
-        return self.assignmentnode(const, targets, op, value, **kwargs)
-
-    def lambda_(self, params=None, kwparams=None, **kwargs):
-        if params is None:
-            params = [self.param(**kwargs)]
-        if kwparams is None:
-            kwparams = []
-        self.next('LAMBDA')
-        body = self.expression(**kwargs)
-        return self.lambdanode(params, kwparams, body, **kwargs)
-
-    def param(self, **kwargs):
-        if self.maybe('OP_MULT'):
-            return self.vparamnode(True, *self.typedname(**kwargs), **kwargs)
-        else:
-            typehint, name = self.typedname(**kwargs)
-            if self.maybe('COLON'):
-                value = self.expression(**kwargs)
-                return self.vparamnode(False, typehint, name, value, **kwargs)
-            else:
-                return self.vparamnode(False, typehint, name, **kwargs)
-
-    def kwparam(self, **kwargs):
-        if self.maybe('OP_POW'):
-            return self.kwparamnode(True, *self.typedname(**kwargs), **kwargs)
-        else:
-            typehint, name = self.typedname(**kwargs)
-            self.next('COLON')
-            value = self.expression(**kwargs)
-            return self.kwparamnode(False, typehint, name, value, **kwargs)
-
     def typedname(self, **kwargs):
         self.next('OP_LT')
         typehint = self.type(**kwargs)
@@ -239,6 +172,20 @@ class Parser(lexer.Lexer):
         else:
             params = []
         return self.typenode(name, params, **kwargs)
+
+    def assignment(self, const, targets, **kwargs):
+        if const:
+            op = self.next('OP_ASSIGN',
+                message='const assignment cannot be augmented:'
+            ).value
+        elif isinstance(targets, list):
+            op = self.next('OP_ASSIGN',
+                message='multiple assignment cannot be augmented:'
+            ).value
+        else:
+            op = self.next(*lexer.ASSIGNMENT).value
+        value = self.expression(**kwargs)
+        return self.assignmentnode(const, targets, op, value, **kwargs)
 
     def if_(self, **kwargs):
         self.next('KW_IF')
@@ -367,6 +314,59 @@ class Parser(lexer.Lexer):
         self.maybe('COMMA', 'NEWLINE')
         self.next('RBRACKET')
         return self.raisesnode(expression, exception, **kwargs)
+
+    def bracketexpr(self, **kwargs):
+        self.next('LBRACKET')
+        if self.maybe('RBRACKET'):
+            if self.peek('LAMBDA'):
+                return self.lambda_([], [], **kwargs)
+            else:
+                return self._primary(self.tuplenode([], **kwargs), **kwargs)
+        elif self.peek('OP_MULT', 'OP_POW', 'OP_LT', 'SEMICOLON'):
+            params = self.itemlist(self.param, 'SEMICOLON', 'RBRACKET', **kwargs)
+            if self.maybe('SEMICOLON'):
+                kwparams = self.itemlist(self.kwparam, 'RBRACKET', **kwargs)
+            else:
+                kwparams = []
+            self.next('RBRACKET')
+            return self.lambda_(params, kwparams, **kwargs)
+        else:
+            exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False, **kwargs)
+            self.next('RBRACKET')
+            # These actually need to jump into boolor
+            if isinstance(exprs, list):
+                return self._primary(self.tuplenode(exprs, **kwargs), **kwargs)
+            else:
+                return self._primary(self.groupingnode(exprs, **kwargs), **kwargs)
+
+    def lambda_(self, params=None, kwparams=None, **kwargs):
+        if params is None:
+            params = [self.param(**kwargs)]
+        if kwparams is None:
+            kwparams = []
+        self.next('LAMBDA')
+        body = self.expression(**kwargs)
+        return self.lambdanode(params, kwparams, body, **kwargs)
+
+    def param(self, **kwargs):
+        if self.maybe('OP_MULT'):
+            return self.vparamnode(True, *self.typedname(**kwargs), **kwargs)
+        else:
+            typehint, name = self.typedname(**kwargs)
+            if self.maybe('COLON'):
+                value = self.expression(**kwargs)
+                return self.vparamnode(False, typehint, name, value, **kwargs)
+            else:
+                return self.vparamnode(False, typehint, name, **kwargs)
+
+    def kwparam(self, **kwargs):
+        if self.maybe('OP_POW'):
+            return self.kwparamnode(True, *self.typedname(**kwargs), **kwargs)
+        else:
+            typehint, name = self.typedname(**kwargs)
+            self.next('COLON')
+            value = self.expression(**kwargs)
+            return self.kwparamnode(False, typehint, name, value, **kwargs)
 
     def boolor(self, **kwargs):
         return self.rightop(self.boolxor, 'OP_OR', **kwargs)
