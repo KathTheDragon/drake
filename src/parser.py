@@ -368,53 +368,6 @@ class Parser(lexer.Lexer):
             value = self.expression(**kwargs)
             return self.kwparamnode(False, typehint, name, value, **kwargs)
 
-    def primary(self, **kwargs):
-        return self._primary(self.atom(**kwargs), **kwargs)
-
-    def _primary(self, obj, **kwargs):
-        while True:
-            if self.maybe('DOT'):
-                attr = self.name(**kwargs)
-                obj = self.lookupnode(obj, attr, **kwargs)
-            elif self.maybe('LBRACKET'):
-                args = self.itemlist(self.arg, 'SEMICOLON', 'RBRACKET', **kwargs)
-                if self.maybe('SEMICOLON'):
-                    kwargs = self.itemlist(self.kwarg, 'RBRACKET', **kwargs)
-                else:
-                    kwargs = []
-                self.next('RBRACKET')
-                obj = self.callnode(obj, args, kwargs, **kwargs)
-            elif self.peek('LSQUARE'):
-                subscript = self.list(**kwargs)
-                obj = self.subscriptnode(obj, subscript, **kwargs)
-            else:
-                return obj
-
-    def arg(self, **kwargs):
-        if self.peek('OP_MULT'):
-            expr = self.expression(**kwargs)
-            return self.unaryopnode('*', expr, **kwargs)
-        elif self.peek('NAME'):
-            name = self.name(**kwargs)
-            if self.maybe('COLON'):
-                expr = self.expression(**kwargs)
-                return self.kwargnode(name, expr, **kwargs)
-            else:
-                # Inject into boolor
-                self.error()
-        else:
-            return self.expression(**kwargs)
-
-    def kwarg(self, **kwargs):
-        if self.maybe('OP_POW'):
-            expr = self.expression(**kwargs)
-            return self.unaryopnode('**', expr, **kwargs)
-        else:
-            name = self.name(**kwargs)
-            self.next('COLON')
-            expr = self.expression(**kwargs)
-            return self.kwargnode(name, expr, **kwargs)
-
     def atom(self, **kwargs):
         if self.peek('LBRACE'):
             return self.brace(**kwargs)
@@ -553,6 +506,53 @@ class Parser(lexer.Lexer):
 
     def name(self, **kwargs):
         return self.namenode(self.next('NAME').value, **kwargs)
+
+    def primary(self, **kwargs):
+        return self._primary(self.atom(**kwargs), **kwargs)
+
+    def _primary(self, obj, **kwargs):
+        while True:
+            if self.maybe('DOT'):
+                attr = self.name(**kwargs)
+                obj = self.lookupnode(obj, attr, **kwargs)
+            elif self.maybe('LBRACKET'):
+                args = self.itemlist(self.arg, 'SEMICOLON', 'RBRACKET', **kwargs)
+                if self.maybe('SEMICOLON'):
+                    kwargs = self.itemlist(self.kwarg, 'RBRACKET', **kwargs)
+                else:
+                    kwargs = []
+                self.next('RBRACKET')
+                obj = self.callnode(obj, args, kwargs, **kwargs)
+            elif self.peek('LSQUARE'):
+                subscript = self.list(**kwargs)
+                obj = self.subscriptnode(obj, subscript, **kwargs)
+            else:
+                return obj
+
+    def arg(self, **kwargs):
+        if self.peek('OP_MULT'):
+            expr = self.expression(**kwargs)
+            return self.unaryopnode('*', expr, **kwargs)
+        elif self.peek('NAME'):
+            name = self.name(**kwargs)
+            if self.maybe('COLON'):
+                expr = self.expression(**kwargs)
+                return self.kwargnode(name, expr, **kwargs)
+            else:
+                # Inject into boolor
+                self.error()
+        else:
+            return self.expression(**kwargs)
+
+    def kwarg(self, **kwargs):
+        if self.maybe('OP_POW'):
+            expr = self.expression(**kwargs)
+            return self.unaryopnode('**', expr, **kwargs)
+        else:
+            name = self.name(**kwargs)
+            self.next('COLON')
+            expr = self.expression(**kwargs)
+            return self.kwargnode(name, expr, **kwargs)
 
     def boolor(self, **kwargs):
         return self.rightop(self.boolxor, 'OP_OR', **kwargs)
