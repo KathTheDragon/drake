@@ -2,6 +2,36 @@ from dataclasses import dataclass, field, InitVar
 from . import lexer
 from .parsetree import *
 
+## Constants
+PRECEDENCE = {
+    '**': -1,
+    '%':  -2,
+    '*':  -3,
+    '/':  -3,
+    '+':  -4,
+    '-':  -4,
+    '<<': -5,
+    '>>': -5,
+    '&':  -6,
+    '^':  -7,
+    '|':  -8,
+    '<':  -9,
+    '<=': -9,
+    '>':  -9,
+    '>=': -9,
+    '==': -9,
+    '!=': -9,
+    'is': -10,
+    'is not': -10,
+    'in': -11,
+    'not in': -11,
+    'and': -12,
+    'xor': -13,
+    'or': -14
+}
+LEFT = ('%', '*', '/', '+', '-', '<<', '>>', '&', '^', '|')
+RIGHT = ('**', '<', '<=', '>', '>=', '==', '!=', 'is', 'is not', 'in', 'not in', 'and', 'xor', 'or')
+
 ## Exceptions
 class InvalidSyntax(Exception):
     def __init__(self, token, message=''):
@@ -125,12 +155,17 @@ class Parser(lexer.Lexer):
             'OP_MULT': self.lambda_,
             'OP_POW': self.lambda_,
             'OP_LT': self.lambda_,
-            'OP_SUB': self.unary,
-            'OP_INV': self.unary,
-            'OP_NOT': self.unary,
             'LBRACKET': self.bracketexpr
-        }.get(kind, self.primary)
-        return func(**kwargs)
+        }.get(kind, None)
+        if func is not None:
+            return func(**kwargs)
+        else:
+            func = {
+                'OP_SUB': self.unary,
+                'OP_INV': self.unary,
+                'OP_NOT': self.unary,
+            }.get(kind, self.atom)
+            return self.binops(func(**kwargs), **kwargs)
 
     def declaration(self, **kwargs):
         if self.maybe('KW_LET'):
@@ -321,7 +356,11 @@ class Parser(lexer.Lexer):
             if self.peek('LAMBDA'):
                 return self.lambda_([], [], **kwargs)
             else:
-                return self._primary(self.tuplenode([], **kwargs), **kwargs)
+                return self.binops(
+                    self.primary(
+                        self.tuplenode([], **kwargs),
+                        **kwargs),
+                    **kwargs)
         elif self.peek('OP_MULT', 'OP_POW', 'OP_LT', 'SEMICOLON'):
             params = self.itemlist(self.param, 'SEMICOLON', 'RBRACKET', **kwargs)
             if self.maybe('SEMICOLON'):
@@ -333,11 +372,11 @@ class Parser(lexer.Lexer):
         else:
             exprs = self.itemlist(self.expression, 'RBRACKET', forcelist=False, **kwargs)
             self.next('RBRACKET')
-            # These actually need to jump into boolor
             if isinstance(exprs, list):
-                return self._primary(self.tuplenode(exprs, **kwargs), **kwargs)
+                expr = self.tuplenode(exprs, **kwargs)
             else:
-                return self._primary(self.groupingnode(exprs, **kwargs), **kwargs)
+                expr = self.groupingnode(exprs, **kwargs)
+            return self.binops(self.primary(expr, **kwargs), **kwargs)
 
     def lambda_(self, params=None, kwparams=None, **kwargs):
         if params is None:
@@ -368,31 +407,40 @@ class Parser(lexer.Lexer):
             value = self.expression(**kwargs)
             return self.kwparamnode(False, typehint, name, value, **kwargs)
 
+    def unary(self, **kwargs):
+        if self.peek('OP_SUB', 'OP_INV', 'OP_NOT'):
+            op = self.next().value
+            expr = self.unary(**kwargs)
+            return self.unaryopnode(op, expr, **kwargs)
+        else:
+            return self.atom(**kwargs)
+
     def atom(self, **kwargs):
         if self.peek('LBRACE'):
-            return self.brace(**kwargs)
+            atom = self.brace(**kwargs)
         elif self.peek('LSQUARE'):
-            return self.list(**kwargs)
+            atom = self.list(**kwargs)
         elif self.peek('LBRACKET'):
-            return self.bracket(**kwargs)
+            atom = self.bracket(**kwargs)
         elif self.peek('NAME'):
-            return self.identifier(**kwargs)
+            atom = self.identifier(**kwargs)
         elif self.peek('STRING'):
-            return self.string(**kwargs)
+            atom = self.string(**kwargs)
         elif self.peek('NUMBER'):
-            return self.number(**kwargs)
+            atom = self.number(**kwargs)
         elif self.peek('BOOLEAN'):
-            return self.boolean(**kwargs)
+            atom = self.boolean(**kwargs)
         elif self.peek('NONE'):
-            return self.none(**kwargs)
+            atom = self.none(**kwargs)
         elif self.peek('BREAK'):
-            return self.break_(**kwargs)
+            atom = self.break_(**kwargs)
         elif self.peek('CONTINUE'):
-            return self.continue_(**kwargs)
+            atom = self.continue_(**kwargs)
         elif self.peek('PASS'):
-            return self.pass_(**kwargs)
+            atom = self.pass_(**kwargs)
         else:
             self.error()
+        return self.primary(atom)
 
     def brace(self, **kwargs):
         self.next('LBRACE')
@@ -507,10 +555,7 @@ class Parser(lexer.Lexer):
     def name(self, **kwargs):
         return self.namenode(self.next('NAME').value, **kwargs)
 
-    def primary(self, **kwargs):
-        return self._primary(self.atom(**kwargs), **kwargs)
-
-    def _primary(self, obj, **kwargs):
+    def primary(self, obj, **kwargs):
         while True:
             if self.maybe('DOT'):
                 attr = self.name(**kwargs)
@@ -534,13 +579,14 @@ class Parser(lexer.Lexer):
             expr = self.expression(**kwargs)
             return self.unaryopnode('*', expr, **kwargs)
         elif self.peek('NAME'):
-            name = self.name(**kwargs)
+            name = self.next('NAME').value
             if self.maybe('COLON'):
+                name = self.namenode(name, **kwargs)
                 expr = self.expression(**kwargs)
                 return self.kwargnode(name, expr, **kwargs)
             else:
-                # Inject into boolor
-                self.error()
+                name = self.identifiernode(name, **kwargs)
+                return self.binops(self.primary(name, **kwargs), **kwargs)
         else:
             return self.expression(**kwargs)
 
@@ -553,6 +599,42 @@ class Parser(lexer.Lexer):
             self.next('COLON')
             expr = self.expression(**kwargs)
             return self.kwargnode(name, expr, **kwargs)
+
+    def _getop(self):
+        if self.maybe('OP_NOT'):
+            if self.maybe('OP_IN'):
+                return 'not in'
+            else:
+                return 'not'
+        elif self.maybe('OP_IS'):
+            if self.maybe('OP_NOT'):
+                return 'is not'
+            else:
+                return 'is'
+        else:
+            return self.next(*OPERATORS).value
+
+    def binops(self, left, operator='', /, **kwargs):
+        if operator:
+            right = self.unary(**kwargs)
+            if self.peek(*OPERATORS):
+                op = self._getop()
+                while op:
+                    if PRECEDENCE[op] < PRECEDENCE[operator]:
+                        return self.binaryopnode(left, operator, right, **kwargs), op
+                    elif PRECEDENCE[op] > PRECEDENCE[operator]:
+                        right, op = self.binops(right, op, **kwargs)
+                    elif op in LEFT:
+                        return self.binaryopnode(left, operator, right, **kwargs), op
+                    else:
+                        right, op = self.binops(right, op, **kwargs)
+            return self.binaryopnode(left, operator, right, **kwargs), ''
+        else:
+            if self.peek(*OPERATORS):
+                op = self._getop()
+                while op:
+                    left, op = self.binops(left, op, **kwargs)
+            return left
 
     def boolor(self, **kwargs):
         return self.rightop(self.boolxor, 'OP_OR', **kwargs)
@@ -613,14 +695,6 @@ class Parser(lexer.Lexer):
 
     def exponent(self, **kwargs):
         return self.rightop(self.unary, 'OP_POW', **kwargs)
-
-    def unary(self, **kwargs):
-        if self.peek('OP_SUB', 'OP_INV', 'OP_NOT', **kwargs):
-            op = self.next().value
-            expr = self.unary(**kwargs)
-            return self.unaryopnode(op, expr, **kwargs)
-        else:
-            return self.primary(**kwargs)
 
     # Node functions
 
